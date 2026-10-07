@@ -1,0 +1,4297 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Klassekart</title>
+    <style>
+      :root {
+        --ink: #182420;
+        --ink-svak: #5d6b65;
+        --bg: #e9ecea;
+        --flate: #ffffff;
+        --tavle: #22453a;
+        --strek: #c9d2ce;
+        --laast: #8a5a12;
+        --laast-bg: #fdf3e0;
+        --sperret: #a8b2ad;
+        --fokus: #2f7d63;
+        --varsel: #9c3b17;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          'Segoe UI',
+          system-ui,
+          -apple-system,
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        font-size: 15px;
+        line-height: 1.45;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 2px solid var(--fokus);
+        outline-offset: 2px;
+      }
+      code {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 0.92em;
+        background: #eef2f0;
+        padding: 0 3px;
+        border-radius: 3px;
+      }
+
+      .app {
+        display: flex;
+        min-height: 100vh;
+        align-items: stretch;
+      }
+      .panel {
+        width: 318px;
+        flex: 0 0 318px;
+        background: var(--flate);
+        border-right: 1px solid var(--strek);
+        overflow-y: auto;
+        max-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .panel-topp {
+        padding: 20px 20px 14px;
+        border-bottom: 1px solid var(--strek);
+      }
+      .panel-kropp {
+        padding: 16px 20px 48px;
+        flex: 1;
+      }
+      .rom {
+        flex: 1;
+        padding: 26px 24px 60px;
+        min-width: 0;
+      }
+
+      .merke {
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0 0 12px;
+      }
+      .velgerpar {
+        display: grid;
+        grid-template-columns: 44px 1fr auto;
+        gap: 6px 8px;
+        align-items: center;
+        font-size: 13px;
+      }
+      .velgerpar span {
+        color: var(--ink-svak);
+      }
+      .velgerpar select {
+        min-width: 0;
+      }
+      input[type='text'],
+      input[type='search'],
+      input[type='email'],
+      input[type='password'],
+      select,
+      textarea {
+        width: 100%;
+        padding: 7px 9px;
+        border: 1px solid var(--strek);
+        border-radius: 5px;
+        background: #fff;
+      }
+      textarea {
+        resize: vertical;
+        line-height: 1.6;
+      }
+
+      .faner {
+        display: flex;
+        gap: 2px;
+        margin-top: 14px;
+      }
+      .fane {
+        flex: 1;
+        border: 1px solid transparent;
+        border-bottom: 0;
+        background: none;
+        padding: 7px 4px;
+        border-radius: 6px 6px 0 0;
+        cursor: pointer;
+        font-size: 13.5px;
+        color: var(--ink-svak);
+      }
+      .fane[aria-selected='true'] {
+        background: var(--flate);
+        border-color: var(--strek);
+        color: var(--ink);
+        font-weight: 650;
+        margin-bottom: -15px;
+        padding-bottom: 14px;
+      }
+      .faner-strek {
+        height: 1px;
+        background: var(--strek);
+        margin: 0 -20px;
+      }
+
+      .seksjon {
+        margin-bottom: 22px;
+      }
+      .seksjon h2 {
+        font-size: 14px;
+        font-weight: 650;
+        margin: 0 0 8px;
+      }
+      .hjelp {
+        font-size: 12.5px;
+        color: var(--ink-svak);
+        margin: 6px 0 0;
+      }
+      label.felt {
+        display: block;
+        font-size: 12.5px;
+        color: var(--ink-svak);
+        margin: 12px 0 4px;
+      }
+      .rad {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .rad > * {
+        min-width: 0;
+      }
+
+      .knapp {
+        border: 1px solid var(--strek);
+        background: #fff;
+        border-radius: 5px;
+        padding: 7px 12px;
+        cursor: pointer;
+      }
+      .knapp:hover {
+        background: #f3f6f4;
+        border-color: #a9b6b1;
+      }
+      .knapp:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      .knapp.hoved {
+        background: var(--tavle);
+        color: #fff;
+        border-color: var(--tavle);
+        font-weight: 600;
+        width: 100%;
+        padding: 11px;
+        font-size: 16px;
+      }
+      .knapp.hoved:hover {
+        background: #1a352d;
+      }
+      .knapp.liten {
+        padding: 4px 8px;
+        font-size: 12.5px;
+      }
+      .knapprad {
+        display: flex;
+        gap: 8px;
+        margin-top: 9px;
+      }
+      .knapprad .knapp {
+        flex: 1;
+      }
+      .bryter {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 10px;
+        font-size: 13.5px;
+        cursor: pointer;
+      }
+      .bryter input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--tavle);
+        margin-top: 2px;
+        flex: 0 0 auto;
+      }
+      .status {
+        font-size: 12.5px;
+        color: var(--ink-svak);
+        margin-top: 8px;
+      }
+      .status:empty {
+        display: none;
+      }
+      .status.varsel {
+        color: var(--varsel);
+        font-weight: 600;
+      }
+
+      /* elevliste */
+      .elevliste {
+        border: 1px solid var(--strek);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .elevrad {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 8px;
+        border-top: 1px solid #edf1ef;
+        font-size: 14px;
+      }
+      .elevliste .elevrad:first-child {
+        border-top: 0;
+      }
+      .elevrad.borte {
+        color: var(--sperret);
+      }
+      .elevrad.borte .elevnavn {
+        text-decoration: line-through;
+      }
+      .elevnavn {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: text;
+      }
+      .merkelapp {
+        font-size: 11px;
+        padding: 1px 5px;
+        border-radius: 9px;
+        background: #eef2f0;
+        color: var(--ink-svak);
+        white-space: nowrap;
+      }
+      .merkelapp.regel {
+        background: #e8f0ec;
+        color: var(--tavle);
+      }
+      .elevrad .knapp.liten {
+        padding: 2px 7px;
+      }
+      .regelboks {
+        padding: 10px 10px 12px;
+        background: #f7faf8;
+        border-top: 1px solid #edf1ef;
+        font-size: 13px;
+      }
+      .regelboks h4 {
+        margin: 10px 0 5px;
+        font-size: 12.5px;
+        font-weight: 650;
+        color: var(--ink-svak);
+      }
+      .regelboks h4:first-child {
+        margin-top: 0;
+      }
+      .segment {
+        display: flex;
+        gap: 4px;
+      }
+      .segment .knapp {
+        flex: 1;
+        padding: 4px 6px;
+        font-size: 12.5px;
+      }
+      .segment .knapp.paa {
+        background: var(--tavle);
+        color: #fff;
+        border-color: var(--tavle);
+      }
+      .brikker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 5px;
+      }
+      .brikke {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #fff;
+        border: 1px solid var(--strek);
+        border-radius: 12px;
+        padding: 2px 5px 2px 9px;
+        font-size: 12.5px;
+      }
+      .brikke button {
+        border: 0;
+        background: none;
+        cursor: pointer;
+        color: var(--ink-svak);
+        font-size: 14px;
+        line-height: 1;
+        padding: 0 2px;
+      }
+      .brikke button:hover {
+        color: var(--varsel);
+      }
+
+      /* klasserom */
+      .romtopp {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+      .romtopp h1 {
+        font-size: 20px;
+        margin: 0;
+        font-weight: 650;
+      }
+      .romtopp .dato {
+        color: var(--ink-svak);
+        font-size: 13.5px;
+      }
+      .kart {
+        max-width: 1180px;
+        margin: 0 auto;
+        overflow-x: auto;
+      }
+      .tavle {
+        background: var(--tavle);
+        color: #eaf1ed;
+        border-radius: 4px;
+        text-align: center;
+        padding: 9px;
+        font-size: 15px;
+        letter-spacing: 0.06em;
+        font-weight: 600;
+      }
+      .pulter {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin: 20px 0;
+      }
+      .pultrad {
+        display: flex;
+        gap: var(--midtgang, 34px);
+        justify-content: center;
+      }
+      .gruppe {
+        display: flex;
+        gap: var(--pultgap, 8px);
+      }
+      .plass {
+        position: relative;
+        width: var(--pultbredde, 132px);
+        height: var(--pulthoyde, 76px);
+        font-size: var(--pultskrift, 15px);
+        border: 1px solid var(--strek);
+        border-radius: 5px;
+        background: var(--flate);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 7px;
+        cursor: pointer;
+        text-align: center;
+        font-weight: 600;
+        line-height: 1.2;
+        box-shadow: 0 1px 0 rgba(24, 36, 32, 0.06);
+      }
+      .plass:hover {
+        border-color: #8fa39b;
+      }
+      .plass.tom {
+        color: var(--ink-svak);
+        font-weight: 400;
+        font-style: italic;
+        background: #f6f8f7;
+      }
+      .plass.laast {
+        border-color: var(--laast);
+        border-width: 2px;
+        background: var(--laast-bg);
+      }
+      .plass.sperret {
+        background: repeating-linear-gradient(
+          135deg,
+          #e7ebe9 0 6px,
+          #dde3e0 6px 12px
+        );
+        color: var(--sperret);
+        font-weight: 400;
+        font-style: normal;
+        border-style: dashed;
+      }
+      .plass.dratt {
+        opacity: 0.35;
+      }
+      .plass.maal {
+        border-color: var(--fokus);
+        border-width: 2px;
+      }
+      .plass .navn {
+        overflow-wrap: anywhere;
+      }
+      .plass .navn.lang {
+        font-size: 0.9em;
+      }
+      .plass .navn.svaert-lang {
+        font-size: 0.8em;
+      }
+      .plass .naal {
+        position: absolute;
+        top: 3px;
+        right: 5px;
+        font-size: 11px;
+        color: var(--laast);
+        font-weight: 700;
+      }
+      .melding {
+        max-width: 1180px;
+        margin: 20px auto 0;
+        padding: 12px 14px;
+        border-radius: 6px;
+        font-size: 13.5px;
+        border: 1px solid;
+      }
+      .melding.gul {
+        border-color: #e2c9a7;
+        background: #fdf6ea;
+      }
+      .melding strong {
+        display: block;
+        margin-bottom: 3px;
+      }
+      .melding ul {
+        margin: 4px 0 0;
+        padding-left: 18px;
+      }
+
+      .popup {
+        position: absolute;
+        z-index: 20;
+        width: 252px;
+        background: #fff;
+        border: 1px solid #9fada7;
+        border-radius: 7px;
+        box-shadow: 0 8px 24px rgba(24, 36, 32, 0.18);
+        padding: 12px;
+      }
+      .popup h3 {
+        margin: 0 0 9px;
+        font-size: 13.5px;
+        font-weight: 650;
+      }
+      .popup .knapp {
+        font-size: 13.5px;
+        padding: 6px 8px;
+      }
+      .popup .knapp.aktiv {
+        background: var(--laast-bg);
+        border-color: var(--laast);
+        color: var(--laast);
+        font-weight: 600;
+      }
+
+      /* innlogging */
+      .inngang {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+      }
+      .inngangkort {
+        width: 100%;
+        max-width: 410px;
+        background: var(--flate);
+        border: 1px solid var(--strek);
+        border-radius: 10px;
+        padding: 28px 28px 24px;
+      }
+      .inngangkort h1 {
+        font-size: 22px;
+        margin: 0 0 4px;
+      }
+      .inngangkort h2 {
+        font-size: 16px;
+        margin: 12px 0 4px;
+      }
+      .lenker {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 18px;
+      }
+      .lenkeknapp {
+        border: 0;
+        background: none;
+        padding: 0;
+        color: var(--fokus);
+        text-decoration: underline;
+        font-size: 13px;
+        cursor: pointer;
+        text-align: left;
+      }
+      .kode {
+        margin: 14px 0;
+        padding: 14px;
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 19px;
+        letter-spacing: 0.04em;
+        text-align: center;
+        background: var(--laast-bg);
+        border: 1px dashed var(--laast);
+        border-radius: 6px;
+        user-select: all;
+        overflow-wrap: anywhere;
+      }
+      .skystatus {
+        margin-left: 8px;
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: 0;
+        color: var(--ink-svak);
+      }
+      .skystatus.varsel {
+        color: var(--varsel);
+        font-weight: 600;
+      }
+
+      /* klasseoversikt */
+      .oversikt {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 24px 60px;
+      }
+      .oversikt-topp {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+      .oversikt-topp h1 {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0;
+      }
+      .oversikt-topp .hjelp {
+        margin: 2px 0 0;
+      }
+      #klassesok {
+        width: 240px;
+        max-width: 100%;
+      }
+      .klassegrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 14px;
+      }
+      .klassekort {
+        background: var(--flate);
+        border: 1px solid var(--strek);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .klassekort.aktiv {
+        border-color: var(--fokus);
+        box-shadow: 0 0 0 1px var(--fokus);
+      }
+      .kort-apne {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border: 0;
+        background: none;
+        text-align: left;
+        padding: 14px 16px 12px;
+        cursor: pointer;
+      }
+      .kort-apne:hover {
+        background: #f6f8f7;
+      }
+      .kort-navn {
+        font-size: 18px;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+      .kort-info {
+        font-size: 12.5px;
+        color: var(--ink-svak);
+        line-height: 1.5;
+      }
+      .mini {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        min-height: 74px;
+        padding: 8px;
+        background: #f3f6f4;
+        border-radius: 5px;
+      }
+      .mini-tavle {
+        width: 55%;
+        height: 4px;
+        margin-bottom: 3px;
+        background: var(--tavle);
+        border-radius: 2px;
+      }
+      .mini-rad {
+        display: flex;
+        gap: 6px;
+      }
+      .mini-gruppe {
+        display: flex;
+        gap: 2px;
+      }
+      .mini-plass {
+        width: 9px;
+        height: 6px;
+        background: #fff;
+        border: 1px solid var(--strek);
+        border-radius: 1.5px;
+      }
+      .mini-plass.full {
+        background: var(--fokus);
+        border-color: var(--fokus);
+      }
+      .mini-plass.sperret {
+        background: transparent;
+        border-style: dashed;
+      }
+      .kort-handlinger {
+        display: flex;
+        border-top: 1px solid #edf1ef;
+      }
+      .kort-handlinger button {
+        flex: 1;
+        border: 0;
+        background: none;
+        padding: 7px;
+        font-size: 12.5px;
+        color: var(--ink-svak);
+        cursor: pointer;
+      }
+      .kort-handlinger button + button {
+        border-left: 1px solid #edf1ef;
+      }
+      .kort-handlinger button:hover {
+        background: #f3f6f4;
+        color: var(--ink);
+      }
+      .kort-handlinger button.fare:hover {
+        color: var(--varsel);
+      }
+      .klassekort.ny {
+        align-items: center;
+        justify-content: center;
+        min-height: 190px;
+        border-style: dashed;
+        background: transparent;
+        color: var(--ink-svak);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .klassekort.ny:hover {
+        border-color: var(--fokus);
+        color: var(--fokus);
+        background: #f6f8f7;
+      }
+
+      @media print {
+        @page {
+          size: landscape;
+          margin: 12mm;
+        }
+        .kart {
+          overflow: visible;
+        }
+        body {
+          background: #fff;
+        }
+        .panel,
+        .popup,
+        .melding {
+          display: none !important;
+        }
+        .rom {
+          padding: 0;
+        }
+        .plass {
+          box-shadow: none;
+        }
+        .plass.laast {
+          border-color: #555;
+        }
+      }
+      @media (max-width: 900px) {
+        .app {
+          flex-direction: column;
+        }
+        .panel {
+          width: auto;
+          flex: none;
+          max-height: none;
+          border-right: 0;
+          border-bottom: 1px solid var(--strek);
+        }
+        .pultrad {
+          gap: var(--midtgang, 20px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" hidden>
+      <aside class="panel">
+        <div class="panel-topp">
+          <p class="merke">
+            Klassekart<span class="skystatus" id="skystatus"></span>
+          </p>
+          <div class="velgerpar">
+            <span>Klasse</span
+            ><select id="velgKlasse"></select
+            ><button
+              class="knapp liten"
+              id="alleKlasser"
+              title="Vis alle klassene"
+            >
+              Alle
+            </button>
+            <span>Rom</span
+            ><select id="velgRom"></select
+            ><button class="knapp liten" id="nyRom">Ny</button>
+          </div>
+          <div class="faner" role="tablist">
+            <button
+              class="fane"
+              role="tab"
+              data-fane="trekning"
+              aria-selected="true"
+            >
+              Trekning
+            </button>
+            <button
+              class="fane"
+              role="tab"
+              data-fane="elever"
+              aria-selected="false"
+            >
+              Elever
+            </button>
+            <button
+              class="fane"
+              role="tab"
+              data-fane="rom"
+              aria-selected="false"
+            >
+              Rom
+            </button>
+            <button
+              class="fane"
+              role="tab"
+              data-fane="data"
+              aria-selected="false"
+            >
+              Data
+            </button>
+          </div>
+          <div class="faner-strek"></div>
+        </div>
+
+        <div class="panel-kropp">
+          <!-- TREKNING -->
+          <div class="fanepanel" data-fane="trekning">
+            <div class="seksjon">
+              <button class="knapp hoved" id="trekk">Trekk plassering</button>
+              <label class="bryter"
+                ><input type="checkbox" id="spre" /> Fordel gutter og jenter
+                jevnt</label
+              >
+              <label class="bryter"
+                ><input type="checkbox" id="nyeNaboer" /> Unngå naboer fra
+                tidligere kart</label
+              >
+              <div class="knapprad">
+                <button class="knapp" id="angre" disabled>Angre</button>
+                <button class="knapp" id="tomKart">Tøm kartet</button>
+              </div>
+              <label class="bryter"
+                ><input type="checkbox" id="speil" /> Speilvend (sett fra
+                tavla)</label
+              >
+              <div class="knapprad">
+                <button class="knapp" id="skrivut">Skriv ut</button>
+              </div>
+              <p class="hjelp">
+                Klikk på en pult for å sette inn en bestemt elev, låse plassen
+                eller sperre den. Dra en elev over på en annen pult for å bytte.
+              </p>
+            </div>
+
+            <div class="seksjon">
+              <h2>Lagrede kart</h2>
+              <div class="rad">
+                <select id="velgKart"></select>
+                <button class="knapp liten" id="slettKart">Slett</button>
+              </div>
+              <div class="knapprad">
+                <button class="knapp" id="lagreKart">Lagre dette kartet</button>
+              </div>
+              <p class="status" id="kartstatus"></p>
+            </div>
+
+            <div class="seksjon">
+              <h2>Nabominne</h2>
+              <p class="status" id="minnestatus"></p>
+              <div class="knapprad">
+                <button class="knapp" id="huskNaboer">Husk naboene</button>
+                <button class="knapp" id="tomMinne">Tøm minnet</button>
+              </div>
+              <p class="hjelp">
+                Minnet fylles automatisk når du lagrer et kart. Bruk knappen
+                hvis du kjører et kart uten å lagre det.
+              </p>
+            </div>
+          </div>
+
+          <!-- ELEVER -->
+          <div class="fanepanel" data-fane="elever" hidden>
+            <div class="seksjon">
+              <div class="rad" style="justify-content: space-between">
+                <h2 style="margin: 0" id="elevtelling">Elever</h2>
+                <span class="rad" style="gap: 6px; flex: 0 0 auto">
+                  <button class="knapp liten" id="importmodus">Importer</button>
+                  <button class="knapp liten" id="tekstmodus">Som tekst</button>
+                </span>
+              </div>
+              <div id="importboks" hidden>
+                <label class="felt" for="importtekst"
+                  >Lim inn klasselisten – fra Skoleplattformen, Excel eller en
+                  PDF</label
+                >
+                <textarea
+                  id="importtekst"
+                  style="height: 150px"
+                  spellcheck="false"
+                  placeholder="Merk tabellen på skjermen, kopier, og lim inn her."
+                ></textarea>
+                <p class="hjelp">
+                  Bare fornavn tas vare på – med første bokstav i etternavnet
+                  der to heter det samme. Det du limer inn, lagres ikke.
+                </p>
+                <p class="status" id="importstatus"></p>
+                <p class="hjelp" id="importfasit"></p>
+                <div id="importnavnboks">
+                  <label class="felt" for="importnavn">Navn på klassen</label>
+                  <input type="text" id="importnavn" />
+                </div>
+                <div class="knapprad">
+                  <button class="knapp" id="importNy">Lag ny klasse</button>
+                  <button class="knapp" id="importLegg">Legg til her</button>
+                </div>
+                <div class="knapprad">
+                  <button class="knapp" id="importAvbryt">Avbryt</button>
+                </div>
+              </div>
+              <div id="elevtekstboks" hidden>
+                <label class="felt" for="elevtekst"
+                  >Ett navn per linje. <code>(g)</code> eller
+                  <code>(j)</code> bak navnet setter kjønn.</label
+                >
+                <textarea
+                  id="elevtekst"
+                  style="height: 260px"
+                  spellcheck="false"
+                ></textarea>
+                <div class="knapprad">
+                  <button class="knapp" id="lagreTekst">Bruk listen</button>
+                  <button class="knapp" id="avbrytTekst">Avbryt</button>
+                </div>
+                <p class="hjelp">
+                  Elever du beholder navnet på, beholder reglene sine.
+                </p>
+              </div>
+              <div id="elevlisteboks">
+                <p class="status" id="elevstatus" style="margin: 0 0 8px"></p>
+                <div class="elevliste" id="elevliste"></div>
+                <p class="hjelp" id="tomliste" hidden>
+                  Ingen elever ennå. Bruk <strong>Importer</strong> og lim inn
+                  klasselisten, eller skriv inn navn ett og ett.
+                </p>
+                <div class="rad" style="margin-top: 9px">
+                  <input
+                    type="text"
+                    id="nyttNavn"
+                    placeholder="Nytt elevnavn"
+                  />
+                  <button class="knapp" id="leggTil">Legg til</button>
+                </div>
+                <p class="hjelp">
+                  Haken slår av og på <em>borte i dag</em>. Tannhjulet åpner
+                  reglene for eleven.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ROM -->
+          <div class="fanepanel" data-fane="rom" hidden>
+            <div class="seksjon">
+              <h2>Pultoppsett</h2>
+              <label class="felt" for="radliste"
+                >Én rad per linje, pultgrupper skilt med +</label
+              >
+              <textarea
+                id="radliste"
+                style="
+                  height: 130px;
+                  font-family: ui-monospace, Consolas, monospace;
+                "
+                spellcheck="false"
+              ></textarea>
+              <div class="rad" style="margin-top: 9px">
+                <input type="text" id="allerader" placeholder="2+3+2" />
+                <button class="knapp" id="brukalle">Bruk på alle</button>
+              </div>
+              <div class="knapprad">
+                <button class="knapp" id="leggRad">Legg til rad</button>
+                <button class="knapp" id="fjernRad">Fjern siste</button>
+              </div>
+              <p class="status" id="plasstatus"></p>
+            </div>
+            <div class="seksjon">
+              <h2>Rommet</h2>
+              <label class="felt" for="romnavn">Navn</label>
+              <input
+                type="text"
+                id="romnavn"
+                placeholder="F.eks. 218 eller Fysikklab"
+              />
+              <div class="knapprad">
+                <button class="knapp" id="dupliserRom">
+                  Lagre som nytt rom
+                </button>
+                <button class="knapp" id="slettRom">Slett rommet</button>
+              </div>
+              <p class="hjelp">
+                Sperrede pulter hører til rommet, så en ødelagt pult eller en
+                søyle følger med hver gang du velger dette rommet.
+              </p>
+            </div>
+          </div>
+
+          <!-- DATA -->
+          <div class="fanepanel" data-fane="data" hidden>
+            <div class="seksjon" id="kontoSeksjon" hidden>
+              <h2>Konto</h2>
+              <p class="hjelp" style="margin-top: 0" id="kontoInfo"></p>
+              <div class="knapprad">
+                <button class="knapp" id="byttPassord">Bytt passord</button>
+                <button class="knapp" id="loggUt">Logg ut</button>
+              </div>
+              <div class="knapprad" id="flyttBoks" hidden>
+                <button class="knapp" id="flyttLokale">
+                  Flytt klasser fra denne nettleseren hit
+                </button>
+              </div>
+              <p class="status" id="kontostatus"></p>
+            </div>
+            <div class="seksjon" id="tilSkySeksjon" hidden>
+              <h2>Lagre i skyen</h2>
+              <p class="hjelp" style="margin-top: 0">
+                Logg inn for å få klassene på alle maskiner og dele dem med
+                kolleger. Alt krypteres før det forlater maskinen.
+              </p>
+              <div class="knapprad">
+                <button class="knapp" id="tilSky">Logg inn</button>
+              </div>
+            </div>
+            <div class="seksjon" id="lokalBrukerSeksjon">
+              <h2>Hvem bruker kopien</h2>
+              <div class="rad">
+                <select id="velgBruker"></select>
+                <button class="knapp liten" id="nyBruker">Ny</button>
+              </div>
+              <p class="hjelp">
+                Deler dere maskin og pålogging, får hver lærer sine egne klasser
+                ved å velge seg selv her. Klasser og kart er adskilt per bruker.
+              </p>
+            </div>
+            <div class="seksjon">
+              <h2>Sikkerhetskopi</h2>
+              <p class="hjelp" style="margin-top: 0" id="kopiHjelp">
+                Alt ligger lagret i nettleseren på denne maskinen. Ta en kopi
+                hvis du bytter maskin eller tømmer nettleseren.
+              </p>
+              <div class="knapprad">
+                <button class="knapp" id="lastNed">Last ned kryptert</button>
+                <button class="knapp" id="hentFil">Hent inn fil</button>
+              </div>
+              <input
+                type="file"
+                id="filvelger"
+                accept="application/json,.json"
+                hidden
+              />
+              <label class="felt" for="jsontekst"
+                >Eller kopier teksten under / lim inn en kopi her</label
+              >
+              <textarea
+                id="jsontekst"
+                style="
+                  height: 170px;
+                  font-family: ui-monospace, Consolas, monospace;
+                  font-size: 12px;
+                "
+                spellcheck="false"
+              ></textarea>
+              <div class="knapprad">
+                <button class="knapp" id="visJson">Vis alt</button>
+                <button class="knapp" id="lesJson">Les inn teksten</button>
+              </div>
+              <p class="status" id="datastatus"></p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="rom">
+        <div class="romtopp">
+          <h1 id="tittel">Klassekart</h1>
+          <span class="dato" id="dato"></span>
+        </div>
+        <div class="kart" id="kart"></div>
+        <div class="melding gul" id="melding" hidden></div>
+      </main>
+    </div>
+
+    <section class="oversikt" id="oversikt" hidden>
+      <div class="oversikt-topp">
+        <div>
+          <h1>Klassene dine</h1>
+          <p class="hjelp" id="oversiktinfo"></p>
+        </div>
+        <input
+          type="search"
+          id="klassesok"
+          placeholder="Søk etter klasse"
+          hidden
+        />
+      </div>
+      <div class="klassegrid" id="klassegrid"></div>
+    </section>
+
+    <section class="inngang" id="inngang" hidden>
+      <div class="inngangkort">
+        <h1>Klassekart</h1>
+
+        <form id="stegInn" novalidate>
+          <p class="hjelp">
+            Elevnavnene krypteres på maskinen din før de lagres. Verken serveren
+            eller andre enn deg og kollegaene du deler med kan lese dem.
+          </p>
+          <label class="felt" for="innEpost">E-post</label>
+          <input type="email" id="innEpost" autocomplete="username" />
+          <label class="felt" for="innPassord">Passord</label>
+          <input
+            type="password"
+            id="innPassord"
+            autocomplete="current-password"
+          />
+          <div id="innGjentaBoks" hidden>
+            <label class="felt" for="innGjenta">Gjenta passordet</label>
+            <input type="password" id="innGjenta" autocomplete="new-password" />
+            <p class="hjelp">Minst 12 tegn. En setning du husker, er fint.</p>
+          </div>
+          <div class="knapprad">
+            <button class="knapp hoved" id="innKnapp" type="submit">
+              Logg inn
+            </button>
+          </div>
+          <p class="status" id="innStatus"></p>
+          <div class="lenker">
+            <button type="button" class="lenkeknapp" id="innBytt">
+              Ny bruker? Opprett konto
+            </button>
+            <button type="button" class="lenkeknapp" id="innGlemt">
+              Glemt passordet?
+            </button>
+            <button type="button" class="lenkeknapp" id="innLokal">
+              Bruk uten konto – lagres bare i denne nettleseren
+            </button>
+          </div>
+        </form>
+
+        <div id="stegKode" hidden>
+          <h2>Ta vare på gjenopprettingskoden</h2>
+          <p class="hjelp">
+            Glemmer du passordet, er koden den eneste måten å få tilbake
+            klassene på. Klasser du har delt, kan kolleger dele med deg igjen.
+            Skriv den ned eller last den ned, og legg den et trygt sted.
+          </p>
+          <div class="kode" id="kodeTekst"></div>
+          <div class="knapprad">
+            <button class="knapp" id="kodeLastNed" type="button">
+              Last ned som fil
+            </button>
+          </div>
+          <label class="bryter"
+            ><input type="checkbox" id="kodeOk" /> Jeg har tatt vare på
+            koden</label
+          >
+          <div class="knapprad">
+            <button
+              class="knapp hoved"
+              id="kodeFortsett"
+              type="button"
+              disabled
+            >
+              Fortsett
+            </button>
+          </div>
+        </div>
+
+        <form id="stegPassord" novalidate hidden>
+          <h2 id="pwTittel"></h2>
+          <div id="pwGammelBoks">
+            <label class="felt" for="pwGammel">Nåværende passord</label>
+            <input
+              type="password"
+              id="pwGammel"
+              autocomplete="current-password"
+            />
+          </div>
+          <div id="pwKodeBoks">
+            <label class="felt" for="pwKode">Gjenopprettingskode</label>
+            <input
+              type="text"
+              id="pwKode"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="ABCD-EFGH-…"
+            />
+            <label class="bryter"
+              ><input type="checkbox" id="pwUtenKode" /> Jeg har ikke koden –
+              start på nytt. Delte klasser kan kolleger dele med meg
+              igjen.</label
+            >
+          </div>
+          <label class="felt" for="pwNy">Nytt passord</label>
+          <input type="password" id="pwNy" autocomplete="new-password" />
+          <label class="felt" for="pwNy2">Gjenta nytt passord</label>
+          <input type="password" id="pwNy2" autocomplete="new-password" />
+          <div class="knapprad">
+            <button class="knapp hoved" id="pwKnapp" type="submit">
+              Lagre nytt passord
+            </button>
+          </div>
+          <p class="status" id="pwStatus"></p>
+          <div class="lenker">
+            <button type="button" class="lenkeknapp" id="pwAvbryt">
+              Avbryt
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+      'use strict';
+
+      /* ============ oppsett for denne kopien ============ */
+      const OPPSETT = {
+        eier: '', // tom streng = spør om navn første gang
+        startklasse: '',
+        brukStartelever: false,
+      };
+
+      /* ============ lagring ============ */
+      const PROFILER = 'klassekart:profiler';
+      const SIST = 'klassekart:sist';
+      const GAMMEL = 'klassekart:v3';
+      let bruker = '';
+      let profiler = [];
+      const brukernokkel = (n) =>
+        'klassekart:v3:' + String(n).toLowerCase().replace(/\s+/g, '_');
+      const dataNokkel = () => brukernokkel(bruker);
+
+      const lager = {
+        async hent(n) {
+          try {
+            if (window.storage && window.storage.get) {
+              const r = await window.storage.get(n, false);
+              return r ? JSON.parse(r.value) : null;
+            }
+            return JSON.parse(localStorage.getItem(n) || 'null');
+          } catch (e) {
+            return null;
+          }
+        },
+        async skriv(n, v) {
+          try {
+            const s = JSON.stringify(v);
+            if (window.storage && window.storage.set)
+              await window.storage.set(n, s, false);
+            else localStorage.setItem(n, s);
+            return true;
+          } catch (e) {
+            return false;
+          }
+        },
+      };
+
+      /* ============ hjelpere ============ */
+      const $ = (id) => document.getElementById(id);
+      const nokkel = (r, g, i) => r + '-' + g + '-' + i;
+      const parN = (a, b) => (a < b ? a + '|' + b : b + '|' + a);
+      const uid = () => 'e' + Math.random().toString(36).slice(2, 9);
+      const kopi = (o) => JSON.parse(JSON.stringify(o));
+      function stokk(a) {
+        const b = a.slice();
+        for (let i = b.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [b[i], b[j]] = [b[j], b[i]];
+        }
+        return b;
+      }
+
+      /* ============ data ============ */
+      const START_NAVN = [];
+      function nyElev(navn, kjonn, gruppe) {
+        return {
+          id: uid(),
+          navn,
+          kjonn: kjonn || null,
+          gruppe: gruppe || null,
+          borte: false,
+          sone: 'fri',
+          sammen: [],
+          unna: [],
+        };
+      }
+      function standarddata(medStartelever) {
+        const bruk = medStartelever !== false && OPPSETT.brukStartelever;
+        const kn = (bruk && OPPSETT.startklasse) || 'Ny klasse';
+        const elever = bruk ? START_NAVN.map((n) => nyElev(n[0], n[1])) : [];
+        return {
+          versjon: 3,
+          klasser: { [kn]: { elever, historikk: [] } },
+          rom: {
+            Standardrom: {
+              rader: [
+                [2, 3, 2],
+                [2, 3, 2],
+                [2, 3, 2],
+                [2, 3, 2],
+                [2, 3, 2],
+              ],
+              sperret: [],
+            },
+          },
+          kart: {},
+          aktiv: {
+            klasse: kn,
+            rom: 'Standardrom',
+            plasser: {},
+            laaste: [],
+            spre: false,
+            nyeNaboer: true,
+            speil: false,
+          },
+        };
+      }
+      let D = standarddata();
+      let angrestabel = [];
+
+      const klasse = () =>
+        D.klasser[D.aktiv.klasse] || { elever: [], historikk: [] };
+      const rommet = () =>
+        D.rom[D.aktiv.rom] || { rader: [[2, 3, 2]], sperret: [] };
+      const elever = () => klasse().elever;
+      const elevMed = (id) => elever().find((e) => e.id === id) || null;
+      const erSperret = (k) => rommet().sperret.includes(k);
+      const erLaast = (k) => D.aktiv.laaste.includes(k);
+
+      /* Hver klasse husker sitt eget pågående kart og rom */
+      function huskOppsett() {
+        const k = D.klasser[D.aktiv.klasse];
+        if (k)
+          k.sist = {
+            rom: D.aktiv.rom,
+            plasser: kopi(D.aktiv.plasser),
+            laaste: D.aktiv.laaste.slice(),
+          };
+      }
+      function gjenopprett(n) {
+        const k = D.klasser[n];
+        const s = k.sist || {};
+        const ids = new Set(k.elever.map((e) => e.id));
+        D.aktiv.klasse = n;
+        if (D.rom[s.rom]) D.aktiv.rom = s.rom;
+        D.aktiv.plasser = {};
+        Object.entries(s.plasser || {}).forEach(([p, id]) => {
+          if (ids.has(id)) D.aktiv.plasser[p] = id;
+        });
+        D.aktiv.laaste = (s.laaste || []).slice();
+      }
+      function apneKlasse(n, merkBrukt) {
+        huskOppsett();
+        gjenopprett(n);
+        if (merkBrukt !== false) D.klasser[n].brukt = new Date().toISOString();
+        angrestabel = [];
+        $('angre').disabled = true;
+        apenElev = null;
+      }
+
+      let lagretimer = null,
+        endringsteller = 0;
+      function lagre() {
+        huskOppsett();
+        endringsteller++;
+        if (iSky()) return planleggSynk();
+        clearTimeout(lagretimer);
+        lagretimer = setTimeout(() => lager.skriv(dataNokkel(), D), 350);
+      }
+
+      /* ============ seter ============ */
+      function seter() {
+        const ut = [];
+        rommet().rader.forEach((rad, r) =>
+          rad.forEach((n, g) => {
+            for (let i = 0; i < n; i++)
+              ut.push({ k: nokkel(r, g, i), r, g, i });
+          }),
+        );
+        return ut;
+      }
+      function naboPar() {
+        const finnes = new Set(seter().map((s) => s.k));
+        const par = [];
+        seter().forEach((s) => {
+          const h = nokkel(s.r, s.g, s.i + 1);
+          if (finnes.has(h)) par.push([s.k, h]);
+        });
+        return par;
+      }
+      function ryddPlasser() {
+        const gyldige = new Set(seter().map((s) => s.k));
+        Object.keys(D.aktiv.plasser).forEach((k) => {
+          if (!gyldige.has(k)) delete D.aktiv.plasser[k];
+        });
+        D.aktiv.laaste = D.aktiv.laaste.filter(
+          (k) => gyldige.has(k) && !erSperret(k),
+        );
+        rommet().sperret.forEach((k) => delete D.aktiv.plasser[k]);
+        const idSett = new Set(elever().map((e) => e.id));
+        Object.keys(D.aktiv.plasser).forEach((k) => {
+          if (!idSett.has(D.aktiv.plasser[k])) delete D.aktiv.plasser[k];
+        });
+      }
+
+      /* ============ trekning ============ */
+      function sonegrenser() {
+        const n = rommet().rader.length;
+        return { foranMaks: n >= 4 ? 1 : 0, bakMin: n >= 4 ? n - 2 : n - 1 };
+      }
+      function byggCtx() {
+        const s = seter();
+        const gs = sonegrenser();
+        const elevKart = new Map(elever().map((e) => [e.id, e]));
+        const gamle = new Set();
+        if (D.aktiv.nyeNaboer)
+          klasse().historikk.forEach((sett) =>
+            sett.forEach((p) => gamle.add(p)),
+          );
+        const sammenPar = [];
+        elever().forEach((e) =>
+          e.sammen.forEach((id) => {
+            if (
+              e.id < id &&
+              elevKart.has(id) &&
+              !e.borte &&
+              !elevKart.get(id).borte
+            )
+              sammenPar.push([e.id, id]);
+          }),
+        );
+        return {
+          seter: s,
+          setekart: new Map(s.map((x) => [x.k, x])),
+          par: naboPar(),
+          elevKart,
+          gamle,
+          sammenPar,
+          spre: D.aktiv.spre,
+          foranMaks: gs.foranMaks,
+          bakMin: gs.bakMin,
+        };
+      }
+      function evaluer(t, c) {
+        let kost = 0;
+        const naboAv = new Map();
+        for (const [a, b] of c.par) {
+          const ia = t[a],
+            ib = t[b];
+          if (!ia || !ib) continue;
+          if (!naboAv.has(ia)) naboAv.set(ia, new Set());
+          if (!naboAv.has(ib)) naboAv.set(ib, new Set());
+          naboAv.get(ia).add(ib);
+          naboAv.get(ib).add(ia);
+          const ea = c.elevKart.get(ia),
+            eb = c.elevKart.get(ib);
+          if (!ea || !eb) continue;
+          if (ea.unna.includes(ib) || eb.unna.includes(ia)) kost += 80;
+          if (c.spre && ea.kjonn && eb.kjonn && ea.kjonn === eb.kjonn)
+            kost += 3;
+          if (c.gamle.size && c.gamle.has(parN(ia, ib))) kost += 10;
+        }
+        for (const [a, b] of c.sammenPar) {
+          const na = naboAv.get(a);
+          if (!na || !na.has(b)) kost += 60;
+        }
+        for (const s of c.seter) {
+          const id = t[s.k];
+          if (!id) continue;
+          const e = c.elevKart.get(id);
+          if (!e) continue;
+          if (e.sone === 'foran' && s.r > c.foranMaks)
+            kost += 100 + (s.r - c.foranMaks) * 10;
+          if (e.sone === 'bak' && s.r < c.bakMin)
+            kost += 100 + (c.bakMin - s.r) * 10;
+        }
+        return kost;
+      }
+      function trekkPlassering() {
+        const c = byggCtx();
+        const laasteElever = new Set();
+        D.aktiv.laaste.forEach((k) => {
+          if (D.aktiv.plasser[k]) laasteElever.add(D.aktiv.plasser[k]);
+        });
+
+        const frie = c.seter
+          .filter((s) => !erSperret(s.k) && !erLaast(s.k))
+          .map((s) => s.k);
+        const pool = elever()
+          .filter((e) => !e.borte && !laasteElever.has(e.id))
+          .map((e) => e.id);
+
+        const fast = {};
+        D.aktiv.laaste.forEach((k) => {
+          if (D.aktiv.plasser[k]) fast[k] = D.aktiv.plasser[k];
+        });
+
+        let beste = null,
+          bestekost = Infinity;
+        const runder = frie.length > 40 ? 14 : 26;
+        for (let start = 0; start < runder; start++) {
+          const t = Object.assign({}, fast);
+          const p = stokk(pool);
+          frie.forEach((k, i) => {
+            t[k] = p[i] || null;
+          });
+          let kost = evaluer(t, c);
+          let uten = 0;
+          for (let it = 0; it < 4000 && kost > 0; it++) {
+            const a = frie[Math.floor(Math.random() * frie.length)];
+            const b = frie[Math.floor(Math.random() * frie.length)];
+            if (a === b) continue;
+            const va = t[a],
+              vb = t[b];
+            if (!va && !vb) continue;
+            t[a] = vb;
+            t[b] = va;
+            const ny = evaluer(t, c);
+            if (ny < kost) {
+              kost = ny;
+              uten = 0;
+            } else if (ny === kost) {
+              uten++;
+            } else {
+              t[a] = va;
+              t[b] = vb;
+              uten++;
+            }
+            if (uten > 700) break;
+          }
+          if (kost < bestekost) {
+            bestekost = kost;
+            beste = Object.assign({}, t);
+          }
+          if (bestekost === 0) break;
+        }
+
+        lagreAngre();
+        D.aktiv.plasser = {};
+        Object.entries(beste || {}).forEach(([k, v]) => {
+          if (v) D.aktiv.plasser[k] = v;
+        });
+        tegn(brudd(c));
+      }
+      function brudd(c) {
+        const t = D.aktiv.plasser,
+          ut = [];
+        const naboAv = new Map();
+        for (const [a, b] of c.par) {
+          const ia = t[a],
+            ib = t[b];
+          if (!ia || !ib) continue;
+          if (!naboAv.has(ia)) naboAv.set(ia, new Set());
+          if (!naboAv.has(ib)) naboAv.set(ib, new Set());
+          naboAv.get(ia).add(ib);
+          naboAv.get(ib).add(ia);
+        }
+        for (const [a, b] of c.sammenPar) {
+          const na = naboAv.get(a);
+          if (!na || !na.has(b))
+            ut.push(
+              navnAv(a) + ' og ' + navnAv(b) + ' fikk ikke sitte sammen.',
+            );
+        }
+        for (const [a, b] of c.par) {
+          const ia = t[a],
+            ib = t[b];
+          if (!ia || !ib) continue;
+          const ea = c.elevKart.get(ia),
+            eb = c.elevKart.get(ib);
+          if (ea && eb && (ea.unna.includes(ib) || eb.unna.includes(ia)))
+            ut.push(
+              ea.navn +
+                ' og ' +
+                eb.navn +
+                ' havnet ved siden av hverandre likevel.',
+            );
+        }
+        for (const s of c.seter) {
+          const id = t[s.k];
+          if (!id) continue;
+          const e = c.elevKart.get(id);
+          if (!e) continue;
+          if (e.sone === 'foran' && s.r > c.foranMaks)
+            ut.push(e.navn + ' fikk ikke plass foran.');
+          if (e.sone === 'bak' && s.r < c.bakMin)
+            ut.push(e.navn + ' fikk ikke plass bak.');
+        }
+        return ut;
+      }
+      const navnAv = (id) => {
+        const e = elevMed(id);
+        return e ? e.navn : '?';
+      };
+
+      /* ============ angre ============ */
+      function lagreAngre() {
+        angrestabel.push({
+          plasser: kopi(D.aktiv.plasser),
+          laaste: D.aktiv.laaste.slice(),
+        });
+        if (angrestabel.length > 25) angrestabel.shift();
+        $('angre').disabled = false;
+      }
+      function angre() {
+        const f = angrestabel.pop();
+        if (!f) return;
+        D.aktiv.plasser = f.plasser;
+        D.aktiv.laaste = f.laaste;
+        $('angre').disabled = angrestabel.length === 0;
+        tegn();
+      }
+
+      /* ============ nabominne ============ */
+      function naaVaerendeNaboer() {
+        const sett = [];
+        naboPar().forEach(([a, b]) => {
+          const ia = D.aktiv.plasser[a],
+            ib = D.aktiv.plasser[b];
+          if (ia && ib) sett.push(parN(ia, ib));
+        });
+        return sett;
+      }
+      function huskNaboer() {
+        const sett = naaVaerendeNaboer();
+        if (!sett.length) return;
+        const k = klasse();
+        k.historikk.unshift(sett);
+        k.historikk = k.historikk.slice(0, 3);
+        lagre();
+        tegn();
+      }
+
+      /* ============ tegning ============ */
+      function tilpassBredde(fastBredde) {
+        const kart = $('kart');
+        const rader = rommet().rader;
+        if (!rader.length) return;
+        const plass = fastBredde || kart.clientWidth || 900;
+        const trangt = plass < 620;
+        const midtgang = trangt ? 16 : 30;
+        const pultgap = trangt ? 5 : 8;
+        let bredde = 148;
+        rader.forEach((rad) => {
+          const pulter = rad.reduce((a, b) => a + b, 0);
+          if (!pulter) return;
+          const gap =
+            rad.reduce((a, n) => a + (n - 1) * pultgap, 0) +
+            (rad.length - 1) * midtgang;
+          bredde = Math.min(bredde, (plass - gap - 6) / pulter);
+        });
+        bredde = Math.max(46, Math.floor(bredde));
+        kart.style.setProperty('--pultbredde', bredde + 'px');
+        kart.style.setProperty(
+          '--pulthoyde',
+          Math.max(38, Math.round(bredde * 0.58)) + 'px',
+        );
+        kart.style.setProperty(
+          '--pultskrift',
+          Math.max(9.5, Math.min(15.5, bredde * 0.125)).toFixed(1) + 'px',
+        );
+        kart.style.setProperty('--midtgang', midtgang + 'px');
+        kart.style.setProperty('--pultgap', pultgap + 'px');
+      }
+      let breddetimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(breddetimer);
+        breddetimer = setTimeout(() => tilpassBredde(), 120);
+      });
+      window.addEventListener('beforeprint', () => tilpassBredde(1010));
+      window.addEventListener('afterprint', () => tilpassBredde());
+
+      function tegn(meldinger) {
+        ryddPlasser();
+        $('tittel').textContent =
+          'Klassekart ' + D.aktiv.klasse + ' · ' + D.aktiv.rom;
+        $('dato').textContent = new Date().toLocaleDateString('no-NO', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        });
+
+        const kart = $('kart');
+        kart.innerHTML = '';
+        const tavle = document.createElement('div');
+        tavle.className = 'tavle';
+        tavle.textContent = 'Tavle';
+        const pulter = document.createElement('div');
+        pulter.className = 'pulter';
+        const rader = rommet().rader;
+        const ri = rader.map((_, i) => i);
+        (D.aktiv.speil ? ri.slice().reverse() : ri).forEach((r) => {
+          const radEl = document.createElement('div');
+          radEl.className = 'pultrad';
+          const gi = rader[r].map((_, i) => i);
+          (D.aktiv.speil ? gi.slice().reverse() : gi).forEach((g) => {
+            const gr = document.createElement('div');
+            gr.className = 'gruppe';
+            const pi = [];
+            for (let i = 0; i < rader[r][g]; i++) pi.push(i);
+            (D.aktiv.speil ? pi.reverse() : pi).forEach((i) =>
+              gr.appendChild(lagPlass(r, g, i)),
+            );
+            radEl.appendChild(gr);
+          });
+          pulter.appendChild(radEl);
+        });
+        if (D.aktiv.speil) {
+          kart.appendChild(pulter);
+          kart.appendChild(tavle);
+        } else {
+          kart.appendChild(tavle);
+          kart.appendChild(pulter);
+        }
+
+        tilpassBredde();
+        visMelding(meldinger);
+        tegnPanel();
+        lagre();
+      }
+
+      function lagPlass(r, g, i) {
+        const k = nokkel(r, g, i);
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'plass';
+        el.dataset.k = k;
+        if (erSperret(k)) {
+          el.classList.add('sperret');
+          el.setAttribute('aria-label', 'Sperret pult');
+          el.title = 'Sperret pult';
+        } else {
+          const e = elevMed(D.aktiv.plasser[k]);
+          if (e) {
+            const n = document.createElement('span');
+            n.className =
+              'navn' +
+              (e.navn.length > 14
+                ? ' svaert-lang'
+                : e.navn.length > 10
+                  ? ' lang'
+                  : '');
+            n.textContent = e.navn;
+            el.appendChild(n);
+            el.draggable = true;
+          } else {
+            el.classList.add('tom');
+            el.textContent = '';
+          }
+          if (erLaast(k)) {
+            el.classList.add('laast');
+            const naal = document.createElement('span');
+            naal.className = 'naal';
+            naal.textContent = 'låst';
+            el.appendChild(naal);
+          }
+        }
+        el.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          apnePanel(k, el);
+        });
+        el.addEventListener('dragstart', (ev) => {
+          ev.dataTransfer.setData('text/plain', k);
+          ev.dataTransfer.effectAllowed = 'move';
+          el.classList.add('dratt');
+        });
+        el.addEventListener('dragend', () => el.classList.remove('dratt'));
+        el.addEventListener('dragover', (ev) => {
+          ev.preventDefault();
+          el.classList.add('maal');
+        });
+        el.addEventListener('dragleave', () => el.classList.remove('maal'));
+        el.addEventListener('drop', (ev) => {
+          ev.preventDefault();
+          el.classList.remove('maal');
+          const fra = ev.dataTransfer.getData('text/plain');
+          if (!fra || fra === k || erSperret(k)) return;
+          lagreAngre();
+          const a = D.aktiv.plasser[fra] || null,
+            b = D.aktiv.plasser[k] || null;
+          if (b) D.aktiv.plasser[fra] = b;
+          else delete D.aktiv.plasser[fra];
+          if (a) D.aktiv.plasser[k] = a;
+          else delete D.aktiv.plasser[k];
+          tegn();
+        });
+        return el;
+      }
+
+      function visMelding(ekstra) {
+        const boks = $('melding');
+        const linjer = (ekstra || []).slice();
+        const plassert = new Set(Object.values(D.aktiv.plasser));
+        const ute = elever().filter((e) => !e.borte && !plassert.has(e.id));
+        const borte = elever().filter((e) => e.borte);
+        if (ute.length && plassert.size)
+          linjer.unshift('Uten plass: ' + ute.map((e) => e.navn).join(', '));
+        if (borte.length)
+          linjer.push('Borte i dag: ' + borte.map((e) => e.navn).join(', '));
+        if (!linjer.length) {
+          boks.hidden = true;
+          return;
+        }
+        boks.hidden = false;
+        boks.innerHTML =
+          '<strong>Merk</strong><ul>' +
+          linjer.map((l) => '<li>' + esc(l) + '</li>').join('') +
+          '</ul>';
+      }
+      const esc = (s) =>
+        String(s).replace(
+          /[&<>"]/g,
+          (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c],
+        );
+
+      /* ============ pultpanel ============ */
+      let apent = null;
+      const lukkPanel = () => {
+        if (apent) {
+          apent.remove();
+          apent = null;
+        }
+      };
+      document.addEventListener('click', lukkPanel);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') lukkPanel();
+        if (
+          (e.ctrlKey || e.metaKey) &&
+          e.key === 'z' &&
+          !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)
+        ) {
+          e.preventDefault();
+          angre();
+        }
+      });
+      function apnePanel(k, el) {
+        lukkPanel();
+        const boks = document.createElement('div');
+        boks.className = 'popup';
+        boks.addEventListener('click', (e) => e.stopPropagation());
+        const h = document.createElement('h3');
+        h.textContent = Number(k.split('-')[0]) + 1 + '. rad';
+        boks.appendChild(h);
+
+        const sperret = erSperret(k),
+          laast = erLaast(k);
+        const brukt = new Set(
+          Object.entries(D.aktiv.plasser)
+            .filter(([nk]) => nk !== k)
+            .map(([, v]) => v),
+        );
+        const velg = document.createElement('select');
+        velg.innerHTML =
+          '<option value="">— ledig —</option>' +
+          elever()
+            .map(
+              (e) =>
+                '<option value="' +
+                e.id +
+                '"' +
+                (e.id === D.aktiv.plasser[k] ? ' selected' : '') +
+                '>' +
+                esc(e.navn) +
+                (e.borte
+                  ? ' (borte)'
+                  : brukt.has(e.id)
+                    ? ' (sitter alt)'
+                    : '') +
+                '</option>',
+            )
+            .join('');
+        velg.disabled = sperret;
+        velg.addEventListener('change', () => {
+          lagreAngre();
+          const id = velg.value || null;
+          if (id)
+            Object.keys(D.aktiv.plasser).forEach((nk) => {
+              if (D.aktiv.plasser[nk] === id) delete D.aktiv.plasser[nk];
+            });
+          if (id) D.aktiv.plasser[k] = id;
+          else delete D.aktiv.plasser[k];
+          tegn();
+          lukkPanel();
+        });
+        boks.appendChild(velg);
+
+        const rad = document.createElement('div');
+        rad.className = 'knapprad';
+        const bLaas = document.createElement('button');
+        bLaas.className = 'knapp' + (laast ? ' aktiv' : '');
+        bLaas.textContent = laast ? 'Lås opp' : 'Lås plassen';
+        bLaas.disabled = sperret;
+        bLaas.addEventListener('click', () => {
+          D.aktiv.laaste = laast
+            ? D.aktiv.laaste.filter((x) => x !== k)
+            : D.aktiv.laaste.concat(k);
+          tegn();
+          lukkPanel();
+        });
+        const bSperr = document.createElement('button');
+        bSperr.className = 'knapp' + (sperret ? ' aktiv' : '');
+        bSperr.textContent = sperret ? 'Åpne pulten' : 'Sperr pulten';
+        bSperr.addEventListener('click', () => {
+          const R = rommet();
+          if (sperret) R.sperret = R.sperret.filter((x) => x !== k);
+          else {
+            R.sperret = R.sperret.concat(k);
+            delete D.aktiv.plasser[k];
+            D.aktiv.laaste = D.aktiv.laaste.filter((x) => x !== k);
+          }
+          tegn();
+          lukkPanel();
+        });
+        rad.appendChild(bLaas);
+        rad.appendChild(bSperr);
+        boks.appendChild(rad);
+
+        document.body.appendChild(boks);
+        const r = el.getBoundingClientRect(),
+          b = boks.getBoundingClientRect();
+        let v = r.left + window.scrollX + r.width / 2 - b.width / 2;
+        v = Math.max(8, Math.min(v, window.innerWidth - b.width - 8));
+        let t = r.bottom + window.scrollY + 6;
+        if (r.bottom + b.height + 20 > window.innerHeight)
+          t = r.top + window.scrollY - b.height - 6;
+        boks.style.left = v + 'px';
+        boks.style.top = t + 'px';
+        apent = boks;
+        velg.focus();
+      }
+
+      /* ============ sidepanel ============ */
+      let apenElev = null;
+
+      function tegnPanel() {
+        // velgere
+        fyll($('velgKlasse'), Object.keys(D.klasser).sort(), D.aktiv.klasse);
+        fyll($('velgRom'), Object.keys(D.rom).sort(), D.aktiv.rom);
+        const kartNavn = Object.keys(D.kart)
+          .filter((n) => D.kart[n].klasse === D.aktiv.klasse)
+          .sort();
+        const vk = $('velgKart');
+        vk.innerHTML = kartNavn.length
+          ? '<option value="">— velg lagret kart —</option>' +
+            kartNavn.map((n) => '<option>' + esc(n) + '</option>').join('')
+          : '<option value="">(ingen lagrede kart)</option>';
+
+        $('spre').checked = !!D.aktiv.spre;
+        $('nyeNaboer').checked = !!D.aktiv.nyeNaboer;
+        $('speil').checked = !!D.aktiv.speil;
+
+        fyll($('velgBruker'), profiler, bruker);
+
+        const h = klasse().historikk.length;
+        $('minnestatus').textContent = h
+          ? h + ' tidligere kart i minnet for ' + D.aktiv.klasse
+          : 'Ingen tidligere kart i minnet.';
+
+        const antall = seter().length,
+          sperret = rommet().sperret.length;
+        const tilgj = antall - sperret,
+          n = elever().filter((e) => !e.borte).length;
+        $('plasstatus').textContent =
+          rommet().rader.length +
+          ' rader · ' +
+          antall +
+          ' pulter' +
+          (sperret ? ' (' + sperret + ' sperret)' : '') +
+          ' · ' +
+          n +
+          ' elever til stede';
+        $('plasstatus').className = 'status' + (tilgj < n ? ' varsel' : '');
+        if (document.activeElement !== $('radliste'))
+          $('radliste').value = rommet()
+            .rader.map((r) => r.join('+'))
+            .join('\n');
+        if (document.activeElement !== $('romnavn'))
+          $('romnavn').value = D.aktiv.rom;
+
+        $('elevtelling').textContent = 'Elever (' + elever().length + ')';
+        tegnElevliste();
+      }
+      function fyll(sel, navn, valgt) {
+        sel.innerHTML = navn
+          .map(
+            (n) =>
+              '<option' +
+              (n === valgt ? ' selected' : '') +
+              '>' +
+              esc(n) +
+              '</option>',
+          )
+          .join('');
+      }
+
+      function tegnElevliste() {
+        const boks = $('elevliste');
+        boks.innerHTML = '';
+        const tomt = $('tomliste');
+        if (tomt) tomt.hidden = elever().length > 0;
+        elever().forEach((e) => {
+          const rad = document.createElement('div');
+          rad.className = 'elevrad' + (e.borte ? ' borte' : '');
+
+          const hake = document.createElement('input');
+          hake.type = 'checkbox';
+          hake.checked = !e.borte;
+          hake.title = 'Til stede i dag';
+          hake.style.accentColor = 'var(--tavle)';
+          hake.addEventListener('change', () => {
+            e.borte = !hake.checked;
+            if (e.borte)
+              Object.keys(D.aktiv.plasser).forEach((k) => {
+                if (D.aktiv.plasser[k] === e.id) delete D.aktiv.plasser[k];
+              });
+            tegn();
+          });
+
+          const navn = document.createElement('span');
+          navn.className = 'elevnavn';
+          navn.textContent = e.navn;
+          navn.title = 'Klikk for å endre navn';
+          navn.addEventListener('click', () => {
+            const nytt = prompt('Nytt navn', e.navn);
+            if (nytt && nytt.trim()) {
+              e.navn = nytt.trim();
+              tegn();
+            }
+          });
+
+          rad.appendChild(hake);
+          rad.appendChild(navn);
+          if (e.gruppe) {
+            const m = document.createElement('span');
+            m.className = 'merkelapp';
+            m.textContent = e.gruppe;
+            rad.appendChild(m);
+          }
+          if (e.kjonn) {
+            const m = document.createElement('span');
+            m.className = 'merkelapp';
+            m.textContent = e.kjonn.toUpperCase();
+            rad.appendChild(m);
+          }
+          const antRegler =
+            (e.sone !== 'fri' ? 1 : 0) + e.sammen.length + e.unna.length;
+          if (antRegler) {
+            const m = document.createElement('span');
+            m.className = 'merkelapp regel';
+            m.textContent = antRegler + ' regel' + (antRegler > 1 ? 'er' : '');
+            rad.appendChild(m);
+          }
+
+          const knapp = document.createElement('button');
+          knapp.className = 'knapp liten';
+          knapp.textContent = '⚙';
+          knapp.title = 'Regler for eleven';
+          knapp.addEventListener('click', () => {
+            apenElev = apenElev === e.id ? null : e.id;
+            tegnElevliste();
+          });
+          rad.appendChild(knapp);
+
+          const slett = document.createElement('button');
+          slett.className = 'knapp liten';
+          slett.textContent = '×';
+          slett.title = 'Fjern eleven';
+          slett.addEventListener('click', () => {
+            if (!confirm('Fjerne ' + e.navn + ' fra klassen?')) return;
+            const k = klasse();
+            k.elever = k.elever.filter((x) => x.id !== e.id);
+            k.elever.forEach((x) => {
+              x.sammen = x.sammen.filter((i) => i !== e.id);
+              x.unna = x.unna.filter((i) => i !== e.id);
+            });
+            Object.keys(D.aktiv.plasser).forEach((nk) => {
+              if (D.aktiv.plasser[nk] === e.id) delete D.aktiv.plasser[nk];
+            });
+            tegn();
+          });
+          rad.appendChild(slett);
+          boks.appendChild(rad);
+
+          if (apenElev === e.id) boks.appendChild(regelboks(e));
+        });
+      }
+
+      function regelboks(e) {
+        const b = document.createElement('div');
+        b.className = 'regelboks';
+
+        b.appendChild(overskrift('Kjønn'));
+        b.appendChild(
+          segment(
+            [
+              ['–', null],
+              ['Gutt', 'g'],
+              ['Jente', 'j'],
+            ],
+            e.kjonn,
+            (v) => {
+              e.kjonn = v;
+              tegn();
+            },
+          ),
+        );
+
+        b.appendChild(overskrift('Hvor i rommet'));
+        b.appendChild(
+          segment(
+            [
+              ['Fritt', 'fri'],
+              ['Foran', 'foran'],
+              ['Bakerst', 'bak'],
+            ],
+            e.sone,
+            (v) => {
+              e.sone = v;
+              tegn();
+            },
+          ),
+        );
+        const gs = sonegrenser();
+        b.appendChild(
+          hint(
+            'Foran = rad 1–' +
+              (gs.foranMaks + 1) +
+              ', bakerst = rad ' +
+              (gs.bakMin + 1) +
+              '–' +
+              rommet().rader.length +
+              ' i dette rommet.',
+          ),
+        );
+
+        b.appendChild(overskrift('Skal sitte ved siden av'));
+        b.appendChild(relasjon(e, 'sammen'));
+        b.appendChild(overskrift('Skal ikke sitte ved siden av'));
+        b.appendChild(relasjon(e, 'unna'));
+        b.appendChild(
+          hint(
+            'Naboer er pulter i samme gruppe. Over en midtgang teller ikke som ved siden av.',
+          ),
+        );
+        return b;
+      }
+      function overskrift(t) {
+        const h = document.createElement('h4');
+        h.textContent = t;
+        return h;
+      }
+      function hint(t) {
+        const p = document.createElement('p');
+        p.className = 'hjelp';
+        p.textContent = t;
+        return p;
+      }
+      function segment(valg, aktiv, cb) {
+        const d = document.createElement('div');
+        d.className = 'segment';
+        valg.forEach(([tekst, verdi]) => {
+          const k = document.createElement('button');
+          k.className =
+            'knapp' +
+            (aktiv === verdi || (verdi === null && !aktiv) ? ' paa' : '');
+          k.textContent = tekst;
+          k.addEventListener('click', () => cb(verdi));
+          d.appendChild(k);
+        });
+        return d;
+      }
+      function relasjon(e, felt) {
+        const d = document.createElement('div');
+        const brikker = document.createElement('div');
+        brikker.className = 'brikker';
+        e[felt].forEach((id) => {
+          const a = elevMed(id);
+          if (!a) return;
+          const br = document.createElement('span');
+          br.className = 'brikke';
+          br.appendChild(document.createTextNode(a.navn));
+          const x = document.createElement('button');
+          x.textContent = '×';
+          x.title = 'Fjern';
+          x.addEventListener('click', () => {
+            e[felt] = e[felt].filter((i) => i !== id);
+            a[felt] = a[felt].filter((i) => i !== e.id);
+            tegn();
+          });
+          br.appendChild(x);
+          brikker.appendChild(br);
+        });
+        if (e[felt].length) d.appendChild(brikker);
+
+        const sel = document.createElement('select');
+        const andre = elever().filter(
+          (x) => x.id !== e.id && !e[felt].includes(x.id),
+        );
+        sel.innerHTML =
+          '<option value="">+ legg til …</option>' +
+          andre
+            .map(
+              (x) =>
+                '<option value="' + x.id + '">' + esc(x.navn) + '</option>',
+            )
+            .join('');
+        sel.style.marginTop = '5px';
+        sel.addEventListener('change', () => {
+          const a = elevMed(sel.value);
+          if (!a) return;
+          e[felt] = e[felt].concat(a.id);
+          a[felt] = a[felt].concat(e.id);
+          const motsatt = felt === 'sammen' ? 'unna' : 'sammen';
+          e[motsatt] = e[motsatt].filter((i) => i !== a.id);
+          a[motsatt] = a[motsatt].filter((i) => i !== e.id);
+          tegn();
+        });
+        d.appendChild(sel);
+        return d;
+      }
+
+      /* ============ faner ============ */
+      document.querySelectorAll('.fane').forEach((f) =>
+        f.addEventListener('click', () => {
+          document
+            .querySelectorAll('.fane')
+            .forEach((x) => x.setAttribute('aria-selected', x === f));
+          document
+            .querySelectorAll('.fanepanel')
+            .forEach((p) => (p.hidden = p.dataset.fane !== f.dataset.fane));
+        }),
+      );
+
+      /* ============ hendelser: trekning ============ */
+      $('trekk').addEventListener('click', trekkPlassering);
+      $('angre').addEventListener('click', angre);
+      $('tomKart').addEventListener('click', () => {
+        lagreAngre();
+        D.aktiv.plasser = {};
+        D.aktiv.laaste = [];
+        tegn();
+      });
+      $('spre').addEventListener('change', (e) => {
+        D.aktiv.spre = e.target.checked;
+        lagre();
+      });
+      $('nyeNaboer').addEventListener('change', (e) => {
+        D.aktiv.nyeNaboer = e.target.checked;
+        lagre();
+      });
+      $('speil').addEventListener('change', (e) => {
+        D.aktiv.speil = e.target.checked;
+        tegn();
+      });
+      $('skrivut').addEventListener('click', () => window.print());
+      $('huskNaboer').addEventListener('click', huskNaboer);
+      $('tomMinne').addEventListener('click', () => {
+        klasse().historikk = [];
+        tegn();
+      });
+
+      $('lagreKart').addEventListener('click', () => {
+        const forslag =
+          D.aktiv.klasse +
+          ' · ' +
+          D.aktiv.rom +
+          ' · ' +
+          new Date().toLocaleDateString('no-NO');
+        const navn = prompt('Navn på kartet', forslag);
+        if (!navn) return;
+        D.kart[navn.trim()] = {
+          klasse: D.aktiv.klasse,
+          rom: D.aktiv.rom,
+          plasser: kopi(D.aktiv.plasser),
+          laaste: D.aktiv.laaste.slice(),
+          endret: new Date().toISOString(),
+        };
+        huskNaboer();
+        $('kartstatus').textContent =
+          'Lagret som «' + navn.trim() + '». Naboene er husket.';
+        tegn();
+      });
+      $('velgKart').addEventListener('change', (e) => {
+        const k = D.kart[e.target.value];
+        if (!k) return;
+        lagreAngre();
+        if (D.rom[k.rom]) D.aktiv.rom = k.rom;
+        D.aktiv.plasser = kopi(k.plasser);
+        D.aktiv.laaste = (k.laaste || []).slice();
+        $('kartstatus').textContent = 'Hentet «' + e.target.value + '».';
+        tegn();
+      });
+      $('slettKart').addEventListener('click', () => {
+        const n = $('velgKart').value;
+        if (!n || !D.kart[n]) return;
+        if (!confirm('Slette kartet «' + n + '»?')) return;
+        delete D.kart[n];
+        tegn();
+      });
+
+      /* ============ hendelser: klasse ============ */
+      $('velgKlasse').addEventListener('change', (e) => {
+        apneKlasse(e.target.value);
+        tegn();
+      });
+      $('alleKlasser').addEventListener('click', visOversikt);
+
+      /* ============ klasseoversikt ============ */
+      function visOversikt() {
+        lukkPanel();
+        document.querySelector('.app').hidden = true;
+        $('oversikt').hidden = false;
+        $('klassesok').value = '';
+        tegnOversikt();
+        lagre();
+        if (iSky()) oppdaterFraSky();
+      }
+      function visKart() {
+        $('oversikt').hidden = true;
+        document.querySelector('.app').hidden = false;
+        tegn();
+      }
+      function naar(iso) {
+        if (!iso) return '';
+        const d = new Date(iso),
+          i = new Date();
+        const dager = Math.round(
+          (new Date(i.toDateString()) - new Date(d.toDateString())) / 864e5,
+        );
+        if (dager === 0) return 'i dag';
+        if (dager === 1) return 'i går';
+        return d.toLocaleDateString('no-NO', {
+          day: 'numeric',
+          month: 'short',
+          year: dager > 300 ? 'numeric' : undefined,
+        });
+      }
+      function miniKart(romnavn, plasser, ids) {
+        const m = document.createElement('div');
+        m.className = 'mini';
+        const R = D.rom[romnavn];
+        if (!R) return m;
+        const t = document.createElement('div');
+        t.className = 'mini-tavle';
+        m.appendChild(t);
+        R.rader.forEach((rad, r) => {
+          const radEl = document.createElement('div');
+          radEl.className = 'mini-rad';
+          rad.forEach((ant, g) => {
+            const gr = document.createElement('div');
+            gr.className = 'mini-gruppe';
+            for (let i = 0; i < ant; i++) {
+              const k = nokkel(r, g, i);
+              const p = document.createElement('span');
+              p.className =
+                'mini-plass' +
+                (R.sperret.includes(k)
+                  ? ' sperret'
+                  : ids.has(plasser[k])
+                    ? ' full'
+                    : '');
+              gr.appendChild(p);
+            }
+            radEl.appendChild(gr);
+          });
+          m.appendChild(radEl);
+        });
+        return m;
+      }
+      function tegnOversikt() {
+        const alle = Object.keys(D.klasser);
+        const sok = $('klassesok').value.trim().toLowerCase();
+        $('klassesok').hidden = alle.length < 6;
+        $('oversiktinfo').textContent =
+          (bruker ? bruker + ' · ' : '') +
+          alle.length +
+          (alle.length === 1 ? ' klasse' : ' klasser');
+        const navn = alle
+          .filter((n) => n.toLowerCase().includes(sok))
+          .sort(
+            (a, b) =>
+              (D.klasser[b].brukt || '').localeCompare(
+                D.klasser[a].brukt || '',
+              ) || a.localeCompare(b, 'no'),
+          );
+
+        const grid = $('klassegrid');
+        grid.innerHTML = '';
+        navn.forEach((n) => {
+          const k = D.klasser[n];
+          const s = k.sist || {};
+          const ids = new Set(k.elever.map((e) => e.id));
+          const romnavn = D.rom[s.rom] ? s.rom : D.aktiv.rom;
+          const antKart = Object.values(D.kart).filter(
+            (x) => x.klasse === n,
+          ).length;
+
+          const kort = document.createElement('div');
+          kort.className =
+            'klassekort' + (n === D.aktiv.klasse ? ' aktiv' : '');
+          const apne = document.createElement('button');
+          apne.type = 'button';
+          apne.className = 'kort-apne';
+          const tittel = document.createElement('span');
+          tittel.className = 'kort-navn';
+          tittel.textContent = n;
+          const info = document.createElement('span');
+          info.className = 'kort-info';
+          const brukt = naar(k.brukt);
+          const delt = (iSky() && sky.medlemmer[k._id]) || [];
+          info.innerHTML =
+            esc(k.elever.length + ' elever · rom ' + romnavn) +
+            '<br>' +
+            esc(
+              antKart +
+                (antKart === 1 ? ' lagret kart' : ' lagrede kart') +
+                (brukt ? ' · åpnet ' + brukt : ''),
+            ) +
+            (delt.length
+              ? '<br>' + esc('Delt med ' + delt.map(kortEpost).join(', '))
+              : '');
+          apne.appendChild(tittel);
+          apne.appendChild(miniKart(romnavn, s.plasser || {}, ids));
+          apne.appendChild(info);
+          apne.addEventListener('click', () => {
+            apneKlasse(n);
+            visKart();
+          });
+
+          const handl = document.createElement('div');
+          handl.className = 'kort-handlinger';
+          const bNavn = document.createElement('button');
+          bNavn.type = 'button';
+          bNavn.textContent = 'Gi nytt navn';
+          bNavn.addEventListener('click', () => omdoepKlasse(n));
+          const bSlett = document.createElement('button');
+          bSlett.type = 'button';
+          bSlett.className = 'fare';
+          bSlett.textContent = 'Slett';
+          bSlett.addEventListener('click', () => slettKlasse(n));
+          handl.appendChild(bNavn);
+          if (iSky()) {
+            const bDel = document.createElement('button');
+            bDel.type = 'button';
+            bDel.textContent = 'Del';
+            bDel.addEventListener('click', () => delKlasse(n));
+            handl.appendChild(bDel);
+            if (delt.length) bSlett.textContent = 'Forlat';
+          }
+          handl.appendChild(bSlett);
+
+          kort.appendChild(apne);
+          kort.appendChild(handl);
+          grid.appendChild(kort);
+        });
+
+        const ny = document.createElement('button');
+        ny.type = 'button';
+        ny.className = 'klassekort ny';
+        ny.textContent = '+ Ny klasse';
+        ny.addEventListener('click', lagNyKlasse);
+        grid.appendChild(ny);
+      }
+      $('klassesok').addEventListener('input', tegnOversikt);
+
+      function lagNyKlasse() {
+        const n = (prompt('Navn på klassen, f.eks. 3ME') || '').trim();
+        if (!n) return;
+        if (D.klasser[n]) {
+          alert('Klassen ' + n + ' finnes fra før.');
+          return;
+        }
+        // den tomme startklassen trengs ikke når du lager din første egne
+        const navn = Object.keys(D.klasser);
+        if (
+          navn.length === 1 &&
+          navn[0] === 'Ny klasse' &&
+          !D.klasser[navn[0]].elever.length
+        )
+          delete D.klasser[navn[0]];
+        D.klasser[n] = { elever: [], historikk: [] };
+        apneKlasse(n);
+        visKart();
+        document.querySelector('.fane[data-fane=elever]').click();
+        $('importmodus').click();
+      }
+      function omdoepKlasse(n) {
+        const ny = (prompt('Nytt navn på klassen', n) || '').trim();
+        if (!ny || ny === n) return;
+        if (D.klasser[ny]) {
+          alert('Klassen ' + ny + ' finnes fra før.');
+          return;
+        }
+        D.klasser[ny] = D.klasser[n];
+        delete D.klasser[n];
+        Object.values(D.kart).forEach((x) => {
+          if (x.klasse === n) x.klasse = ny;
+        });
+        if (D.aktiv.klasse === n) D.aktiv.klasse = ny;
+        tegnOversikt();
+        lagre();
+      }
+      function slettKlasse(n) {
+        const delt = (iSky() && sky.medlemmer[D.klasser[n]._id]) || [];
+        const sporsmal = delt.length
+          ? 'Forlate ' +
+            n +
+            '? Klassen blir værende hos ' +
+            delt.map(kortEpost).join(', ') +
+            ', men du mister tilgangen.'
+          : 'Slette klassen ' + n + ' med elever, regler og kart?';
+        if (!confirm(sporsmal)) return;
+        delete D.klasser[n];
+        Object.keys(D.kart).forEach((k) => {
+          if (D.kart[k].klasse === n) delete D.kart[k];
+        });
+        if (D.aktiv.klasse === n) {
+          normaliser(); // lager en tom klasse hvis dette var den siste
+          apneKlasse(D.aktiv.klasse, false);
+        }
+        tegnOversikt();
+        lagre();
+      }
+      $('leggTil').addEventListener('click', () => {
+        const felt = $('nyttNavn'),
+          v = felt.value.trim();
+        if (!v) return;
+        klasse().elever.push(nyElev(v));
+        felt.value = '';
+        felt.focus();
+        tegn();
+      });
+      $('nyttNavn').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') $('leggTil').click();
+      });
+
+      /* ---- import av klasseliste ---- */
+      const SOPPEL = [
+        /^#/,
+        /^nr\.?$/i,
+        /^klasse$/i,
+        /^elev(er)?$/i,
+        /^navn$/i,
+        /^trinn$/i,
+        /^gruppe$/i,
+        /^karakteransvarlig/i,
+        /^fagl(æ|ae)rer/i,
+        /^oslo$/i,
+        /^bilde f/i,
+        /^ikke$/i,
+        /^\d{1,2}\.\d{1,2}\.\d{4}/,
+        /^\d+\s*\/\s*\d+$/,
+        /videreg(å|aa)ende skole/i,
+        /\d{4}\s*\/\s*\d{4}/,
+        /^[A-ZÆØÅ]{1,3}\/[A-ZÆØÅ]{2,6}\d{3,5}$/,
+      ];
+      const erSoppel = (l) => SOPPEL.some((r) => r.test(l));
+      const erKlassekode = (s) =>
+        /^[0-9A-ZÆØÅ]{2,6}$/.test(s) && /\d/.test(s) && /[A-ZÆØÅ]/.test(s);
+
+      /* Fotolisten: «Fornavn Etternavn (3ME)», ofte brutt over flere linjer */
+      function fotorader(linjer) {
+        const slutt = /\(([0-9A-ZÆØÅ]{2,8})\)$/;
+        if (linjer.filter((l) => slutt.test(l)).length < 3) return null;
+        const rader = [];
+        let buffer = [];
+        linjer.forEach((l) => {
+          buffer.push(l);
+          if (slutt.test(l)) {
+            const hel = buffer.join(' ').replace(/\s+/g, ' ').trim();
+            rader.push([hel.match(slutt)[1], hel.replace(slutt, '').trim()]);
+            buffer = [];
+          }
+        });
+        return rader.length >= 3 ? rader : null;
+      }
+
+      function tilRader(linjer) {
+        const foto = fotorader(linjer);
+        if (foto) return foto;
+
+        const medTab = linjer.filter((l) => l.includes('\t'));
+        if (medTab.length >= Math.max(1, linjer.length * 0.5))
+          return medTab.map((l) => l.split('\t').map((s) => s.trim()));
+
+        const nummerert = /^(\d{1,3})[.)]?\s+(.*)$/;
+        const num = linjer.filter((l) => nummerert.test(l));
+        if (num.length >= Math.max(1, linjer.length * 0.4))
+          return num.map((l) => {
+            const rest = l.match(nummerert)[2];
+            const deler = rest
+              .split(/\s{2,}/)
+              .map((s) => s.trim())
+              .filter(Boolean);
+            return deler.length > 1 ? deler : [rest];
+          });
+
+        const rentTall = (l) => /^\d{1,3}$/.test(l);
+        if (linjer.filter(rentTall).length >= 2) {
+          const rader = [];
+          let ny = null;
+          linjer.forEach((l) => {
+            if (rentTall(l)) {
+              if (ny && ny.length) rader.push(ny);
+              ny = [];
+            } else if (ny) ny.push(l);
+          });
+          if (ny && ny.length) rader.push(ny);
+          if (rader.length) return rader;
+        }
+
+        const kolonner = linjer.map((l) =>
+          l
+            .split(/\s{2,}/)
+            .map((s) => s.trim())
+            .filter(Boolean),
+        );
+        if (
+          kolonner.filter((r) => r.length > 1).length >=
+          Math.max(1, linjer.length * 0.5)
+        )
+          return kolonner;
+
+        return linjer.map((l) => [l]);
+      }
+
+      /* Kolonner skilt med ett mellomrom: «01 3ME Kari Nordmann Ola Lærer».
+   Lærernavnet er likt på alle rader og kan derfor skrelles av bakfra. */
+      function fellesSlutt(celler) {
+        let beste = '';
+        for (let k = 1; k <= 6; k++) {
+          const tell = {};
+          celler.forEach((c) => {
+            const ord = c.split(' ');
+            if (ord.length <= k + 1) return;
+            const s = ord.slice(-k).join(' ');
+            tell[s] = (tell[s] || 0) + 1;
+          });
+          let topp = '',
+            ant = 0;
+          Object.keys(tell).forEach((s) => {
+            if (tell[s] > ant) {
+              ant = tell[s];
+              topp = s;
+            }
+          });
+          if (ant >= Math.max(3, celler.length * 0.6) && !/\d/.test(topp))
+            beste = topp;
+          else break;
+        }
+        return beste;
+      }
+      function skillEnkeltceller(rader) {
+        const enkle = rader.filter((r) => r.length === 1).map((r) => r[0]);
+        if (enkle.length < rader.length * 0.6) return rader;
+        const slutt = fellesSlutt(enkle);
+        return rader.map((r) => {
+          if (r.length !== 1) return r;
+          let s = r[0];
+          if (slutt && s.length > slutt.length + 1 && s.endsWith(' ' + slutt))
+            s = s.slice(0, -(slutt.length + 1)).trim();
+          const m = s.match(/^(\S+)\s+(.+)$/);
+          if (m && erKlassekode(m[1])) return [m[1], m[2]];
+          return [s];
+        });
+      }
+
+      function velgKolonne(rader, navnekolonne) {
+        const bredde = Math.max.apply(
+          null,
+          rader.map((r) => r.length),
+        );
+        let beste = 0,
+          bestePoeng = -1;
+        for (let c = 0; c < bredde; c++) {
+          if (c === navnekolonne) continue;
+          const v = rader.map((r) => r[c]).filter(Boolean);
+          if (v.length < rader.length * 0.6) continue;
+          const unike = new Set(v.map((x) => x.toLowerCase())).size / v.length;
+          let poeng;
+          if (navnekolonne === -1)
+            poeng =
+              (v.filter((x) => /\s/.test(x) && !/\d/.test(x) && x.length > 4)
+                .length /
+                v.length) *
+              unike;
+          else poeng = v.filter(erKlassekode).length / v.length;
+          if (poeng > bestePoeng) {
+            bestePoeng = poeng;
+            beste = c;
+          }
+        }
+        return bestePoeng > 0.4 ? beste : -1;
+      }
+
+      function lesKlasseliste(tekst) {
+        const alle = tekst
+          .replace(/\r/g, '')
+          .split('\n')
+          .map((l) => l.trim());
+        const linjer = alle.filter((l) => l && !erSoppel(l));
+        if (!linjer.length) return { elever: [], forslag: '' };
+
+        const rader = skillEnkeltceller(
+          tilRader(linjer)
+            .map((r) => r.filter((c) => c && !erSoppel(c)))
+            .filter((r) => r.length),
+        );
+        const nk = Math.max(0, velgKolonne(rader, -1));
+        const gk = velgKolonne(rader, nk);
+
+        const sett = new Set();
+        const elever = [];
+        rader.forEach((r) => {
+          const navn = (r[nk] || r[0] || '').replace(/\s+/g, ' ').trim();
+          if (
+            !navn ||
+            navn.length < 2 ||
+            /^\d+$/.test(navn) ||
+            erKlassekode(navn)
+          )
+            return;
+          if (sett.has(navn.toLowerCase())) return;
+          sett.add(navn.toLowerCase());
+          elever.push({ navn, gruppe: gk >= 0 ? r[gk] || null : null });
+        });
+
+        let forslag = '';
+        for (const l of alle) {
+          if (l && /^[A-ZÆØÅ]{1,3}\/[A-ZÆØÅ]{2,6}\d{3,5}$/.test(l)) {
+            forslag = l;
+            break;
+          }
+        }
+        if (!forslag) {
+          const forste = alle.find((l) => l && !/^\d/.test(l));
+          if (
+            forste &&
+            forste.length < 40 &&
+            !elever.some((e) => e.navn === forste)
+          )
+            forslag = forste;
+        }
+        return { elever, forslag };
+      }
+
+      /* Fullt navn brukes bare her, i minnet, og lagres aldri */
+      function oppdelNavn(fullt) {
+        let n = fullt.replace(/\s+/g, ' ').trim();
+        let fornavn, etter;
+        const p = n
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        if (p.length > 1) {
+          // «Etternavn, Fornavn Mellomnavn»
+          fornavn = p[1].split(' ')[0];
+          etter = p[0].split(' ').pop();
+        } else {
+          // «Fornavn Mellomnavn Etternavn»
+          const ord = n.split(' ');
+          fornavn = ord[0];
+          etter = ord.length > 1 ? ord[ord.length - 1] : '';
+        }
+        etter = etter.replace(/^[^A-Za-zÆØÅæøåÀ-ÿ]+/, '');
+        if (etter) etter = etter[0].toUpperCase() + etter.slice(1);
+        return { fornavn, etter };
+      }
+      const lav = (s) => s.toLowerCase();
+
+      /* Fornavn, og bare så mange bokstaver av etternavnet som trengs
+         for å skille elever med samme fornavn: «Emma H», «Emma Ha» … */
+      function forkortNavn(navneliste) {
+        const d = navneliste.map(oppdelNavn);
+        const niva = d.map(() => 0);
+        // helt like navn skilles aldri av etternavnet – stopp på initialen
+        const hel = (x) => lav(x.fornavn + ' ' + x.etter);
+        const likt = {};
+        d.forEach((x) => (likt[hel(x)] = (likt[hel(x)] || 0) + 1));
+        const maks = d.map((x) =>
+          likt[hel(x)] > 1 ? Math.min(1, x.etter.length) : x.etter.length,
+        );
+        const kort = (i) =>
+          niva[i]
+            ? d[i].fornavn + ' ' + d[i].etter.slice(0, niva[i])
+            : d[i].fornavn;
+        for (let runde = 0; runde < 40; runde++) {
+          const grupper = {};
+          d.forEach((_, i) => (grupper[lav(kort(i))] ||= []).push(i));
+          let endret = false;
+          Object.values(grupper).forEach((g) => {
+            if (g.length < 2) return;
+            g.forEach((i) => {
+              if (niva[i] < maks[i]) {
+                niva[i]++;
+                endret = true;
+              }
+            });
+          });
+          if (!endret) break;
+        }
+        // helt like navn får et nummer
+        const ant = {},
+          nr = {};
+        const ut = d.map((_, i) => kort(i));
+        ut.forEach((k) => (ant[lav(k)] = (ant[lav(k)] || 0) + 1));
+        return ut.map((k) => {
+          if (ant[lav(k)] < 2) return k;
+          nr[lav(k)] = (nr[lav(k)] || 0) + 1;
+          return k + ' ' + nr[lav(k)];
+        });
+      }
+
+      function importliste() {
+        const r = lesKlasseliste($('importtekst').value);
+        const k = forkortNavn(r.elever.map((e) => e.navn));
+        r.elever = r.elever.map((e, i) => ({ navn: k[i], gruppe: e.gruppe }));
+        return r;
+      }
+
+      function visBoks(hvilken) {
+        $('elevlisteboks').hidden = hvilken !== 'liste';
+        $('elevtekstboks').hidden = hvilken !== 'tekst';
+        $('importboks').hidden = hvilken !== 'import';
+      }
+      function tomImport() {
+        $('importtekst').value = '';
+        $('importnavn').value = '';
+        $('importstatus').textContent = '';
+        $('importfasit').textContent = '';
+      }
+      $('importmodus').addEventListener('click', () => {
+        // tom klasse: elevene går rett inn i den, uten valg om ny klasse
+        const tom = elever().length === 0;
+        $('importnavnboks').hidden = tom;
+        $('importNy').hidden = tom;
+        $('importLegg').textContent = tom ? 'Importer' : 'Legg til her';
+        $('elevstatus').textContent = '';
+        tomImport();
+        visBoks('import');
+        $('importtekst').focus();
+      });
+      $('importAvbryt').addEventListener('click', () => {
+        tomImport();
+        visBoks('liste');
+      });
+      function visImport() {
+        const r = importliste();
+        $('importstatus').textContent = r.elever.length
+          ? 'Fant ' + r.elever.length + ' elever.'
+          : $('importtekst').value.trim()
+            ? 'Fant ingen navn i teksten.'
+            : '';
+        $('importstatus').className =
+          'status' + (r.elever.length ? '' : ' varsel');
+        $('importfasit').textContent = r.elever
+          .slice(0, 60)
+          .map((e) => e.navn + (e.gruppe ? ' (' + e.gruppe + ')' : ''))
+          .join(' · ');
+        if (r.forslag && !$('importnavn').value)
+          $('importnavn').value = r.forslag;
+      }
+      $('importtekst').addEventListener('input', visImport);
+      function importer(nyKlasse) {
+        const r = importliste();
+        if (!r.elever.length) {
+          $('importstatus').textContent = 'Ingenting å importere.';
+          return;
+        }
+        if (nyKlasse) {
+          const n = ($('importnavn').value || r.forslag || 'Ny klasse').trim();
+          if (
+            D.klasser[n] &&
+            !confirm('Klassen ' + n + ' finnes fra før. Erstatte elevlisten?')
+          )
+            return;
+          D.klasser[n] = {
+            elever: r.elever.map((e) => nyElev(e.navn, null, e.gruppe)),
+            historikk: [],
+          };
+          apneKlasse(n);
+          $('elevstatus').textContent =
+            'Laget ' + n + ' med ' + r.elever.length + ' elever.';
+        } else {
+          // samme kortnavn regnes som samme elev
+          const finnes = new Set(elever().map((e) => lav(e.navn)));
+          const hoppet = [];
+          let lagt = 0;
+          r.elever.forEach((e) => {
+            if (finnes.has(lav(e.navn))) return hoppet.push(e.navn);
+            finnes.add(lav(e.navn));
+            klasse().elever.push(nyElev(e.navn, null, e.gruppe));
+            lagt++;
+          });
+          $('elevstatus').textContent =
+            'La til ' +
+            lagt +
+            (lagt === 1 ? ' elev.' : ' elever.') +
+            (hoppet.length
+              ? ' Hoppet over ' +
+                hoppet.join(', ') +
+                ' – de finnes alt i klassen. Legg til for hånd hvis det er en annen elev.'
+              : '');
+        }
+        tomImport();
+        visBoks('liste');
+        tegn();
+      }
+      $('importNy').addEventListener('click', () => importer(true));
+      $('importLegg').addEventListener('click', () => importer(false));
+
+      $('tekstmodus').addEventListener('click', () => {
+        $('elevtekst').value = elever()
+          .map((e) => e.navn + (e.kjonn ? ' (' + e.kjonn + ')' : ''))
+          .join('\n');
+        visBoks('tekst');
+        $('elevtekst').focus();
+      });
+      $('avbrytTekst').addEventListener('click', () => visBoks('liste'));
+      $('lagreTekst').addEventListener('click', () => {
+        const gamle = elever();
+        const nye = $('elevtekst')
+          .value.split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .map((l) => {
+            const m = l.match(/\(?\s*([gjGJ])\s*\)\s*$/);
+            let kjonn = null,
+              navn = l;
+            if (m) {
+              kjonn = m[1].toLowerCase();
+              navn = l.slice(0, m.index).trim();
+            }
+            const funnet = gamle.find(
+              (e) => e.navn.toLowerCase() === navn.toLowerCase(),
+            );
+            if (funnet) {
+              funnet.navn = navn;
+              if (kjonn) funnet.kjonn = kjonn;
+              return funnet;
+            }
+            return nyElev(navn, kjonn);
+          });
+        const beholdt = new Set(nye.map((e) => e.id));
+        nye.forEach((e) => {
+          e.sammen = e.sammen.filter((i) => beholdt.has(i));
+          e.unna = e.unna.filter((i) => beholdt.has(i));
+        });
+        klasse().elever = nye;
+        visBoks('liste');
+        tegn();
+      });
+
+      /* ============ hendelser: rom ============ */
+      function lesRader(tekst) {
+        const r = tekst
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .map((l) =>
+            l
+              .split(/[+,\s]+/)
+              .map((n) => parseInt(n, 10))
+              .filter((n) => n > 0 && n < 20),
+          )
+          .filter((x) => x.length);
+        return r.length ? r : [[2, 3, 2]];
+      }
+      $('radliste').addEventListener('input', (e) => {
+        rommet().rader = lesRader(e.target.value);
+        tegn();
+      });
+      $('brukalle').addEventListener('click', () => {
+        const m = lesRader($('allerader').value || '2+3+2')[0];
+        const R = rommet();
+        R.rader = R.rader.map(() => m.slice());
+        tegn();
+      });
+      $('allerader').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') $('brukalle').click();
+      });
+      $('leggRad').addEventListener('click', () => {
+        const R = rommet();
+        R.rader.push((R.rader[R.rader.length - 1] || [2, 3, 2]).slice());
+        tegn();
+      });
+      $('fjernRad').addEventListener('click', () => {
+        const R = rommet();
+        if (R.rader.length > 1) {
+          R.rader.pop();
+          tegn();
+        }
+      });
+      $('velgRom').addEventListener('change', (e) => {
+        D.aktiv.rom = e.target.value;
+        D.aktiv.plasser = {};
+        D.aktiv.laaste = [];
+        tegn();
+      });
+      $('nyRom').addEventListener('click', () => {
+        const n = (prompt('Navn på rommet') || '').trim();
+        if (!n || D.rom[n]) return;
+        D.rom[n] = {
+          rader: [
+            [2, 3, 2],
+            [2, 3, 2],
+            [2, 3, 2],
+          ],
+          sperret: [],
+        };
+        D.aktiv.rom = n;
+        D.aktiv.plasser = {};
+        D.aktiv.laaste = [];
+        tegn();
+      });
+      $('romnavn').addEventListener('change', (e) => {
+        const nytt = e.target.value.trim();
+        if (!nytt || nytt === D.aktiv.rom || D.rom[nytt]) {
+          e.target.value = D.aktiv.rom;
+          return;
+        }
+        D.rom[nytt] = D.rom[D.aktiv.rom];
+        delete D.rom[D.aktiv.rom];
+        Object.values(D.kart).forEach((k) => {
+          if (k.rom === D.aktiv.rom) k.rom = nytt;
+        });
+        D.aktiv.rom = nytt;
+        tegn();
+      });
+      $('dupliserRom').addEventListener('click', () => {
+        const n = (
+          prompt('Navn på det nye rommet', D.aktiv.rom + ' (kopi)') || ''
+        ).trim();
+        if (!n || D.rom[n]) return;
+        D.rom[n] = kopi(rommet());
+        D.aktiv.rom = n;
+        tegn();
+      });
+      $('slettRom').addEventListener('click', () => {
+        if (Object.keys(D.rom).length < 2) {
+          $('plasstatus').textContent = 'Du må ha minst ett rom.';
+          return;
+        }
+        if (!confirm('Slette rommet ' + D.aktiv.rom + '?')) return;
+        delete D.rom[D.aktiv.rom];
+        D.aktiv.rom = Object.keys(D.rom).sort()[0];
+        D.aktiv.plasser = {};
+        D.aktiv.laaste = [];
+        tegn();
+      });
+
+      /* ============ hendelser: data ============ */
+      function lastNedFil(innhold, filnavn, type) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([innhold], { type }));
+        a.download = filnavn;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      }
+      $('lastNed').addEventListener('click', async () => {
+        const pw = prompt(
+          'Velg et passord for sikkerhetskopien (minst 8 tegn). Du trenger det for å lese kopien inn igjen.',
+        );
+        if (pw === null) return;
+        if (pw.length < 8) {
+          $('datastatus').textContent = 'Passordet må ha minst 8 tegn.';
+          return;
+        }
+        try {
+          $('datastatus').textContent = 'Krypterer …';
+          const salt = crypto.getRandomValues(new Uint8Array(16));
+          const bits = await passordBits(pw, salt);
+          const data = await krypter(
+            await aesNokkel(bits.slice(0, 32)),
+            koder.encode(JSON.stringify(D)),
+          );
+          const fil = {
+            klassekart: 'kryptert-kopi',
+            versjon: 1,
+            salt: b64(salt),
+            data,
+          };
+          lastNedFil(
+            JSON.stringify(fil),
+            'klassekart-kopi-' +
+              new Date().toISOString().slice(0, 10) +
+              '.json',
+            'application/json',
+          );
+          $('datastatus').textContent = 'Kryptert kopi lastet ned.';
+        } catch (err) {
+          $('datastatus').textContent =
+            'Nedlasting blokkert her – bruk «Vis alt» og kopier teksten i stedet.';
+        }
+      });
+      $('hentFil').addEventListener('click', () => $('filvelger').click());
+      $('filvelger').addEventListener('change', (e) => {
+        const f = e.target.files[0];
+        e.target.value = '';
+        if (!f) return;
+        const les = new FileReader();
+        les.onload = () => lesFil(les.result);
+        les.readAsText(f);
+      });
+      async function lesFil(tekst) {
+        let fil = null;
+        try {
+          fil = JSON.parse(tekst);
+        } catch (err) {}
+        if (!fil || fil.klassekart !== 'kryptert-kopi') return lesInn(tekst);
+        const pw = prompt('Passordet for sikkerhetskopien');
+        if (pw === null) return;
+        try {
+          const bits = await passordBits(pw, ub64(fil.salt));
+          const ren = await dekrypter(
+            await aesNokkel(bits.slice(0, 32)),
+            fil.data,
+          );
+          lesInn(avkoder.decode(ren));
+        } catch (err) {
+          $('datastatus').textContent = 'Feil passord for sikkerhetskopien.';
+        }
+      }
+      $('visJson').addEventListener('click', () => {
+        $('jsontekst').value = JSON.stringify(D, null, 2);
+        $('jsontekst').select();
+        $('datastatus').textContent = 'Kopier teksten og ta vare på den.';
+      });
+      $('lesJson').addEventListener('click', () =>
+        lesInn($('jsontekst').value),
+      );
+      function lesInn(tekst) {
+        let ny;
+        try {
+          ny = JSON.parse(tekst);
+          if (!ny || !ny.klasser || !ny.rom) throw new Error('feil format');
+        } catch (err) {
+          $('datastatus').textContent =
+            'Fant ikke gyldig sikkerhetskopi i teksten.';
+          return;
+        }
+        if (iSky()) {
+          // i skyen legges klassene til – vi sletter ikke delte klasser
+          if (!confirm('Legge klassene i kopien til i kontoen din?')) return;
+          const ant = slaaSammen(ny);
+          $('datastatus').textContent =
+            ant + (ant === 1 ? ' klasse' : ' klasser') + ' lagt til.';
+          tegn();
+          return;
+        }
+        if (!confirm('Erstatte alt som ligger her nå med innholdet i kopien?'))
+          return;
+        D = ny;
+        normaliser();
+        angrestabel = [];
+        $('angre').disabled = true;
+        $('datastatus').textContent = 'Kopien er lest inn.';
+        tegn();
+      }
+
+      /* Legger klassene i en annen datamengde inn i D, uten å overskrive */
+      function slaaSammen(ny) {
+        let antall = 0;
+        Object.entries(ny.klasser || {}).forEach(([n, k]) => {
+          if (!k.elever || !k.elever.length) return;
+          let nn = n,
+            i = 1;
+          while (D.klasser[nn]) nn = n + ' (' + ++i + ')';
+          D.klasser[nn] = {
+            elever: k.elever,
+            historikk: k.historikk || [],
+            sist: k.sist || null,
+          };
+          Object.entries(ny.kart || {}).forEach(([kn, x]) => {
+            if (x.klasse !== n) return;
+            let kk = kn;
+            while (D.kart[kk]) kk += ' (kopi)';
+            D.kart[kk] = { ...x, klasse: nn };
+          });
+          antall++;
+        });
+        Object.entries(ny.rom || {}).forEach(([rn, r]) => {
+          if (!D.rom[rn]) D.rom[rn] = r;
+        });
+        // en tom «Ny klasse» trengs ikke lenger
+        if (antall)
+          Object.keys(D.klasser).forEach((n) => {
+            const k = D.klasser[n];
+            if (n === 'Ny klasse' && !k.elever.length) delete D.klasser[n];
+          });
+        normaliser();
+        gjenopprett(D.aktiv.klasse);
+        return antall;
+      }
+
+      /* ============ brukere ============ */
+      function normaliser() {
+        if (!D.kart) D.kart = {};
+        if (!D.klasser || !Object.keys(D.klasser).length)
+          D.klasser = standarddata().klasser;
+        if (!D.rom || !Object.keys(D.rom).length) D.rom = standarddata().rom;
+        if (!D.aktiv || !D.klasser[D.aktiv.klasse])
+          D.aktiv = {
+            klasse: Object.keys(D.klasser)[0],
+            rom: Object.keys(D.rom)[0],
+            plasser: {},
+            laaste: [],
+            spre: false,
+            nyeNaboer: true,
+            speil: false,
+          };
+        if (!D.rom[D.aktiv.rom]) D.aktiv.rom = Object.keys(D.rom)[0];
+        Object.values(D.klasser).forEach((k) => {
+          if (!k.historikk) k.historikk = [];
+          k.elever.forEach((e) => {
+            if (!e.sammen) e.sammen = [];
+            if (!e.unna) e.unna = [];
+            if (!e.sone) e.sone = 'fri';
+            if (e.gruppe === undefined) e.gruppe = null;
+            delete e.fullt; // fullt navn lagres ikke lenger
+          });
+        });
+      }
+      async function lastBruker(navn) {
+        bruker = navn;
+        await lager.skriv(SIST, bruker);
+        const lagret = await lager.hent(dataNokkel());
+        D = lagret && lagret.klasser && lagret.rom ? lagret : standarddata();
+        normaliser();
+        angrestabel = [];
+        $('angre').disabled = true;
+        apenElev = null;
+        tegn();
+        visOversikt();
+      }
+      $('velgBruker').addEventListener('change', async (e) => {
+        clearTimeout(lagretimer);
+        await lager.skriv(dataNokkel(), D);
+        await lastBruker(e.target.value);
+      });
+      $('nyBruker').addEventListener('click', async () => {
+        const n = (prompt('Navn på den nye brukeren') || '').trim();
+        if (!n || profiler.includes(n)) return;
+        clearTimeout(lagretimer);
+        await lager.skriv(dataNokkel(), D);
+        profiler = profiler.concat(n).sort();
+        await lager.skriv(PROFILER, profiler);
+        await lager.skriv(brukernokkel(n), standarddata(false));
+        await lastBruker(n);
+      });
+
+      /* ============ kryptering ============
+         Passordet blir til to nøkler i nettleseren: én til innloggingen hos
+         Supabase og én som låser opp lærerens private nøkkel. Hver klasse har
+         sin egen tilfeldige nøkkel, pakket inn for hvert medlem. Serveren ser
+         bare kryptert innhold. */
+      const koder = new TextEncoder(),
+        avkoder = new TextDecoder();
+      const RSA = { name: 'RSA-OAEP', hash: 'SHA-256' };
+      function b64(buf) {
+        const b = new Uint8Array(buf);
+        let s = '';
+        for (let i = 0; i < b.length; i += 0x8000)
+          s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+        return btoa(s);
+      }
+      const ub64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+      const hex = (b) =>
+        Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+      const aesNokkel = (raw) =>
+        crypto.subtle.importKey('raw', raw, 'AES-GCM', false, [
+          'encrypt',
+          'decrypt',
+        ]);
+      async function passordBits(passord, salt) {
+        const base = await crypto.subtle.importKey(
+          'raw',
+          koder.encode(passord),
+          'PBKDF2',
+          false,
+          ['deriveBits'],
+        );
+        return new Uint8Array(
+          await crypto.subtle.deriveBits(
+            { name: 'PBKDF2', salt, iterations: 600000, hash: 'SHA-256' },
+            base,
+            512,
+          ),
+        );
+      }
+      async function avledNokler(epost, passord) {
+        const salt = await crypto.subtle.digest(
+          'SHA-256',
+          koder.encode('klassekart:' + epost.trim().toLowerCase()),
+        );
+        const bits = await passordBits(passord, new Uint8Array(salt));
+        return {
+          auth: hex(bits.slice(0, 32)),
+          kek: await aesNokkel(bits.slice(32)),
+        };
+      }
+      async function krypter(nokkel, data) {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const ct = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          nokkel,
+          data,
+        );
+        return b64(iv) + '.' + b64(ct);
+      }
+      async function dekrypter(nokkel, s) {
+        const [iv, ct] = s.split('.');
+        return new Uint8Array(
+          await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: ub64(iv) },
+            nokkel,
+            ub64(ct),
+          ),
+        );
+      }
+      const krypterJson = (k, o) =>
+        krypter(k, koder.encode(typeof o === 'string' ? o : JSON.stringify(o)));
+      const dekrypterJson = async (k, s) =>
+        JSON.parse(avkoder.decode(await dekrypter(k, s)));
+      const nyAesNokkel = () =>
+        crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
+          'encrypt',
+          'decrypt',
+        ]);
+      const offentligNokkel = (s) =>
+        crypto.subtle.importKey('spki', ub64(s), RSA, false, ['wrapKey']);
+      const pakkInn = async (aes, offentlig) =>
+        b64(await crypto.subtle.wrapKey('raw', aes, offentlig, RSA));
+      const pakkUt = (s, privat) =>
+        crypto.subtle.unwrapKey('raw', ub64(s), privat, RSA, 'AES-GCM', true, [
+          'encrypt',
+          'decrypt',
+        ]);
+      function nyKode() {
+        const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let bits = 0,
+          v = 0,
+          ut = '';
+        crypto.getRandomValues(new Uint8Array(15)).forEach((x) => {
+          v = ((v << 8) | x) & 0xffff;
+          bits += 8;
+          while (bits >= 5) {
+            ut += A[(v >> (bits - 5)) & 31];
+            bits -= 5;
+          }
+        });
+        return ut.match(/.{4}/g).join('-');
+      }
+      async function kodeNokkel(kode) {
+        const ren = kode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const h = await crypto.subtle.digest(
+          'SHA-256',
+          koder.encode('klassekart-kode:' + ren),
+        );
+        return aesNokkel(new Uint8Array(h));
+      }
+
+      /* ============ sky (Supabase) ============ */
+      const SKY = {
+        url: 'https://aqeixcqqniluotibfhes.supabase.co',
+        nokkel: 'sb_publishable_zNYzw_tku1NI1hUpiWIONA_wRjC09ze',
+      };
+      const MODUS = 'klassekart:modus';
+      const sky = {
+        klient: null,
+        klar: false,
+        id: null,
+        epost: '',
+        privat: null,
+        offentlig: null,
+        egenNokkel: null,
+        nokler: {}, // klasse-id → AES-nøkkel
+        versjon: {}, // klasse-id → versjonsnummer i databasen
+        lagret: {}, // klasse-id → sist lagrede innhold (ukryptert JSON)
+        egenLagret: '',
+        medlemmer: {}, // klasse-id → e-poster til andre medlemmer
+      };
+      function iSky() {
+        return sky.klar;
+      }
+      const kortEpost = (e) => e.split('@')[0];
+      const hjemUrl = () => location.href.split('#')[0].split('?')[0];
+      function skyFeil(r) {
+        if (r.error) throw r.error;
+        return r.data;
+      }
+
+      function visSkystatus(t, varsel) {
+        const s = $('skystatus');
+        s.textContent = t;
+        s.className = 'skystatus' + (varsel ? ' varsel' : '');
+      }
+
+      async function hentProfil() {
+        return skyFeil(
+          await sky.klient
+            .from('profiler')
+            .select('*')
+            .eq('id', sky.id)
+            .maybeSingle(),
+        );
+      }
+      async function lagProfil(kek) {
+        const par = await crypto.subtle.generateKey(
+          {
+            ...RSA,
+            modulusLength: 2048,
+            publicExponent: new Uint8Array([1, 0, 1]),
+          },
+          true,
+          ['wrapKey', 'unwrapKey'],
+        );
+        const egen = await nyAesNokkel();
+        const kode = nyKode();
+        const pk = new Uint8Array(
+          await crypto.subtle.exportKey('pkcs8', par.privateKey),
+        );
+        const rad = {
+          id: sky.id,
+          epost: sky.epost.toLowerCase(),
+          offentlig_nokkel: b64(
+            await crypto.subtle.exportKey('spki', par.publicKey),
+          ),
+          privat_passord: await krypter(kek, pk),
+          privat_gjenoppretting: await krypter(await kodeNokkel(kode), pk),
+          egen_nokkel: await pakkInn(egen, par.publicKey),
+          egendata: null,
+        };
+        return { rad, kode };
+      }
+      async function laasOpp(profil, nokkel, felt) {
+        let pk;
+        try {
+          pk = await dekrypter(nokkel, profil[felt]);
+        } catch (err) {
+          throw new Error(
+            felt === 'privat_passord'
+              ? 'Klarte ikke å låse opp nøklene dine med dette passordet.'
+              : 'Gjenopprettingskoden stemmer ikke.',
+          );
+        }
+        sky.privat = await crypto.subtle.importKey('pkcs8', pk, RSA, true, [
+          'unwrapKey',
+        ]);
+        sky.offentlig = await offentligNokkel(profil.offentlig_nokkel);
+        sky.egenNokkel = await pakkUt(profil.egen_nokkel, sky.privat);
+        return pk;
+      }
+
+      async function loggInn(epost, passord) {
+        const { auth, kek } = await avledNokler(epost, passord);
+        const r = await sky.klient.auth.signInWithPassword({
+          email: epost,
+          password: auth,
+        });
+        if (r.error)
+          throw new Error(
+            /confirm/i.test(r.error.message)
+              ? 'Du må bekrefte e-postadressen først – sjekk innboksen.'
+              : /invalid/i.test(r.error.message)
+                ? 'Feil e-post eller passord.'
+                : r.error.message,
+          );
+        sky.id = r.data.user.id;
+        sky.epost = r.data.user.email;
+        let profil = await hentProfil(),
+          kode = null;
+        if (!profil) {
+          // første innlogging: lag nøkler
+          const ny = await lagProfil(kek);
+          skyFeil(await sky.klient.from('profiler').insert(ny.rad));
+          profil = ny.rad;
+          kode = ny.kode;
+        }
+        await laasOpp(profil, kek, 'privat_passord');
+        return kode;
+      }
+      async function registrer(epost, passord) {
+        const { auth } = await avledNokler(epost, passord);
+        const r = await sky.klient.auth.signUp({
+          email: epost,
+          password: auth,
+          options: { emailRedirectTo: hjemUrl() },
+        });
+        if (r.error)
+          throw new Error(
+            /database error|domene/i.test(r.error.message)
+              ? 'Bare e-postadresser fra skolen kan opprette konto.'
+              : r.error.message,
+          );
+        return !!r.data.session;
+      }
+
+      /* ---- fra databasen til D og tilbake ---- */
+      function klassePakke(n, k) {
+        const kart = {};
+        Object.entries(D.kart).forEach(([kn, x]) => {
+          if (x.klasse === n)
+            kart[kn] = {
+              rom: x.rom,
+              plasser: x.plasser,
+              laaste: x.laaste,
+              endret: x.endret,
+            };
+        });
+        return {
+          navn: n,
+          elever: k.elever,
+          historikk: k.historikk,
+          sist: k.sist || null,
+          kart,
+        };
+      }
+      function egenPakke() {
+        const brukt = {};
+        Object.values(D.klasser).forEach((k) => {
+          if (k._id && k.brukt) brukt[k._id] = k.brukt;
+        });
+        const a = D.aktiv;
+        return {
+          rom: D.rom,
+          aktiv: {
+            klasse: (D.klasser[a.klasse] || {})._id || null,
+            rom: a.rom,
+            spre: a.spre,
+            nyeNaboer: a.nyeNaboer,
+            speil: a.speil,
+          },
+          brukt,
+        };
+      }
+      function klasseFraPakke(ny, p, id, brukt) {
+        let n = p.navn,
+          i = 1;
+        while (ny.klasser[n]) n = p.navn + ' (' + ++i + ')';
+        ny.klasser[n] = {
+          elever: p.elever || [],
+          historikk: p.historikk || [],
+          sist: p.sist || null,
+          _id: id,
+          brukt,
+        };
+        Object.entries(p.kart || {}).forEach(([kn, x]) => {
+          let kk = kn;
+          while (ny.kart[kk]) kk += ' (' + n + ')';
+          ny.kart[kk] = { ...x, klasse: n };
+        });
+        return n;
+      }
+
+      /* Henter og dekrypterer alt, men endrer ikke D før bruk() kalles */
+      async function hentSky() {
+        const k = sky.klient;
+        const profil = skyFeil(
+          await k.from('profiler').select('egendata').eq('id', sky.id).single(),
+        );
+        const medl = skyFeil(
+          await k
+            .from('klassemedlemmer')
+            .select('klasse_id, nokkel')
+            .eq('bruker_id', sky.id),
+        );
+        const rader = medl.length
+          ? skyFeil(
+              await k
+                .from('klasser')
+                .select('id, data, versjon')
+                .in(
+                  'id',
+                  medl.map((m) => m.klasse_id),
+                ),
+            )
+          : [];
+        const egen = profil.egendata
+          ? await dekrypterJson(sky.egenNokkel, profil.egendata)
+          : {};
+        const ny = standarddata(false);
+        ny.klasser = {};
+        ny.kart = {};
+        if (egen.rom && Object.keys(egen.rom).length) ny.rom = egen.rom;
+        const nokler = {},
+          versjon = {};
+        for (const m of medl) {
+          const rad = rader.find((r) => r.id === m.klasse_id);
+          if (!rad) continue;
+          try {
+            const nokkel = await pakkUt(m.nokkel, sky.privat);
+            const p = await dekrypterJson(nokkel, rad.data);
+            klasseFraPakke(ny, p, rad.id, (egen.brukt || {})[rad.id]);
+            nokler[rad.id] = nokkel;
+            versjon[rad.id] = rad.versjon;
+          } catch (err) {
+            console.warn('Klarte ikke å åpne klasse', rad.id, err);
+          }
+        }
+        if (egen.aktiv) {
+          const a = egen.aktiv;
+          ny.aktiv = {
+            ...ny.aktiv,
+            ...a,
+            klasse:
+              Object.keys(ny.klasser).find(
+                (n) => ny.klasser[n]._id === a.klasse,
+              ) || '',
+          };
+        }
+        return () => {
+          D = ny;
+          sky.nokler = nokler;
+          sky.versjon = versjon;
+          normaliser();
+          gjenopprett(D.aktiv.klasse);
+          sky.lagret = {};
+          Object.entries(D.klasser).forEach(([n, kl]) => {
+            if (kl._id) sky.lagret[kl._id] = JSON.stringify(klassePakke(n, kl));
+          });
+          sky.egenLagret = JSON.stringify(egenPakke());
+          angrestabel = [];
+          $('angre').disabled = true;
+          apenElev = null;
+        };
+      }
+      async function hentMedlemmer() {
+        const ids = Object.values(D.klasser)
+          .map((k) => k._id)
+          .filter(Boolean);
+        const m = {};
+        if (ids.length)
+          skyFeil(
+            await sky.klient.rpc('medlemmer_i', { p_klasser: ids }),
+          ).forEach((r) => {
+            if (r.bruker_id !== sky.id) (m[r.klasse_id] ||= []).push(r.epost);
+          });
+        sky.medlemmer = m;
+      }
+      let henter = false;
+      async function oppdaterFraSky() {
+        if (henter) return;
+        henter = true;
+        try {
+          await tomSynk();
+          if (ulagret) return;
+          const foer = endringsteller;
+          const bruk = await hentSky();
+          if (endringsteller !== foer) return; // brukeren rakk å endre noe
+          bruk();
+          await hentMedlemmer();
+          if (!$('oversikt').hidden) tegnOversikt();
+          else tegn();
+          visSkystatus('Lagret');
+        } catch (err) {
+          console.error(err);
+          visSkystatus('Fikk ikke kontakt med skyen', true);
+        } finally {
+          henter = false;
+        }
+      }
+
+      /* ---- lagring ---- */
+      let synkTimer = null,
+        synkKjede = Promise.resolve(),
+        ulagret = false;
+      function planleggSynk() {
+        ulagret = true;
+        visSkystatus('Lagrer …');
+        clearTimeout(synkTimer);
+        synkTimer = setTimeout(kjorSynk, 800);
+      }
+      function kjorSynk() {
+        clearTimeout(synkTimer);
+        synkTimer = null;
+        synkKjede = synkKjede
+          .then(synk)
+          .then(() => {
+            if (synkTimer) return;
+            ulagret = false;
+            visSkystatus('Lagret');
+          })
+          .catch((err) => {
+            console.error(err);
+            visSkystatus('Ikke lagret – prøver igjen', true);
+            synkTimer = setTimeout(kjorSynk, 10000);
+          });
+        return synkKjede;
+      }
+      const tomSynk = () => (ulagret ? kjorSynk() : synkKjede);
+
+      async function synk() {
+        if (!iSky()) return;
+        const k = sky.klient;
+        const meldinger = [];
+        const finnes = new Set();
+        for (const [n, kl] of Object.entries(D.klasser)) {
+          const s = JSON.stringify(klassePakke(n, kl));
+          if (!kl._id) await opprettSkyklasse(kl, s);
+          const id = kl._id;
+          finnes.add(id);
+          if (s === sky.lagret[id]) continue;
+          const v = sky.versjon[id];
+          const r = skyFeil(
+            await k
+              .from('klasser')
+              .update({
+                data: await krypterJson(sky.nokler[id], s),
+                versjon: v + 1,
+                endret: new Date().toISOString(),
+                endret_av: sky.id,
+              })
+              .eq('id', id)
+              .eq('versjon', v)
+              .select('id'),
+          );
+          if (r.length) {
+            sky.versjon[id] = v + 1;
+            sky.lagret[id] = s;
+          } else meldinger.push(await hentKlasseIgjen(id));
+        }
+        for (const id of Object.keys(sky.lagret))
+          if (!finnes.has(id)) await fjernSkyklasse(id);
+
+        const e = JSON.stringify(egenPakke());
+        if (e !== sky.egenLagret) {
+          skyFeil(
+            await k
+              .from('profiler')
+              .update({ egendata: await krypterJson(sky.egenNokkel, e) })
+              .eq('id', sky.id),
+          );
+          sky.egenLagret = e;
+        }
+        if (meldinger.length) {
+          if (!$('oversikt').hidden) tegnOversikt();
+          else tegn(meldinger);
+        }
+      }
+      async function opprettSkyklasse(kl, s) {
+        const k = sky.klient;
+        const id = crypto.randomUUID();
+        const nokkel = await nyAesNokkel();
+        skyFeil(
+          await k.from('klasser').insert({
+            id,
+            data: await krypterJson(nokkel, s),
+            versjon: 1,
+            opprettet_av: sky.id,
+            endret_av: sky.id,
+          }),
+        );
+        skyFeil(
+          await k.from('klassemedlemmer').insert({
+            klasse_id: id,
+            bruker_id: sky.id,
+            nokkel: await pakkInn(nokkel, sky.offentlig),
+            lagt_til_av: sky.id,
+          }),
+        );
+        kl._id = id;
+        sky.nokler[id] = nokkel;
+        sky.versjon[id] = 1;
+        sky.lagret[id] = s;
+      }
+      /* Er det andre medlemmer igjen, forlater vi klassen – ellers slettes den */
+      async function fjernSkyklasse(id) {
+        const k = sky.klient;
+        const medl = skyFeil(
+          await k
+            .from('klassemedlemmer')
+            .select('bruker_id')
+            .eq('klasse_id', id),
+        );
+        if (medl.some((m) => m.bruker_id !== sky.id))
+          skyFeil(
+            await k
+              .from('klassemedlemmer')
+              .delete()
+              .eq('klasse_id', id)
+              .eq('bruker_id', sky.id),
+          );
+        else skyFeil(await k.from('klasser').delete().eq('id', id));
+        delete sky.lagret[id];
+        delete sky.nokler[id];
+        delete sky.versjon[id];
+      }
+      /* En kollega lagret samme klasse samtidig: hent deres versjon */
+      async function hentKlasseIgjen(id) {
+        const r = skyFeil(
+          await sky.klient
+            .from('klasser')
+            .select('data, versjon')
+            .eq('id', id)
+            .maybeSingle(),
+        );
+        const n = Object.keys(D.klasser).find((x) => D.klasser[x]._id === id);
+        const gammel = D.klasser[n];
+        delete D.klasser[n];
+        Object.keys(D.kart).forEach((kn) => {
+          if (D.kart[kn].klasse === n) delete D.kart[kn];
+        });
+        delete sky.lagret[id];
+        if (!r) {
+          if (!D.klasser[D.aktiv.klasse]) {
+            normaliser();
+            gjenopprett(D.aktiv.klasse);
+          }
+          return n + ' er slettet, eller du har ikke lenger tilgang.';
+        }
+        const p = await dekrypterJson(sky.nokler[id], r.data);
+        const nn = klasseFraPakke(D, p, id, gammel.brukt);
+        sky.versjon[id] = r.versjon;
+        sky.lagret[id] = JSON.stringify(klassePakke(nn, D.klasser[nn]));
+        if (D.aktiv.klasse === n) gjenopprett(nn);
+        return (
+          'En kollega endret ' +
+          nn +
+          ' samtidig. Du ser nå deres versjon – de siste endringene dine i klassen ble ikke lagret.'
+        );
+      }
+      window.addEventListener('beforeunload', (e) => {
+        if (iSky() && ulagret) {
+          kjorSynk();
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      });
+
+      /* ---- deling ---- */
+      async function delKlasse(n) {
+        const epost = (
+          prompt('E-postadressen til kollegaen du vil dele ' + n + ' med') || ''
+        )
+          .trim()
+          .toLowerCase();
+        if (!epost) return;
+        try {
+          await tomSynk();
+          const kl = D.klasser[n];
+          if (!kl || !kl._id || ulagret)
+            return alert('Klassen er ikke lagret ennå. Prøv igjen om litt.');
+          const funnet = skyFeil(
+            await sky.klient.rpc('finn_kollega', { p_epost: epost }),
+          );
+          if (!funnet.length)
+            return alert(
+              'Fant ingen konto for ' +
+                epost +
+                '. Kollegaen må opprette konto og logge inn én gang før du kan dele med dem.',
+            );
+          const kollega = funnet[0];
+          if (kollega.id === sky.id) return;
+          skyFeil(
+            await sky.klient.from('klassemedlemmer').upsert({
+              klasse_id: kl._id,
+              bruker_id: kollega.id,
+              nokkel: await pakkInn(
+                sky.nokler[kl._id],
+                await offentligNokkel(kollega.offentlig_nokkel),
+              ),
+              lagt_til_av: sky.id,
+            }),
+          );
+          await hentMedlemmer();
+          tegnOversikt();
+          alert(
+            n +
+              ' er delt med ' +
+              epost +
+              '. Klassen dukker opp neste gang kollegaen åpner oversikten.',
+          );
+        } catch (err) {
+          console.error(err);
+          alert('Klarte ikke å dele klassen: ' + err.message);
+        }
+      }
+
+      /* ---- klasser lagret lokalt i denne nettleseren ---- */
+      function lokaleData() {
+        const ut = [];
+        try {
+          JSON.parse(localStorage.getItem(PROFILER) || '[]').forEach((n) => {
+            const d = JSON.parse(
+              localStorage.getItem(brukernokkel(n)) || 'null',
+            );
+            if (
+              d &&
+              d.klasser &&
+              Object.values(d.klasser).some((k) => k.elever && k.elever.length)
+            )
+              ut.push(d);
+          });
+        } catch (err) {}
+        return ut;
+      }
+      function flyttLokale() {
+        let ant = 0;
+        lokaleData().forEach((d) => (ant += slaaSammen(d)));
+        tegn();
+        visOversikt();
+        if (
+          ant &&
+          confirm(
+            ant +
+              (ant === 1 ? ' klasse er' : ' klasser er') +
+              ' flyttet til kontoen. Slette den lokale kopien fra denne nettleseren?',
+          )
+        ) {
+          try {
+            JSON.parse(localStorage.getItem(PROFILER) || '[]').forEach((n) =>
+              localStorage.removeItem(brukernokkel(n)),
+            );
+            [PROFILER, SIST, GAMMEL].forEach((x) => localStorage.removeItem(x));
+          } catch (err) {}
+        }
+        oppdaterKontoUi();
+      }
+      $('flyttLokale').addEventListener('click', flyttLokale);
+
+      function oppdaterKontoUi() {
+        const s = iSky();
+        $('lokalBrukerSeksjon').hidden = s;
+        $('kontoSeksjon').hidden = !s;
+        $('tilSkySeksjon').hidden = s;
+        if (s) {
+          $('kontoInfo').textContent =
+            'Innlogget som ' +
+            sky.epost +
+            '. Klassene lagres kryptert – bare du og kollegaene du deler med kan lese dem.';
+          $('flyttBoks').hidden = !lokaleData().length;
+        } else visSkystatus('');
+        $('kopiHjelp').textContent = s
+          ? 'Klassene ligger kryptert i skyen. Du kan i tillegg ta en kryptert kopi som fil.'
+          : 'Alt ligger lagret i nettleseren på denne maskinen. Ta en kryptert kopi hvis du bytter maskin eller tømmer nettleseren.';
+      }
+      $('tilSky').addEventListener('click', () => {
+        try {
+          localStorage.setItem(MODUS, 'sky');
+        } catch (err) {}
+        location.reload();
+      });
+      $('loggUt').addEventListener('click', async () => {
+        await tomSynk();
+        if (ulagret && !confirm('Noe er ikke lagret ennå. Logge ut likevel?'))
+          return;
+        await sky.klient.auth.signOut();
+        location.reload(); // tømmer nøklene fra minnet
+      });
+      $('byttPassord').addEventListener('click', () => visPassordsteg('bytt'));
+
+      /* ============ innlogging ============ */
+      let nyKonto = false,
+        passordModus = 'bytt';
+      function visInngang(steg) {
+        document.querySelector('.app').hidden = true;
+        $('oversikt').hidden = true;
+        $('inngang').hidden = false;
+        ['stegInn', 'stegKode', 'stegPassord'].forEach(
+          (s) => ($(s).hidden = s !== steg),
+        );
+      }
+      function lukkInngang() {
+        $('inngang').hidden = true;
+      }
+      function innStatus(t, varsel) {
+        $('innStatus').textContent = t;
+        $('innStatus').className = 'status' + (varsel ? ' varsel' : '');
+      }
+      function settNyKonto(ja) {
+        nyKonto = ja;
+        $('innGjentaBoks').hidden = !ja;
+        $('innKnapp').textContent = ja ? 'Opprett konto' : 'Logg inn';
+        $('innBytt').textContent = ja
+          ? 'Har du konto? Logg inn'
+          : 'Ny bruker? Opprett konto';
+        $('innPassord').autocomplete = ja ? 'new-password' : 'current-password';
+      }
+      $('innBytt').addEventListener('click', () => {
+        settNyKonto(!nyKonto);
+        innStatus('');
+      });
+      $('innLokal').addEventListener('click', () => {
+        try {
+          localStorage.setItem(MODUS, 'lokal');
+        } catch (err) {}
+        lukkInngang();
+        startLokal();
+      });
+      $('innGlemt').addEventListener('click', async () => {
+        const epost = $('innEpost').value.trim();
+        if (!epost) return innStatus('Skriv inn e-postadressen først.', true);
+        if (!sky.klient) return innStatus('Får ikke kontakt med skyen.', true);
+        const r = await sky.klient.auth.resetPasswordForEmail(epost, {
+          redirectTo: hjemUrl(),
+        });
+        innStatus(
+          r.error
+            ? r.error.message
+            : 'Sjekk e-posten din. Lenken tar deg tilbake hit, der du velger nytt passord.',
+          !!r.error,
+        );
+      });
+      $('stegInn').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const epost = $('innEpost').value.trim(),
+          pw = $('innPassord').value;
+        if (!sky.klient)
+          return innStatus(
+            'Får ikke kontakt med skyen. Sjekk nettet, eller bruk uten konto.',
+            true,
+          );
+        if (!/^\S+@\S+\.\S+$/.test(epost))
+          return innStatus('Skriv inn en gyldig e-postadresse.', true);
+        if (!pw) return innStatus('Skriv inn passordet.', true);
+        $('innKnapp').disabled = true;
+        try {
+          if (nyKonto) {
+            if (pw.length < 12)
+              throw new Error('Passordet må ha minst 12 tegn.');
+            if (pw !== $('innGjenta').value)
+              throw new Error('Passordene er ikke like.');
+            innStatus('Oppretter konto …');
+            if (!(await registrer(epost, pw))) {
+              settNyKonto(false);
+              $('innPassord').value = '';
+              $('innGjenta').value = '';
+              innStatus(
+                'Nesten ferdig! Klikk på lenken vi har sendt til ' +
+                  epost +
+                  ', og logg deretter inn her.',
+              );
+              return;
+            }
+          }
+          innStatus('Logger inn og låser opp klassene …');
+          const kode = await loggInn(epost, pw);
+          $('innPassord').value = '';
+          $('innGjenta').value = '';
+          innStatus('');
+          if (kode) visKode(kode);
+          else await startSky();
+        } catch (err) {
+          console.error(err);
+          innStatus(err.message || String(err), true);
+        } finally {
+          $('innKnapp').disabled = false;
+        }
+      });
+
+      function visKode(kode) {
+        visInngang('stegKode');
+        $('kodeTekst').textContent = kode;
+        $('kodeOk').checked = false;
+        $('kodeFortsett').disabled = true;
+      }
+      $('kodeOk').addEventListener(
+        'change',
+        (e) => ($('kodeFortsett').disabled = !e.target.checked),
+      );
+      $('kodeLastNed').addEventListener('click', () =>
+        lastNedFil(
+          'Gjenopprettingskode for Klassekart\n' +
+            'Konto: ' +
+            sky.epost +
+            '\n\n' +
+            $('kodeTekst').textContent +
+            '\n\nBruk koden hvis du glemmer passordet. Hold den hemmelig.\n',
+          'klassekart-gjenopprettingskode.txt',
+          'text/plain',
+        ),
+      );
+      $('kodeFortsett').addEventListener('click', async () => {
+        $('kodeTekst').textContent = '';
+        if (iSky()) {
+          lukkInngang();
+          visOversikt();
+        } else await startSky();
+      });
+
+      /* ---- nytt passord: bytte, eller etter «glemt passord» ---- */
+      function visPassordsteg(modus) {
+        passordModus = modus;
+        visInngang('stegPassord');
+        $('pwTittel').textContent =
+          modus === 'bytt' ? 'Bytt passord' : 'Velg nytt passord';
+        $('pwGammelBoks').hidden = modus !== 'bytt';
+        $('pwKodeBoks').hidden = modus === 'bytt';
+        $('pwAvbryt').hidden = modus !== 'bytt';
+        ['pwGammel', 'pwKode', 'pwNy', 'pwNy2'].forEach(
+          (x) => ($(x).value = ''),
+        );
+        $('pwUtenKode').checked = false;
+        $('pwStatus').textContent = '';
+      }
+      $('pwAvbryt').addEventListener('click', () => {
+        lukkInngang();
+        visOversikt();
+      });
+      $('stegPassord').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const st = (t, v) => {
+          $('pwStatus').textContent = t;
+          $('pwStatus').className = 'status' + (v ? ' varsel' : '');
+        };
+        const ny = $('pwNy').value;
+        if (ny.length < 12) return st('Passordet må ha minst 12 tegn.', true);
+        if (ny !== $('pwNy2').value)
+          return st('Passordene er ikke like.', true);
+        $('pwKnapp').disabled = true;
+        try {
+          st('Lagrer …');
+          if (passordModus === 'bytt') {
+            await byttPassord($('pwGammel').value, ny);
+            lukkInngang();
+            visOversikt();
+            $('kontostatus').textContent = 'Passordet er byttet.';
+          } else {
+            const kode = await passordEtterGlemt(
+              $('pwKode').value,
+              $('pwUtenKode').checked,
+              ny,
+            );
+            history.replaceState(null, '', hjemUrl());
+            if (kode) visKode(kode);
+            else await startSky();
+          }
+        } catch (err) {
+          console.error(err);
+          st(err.message || String(err), true);
+        } finally {
+          $('pwKnapp').disabled = false;
+        }
+      });
+      async function byttPassord(gammelt, nytt) {
+        const g = await avledNokler(sky.epost, gammelt);
+        const profil = await hentProfil();
+        let pk;
+        try {
+          pk = await dekrypter(g.kek, profil.privat_passord);
+        } catch (err) {
+          throw new Error('Nåværende passord stemmer ikke.');
+        }
+        const n = await avledNokler(sky.epost, nytt);
+        const u = await sky.klient.auth.updateUser({ password: n.auth });
+        if (u.error) throw u.error;
+        const r = await sky.klient
+          .from('profiler')
+          .update({ privat_passord: await krypter(n.kek, pk) })
+          .eq('id', sky.id);
+        if (r.error)
+          throw new Error(
+            'Passordet er byttet, men nøkkelen ble ikke oppdatert. Bruk gjenopprettingskoden neste gang du logger inn.',
+          );
+      }
+      async function passordEtterGlemt(kode, utenKode, nytt) {
+        const u = await sky.klient.auth.getUser();
+        if (u.error || !u.data.user)
+          throw new Error(
+            'Lenken er utløpt. Be om en ny fra innloggingssiden.',
+          );
+        sky.id = u.data.user.id;
+        sky.epost = u.data.user.email;
+        const n = await avledNokler(sky.epost, nytt);
+        const profil = await hentProfil();
+        if (profil && !utenKode) {
+          if (!kode.trim())
+            throw new Error(
+              'Skriv inn gjenopprettingskoden, eller kryss av for at du ikke har den.',
+            );
+          const pk = await laasOpp(
+            profil,
+            await kodeNokkel(kode),
+            'privat_gjenoppretting',
+          );
+          const e = await sky.klient.auth.updateUser({ password: n.auth });
+          if (e.error) throw e.error;
+          skyFeil(
+            await sky.klient
+              .from('profiler')
+              .update({ privat_passord: await krypter(n.kek, pk) })
+              .eq('id', sky.id),
+          );
+          return null;
+        }
+        // ny start: nye nøkler, og medlemskap vi ikke lenger kan åpne fjernes
+        const ny = await lagProfil(n.kek);
+        const e = await sky.klient.auth.updateUser({ password: n.auth });
+        if (e.error) throw e.error;
+        skyFeil(await sky.klient.from('profiler').upsert(ny.rad));
+        skyFeil(
+          await sky.klient
+            .from('klassemedlemmer')
+            .delete()
+            .eq('bruker_id', sky.id),
+        );
+        await laasOpp(ny.rad, n.kek, 'privat_passord');
+        return ny.kode;
+      }
+
+      async function startSky() {
+        try {
+          localStorage.setItem(MODUS, 'sky');
+        } catch (err) {}
+        innStatus('Henter klassene …');
+        (await hentSky())();
+        bruker = sky.epost;
+        sky.klar = true;
+        await hentMedlemmer();
+        lukkInngang();
+        oppdaterKontoUi();
+        tegn();
+        visOversikt();
+        const harKlasser = Object.values(D.klasser).some(
+          (k) => k.elever.length,
+        );
+        if (
+          !harKlasser &&
+          lokaleData().length &&
+          confirm(
+            'Vi fant klasser lagret i denne nettleseren. Vil du flytte dem til kontoen din?',
+          )
+        )
+          flyttLokale();
+      }
+
+      /* ============ oppstart ============ */
+      async function startLokal() {
+        oppdaterKontoUi();
+        profiler = (await lager.hent(PROFILER)) || [];
+        if (!profiler.length) {
+          let navn = OPPSETT.eier;
+          if (!navn)
+            navn = (
+              prompt(
+                'Hvem bruker denne kopien? Fornavn holder – det skiller dine klasser fra andres hvis dere deler pålogging.',
+              ) || ''
+            ).trim();
+          if (!navn) navn = 'Lærer';
+          profiler = [navn];
+          await lager.skriv(PROFILER, profiler);
+          const gammelt = await lager.hent(GAMMEL);
+          if (gammelt && gammelt.klasser)
+            await lager.skriv(brukernokkel(navn), gammelt);
+        }
+        const sist = await lager.hent(SIST);
+        await lastBruker(profiler.includes(sist) ? sist : profiler[0]);
+      }
+      (async function () {
+        let modus = null;
+        try {
+          modus = localStorage.getItem(MODUS);
+        } catch (err) {}
+        const fraGlemt = /type=recovery/.test(location.hash);
+        if (modus === 'lokal' && !fraGlemt) return startLokal();
+        visInngang('stegInn');
+        if (!window.supabase) {
+          innStatus(
+            'Får ikke kontakt med skyen. Sjekk nettet, eller bruk uten konto.',
+            true,
+          );
+          return;
+        }
+        sky.klient = window.supabase.createClient(SKY.url, SKY.nokkel);
+        sky.klient.auth.onAuthStateChange((hendelse) => {
+          if (hendelse === 'PASSWORD_RECOVERY') visPassordsteg('glemt');
+        });
+        const { data } = await sky.klient.auth.getSession();
+        if (fraGlemt) visPassordsteg('glemt');
+        else if (data.session) {
+          $('innEpost').value = data.session.user.email;
+          innStatus('Skriv passordet for å låse opp klassene.');
+          $('innPassord').focus();
+        } else $('innEpost').focus();
+      })();
+    </script>
+  </body>
+</html>
