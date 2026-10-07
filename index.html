@@ -4,19 +4,35 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Klassekart</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        --ink: #182420;
-        --ink-svak: #5d6b65;
-        --bg: #e9ecea;
+        /* blekk og papir */
+        --ink: #1d2b36;
+        --ink-svak: #5b6b76;
+        --bg: #e8edf0;
         --flate: #ffffff;
-        --tavle: #22453a;
-        --strek: #c9d2ce;
+        --strek: #cdd6db;
+        --papir: #f8fafb;
+        --rute: rgba(45, 95, 130, 0.075);
+        /* tavle og krittkant */
+        --tavle: #23463b;
+        --kritt: #e8efe9;
+        --krittkant: #a07f55;
+        /* bjørkepult */
+        --pult: #f3e5cb;
+        --pult-kant: #d6bd94;
+        --pult-tom: #fbf6ec;
         --laast: #8a5a12;
         --laast-bg: #fdf3e0;
-        --sperret: #a8b2ad;
+        --sperret: #a3adb3;
         --fokus: #2f7d63;
-        --varsel: #9c3b17;
+        --varsel: #a83a1a;
       }
       * {
         box-sizing: border-box;
@@ -29,6 +45,7 @@
         background: var(--bg);
         color: var(--ink);
         font-family:
+          'Atkinson Hyperlegible',
           'Segoe UI',
           system-ui,
           -apple-system,
@@ -545,22 +562,42 @@
         max-width: 1180px;
         margin: 0 auto;
         overflow-x: auto;
+        padding: 22px;
+        background-color: var(--papir);
+        background-image:
+          linear-gradient(var(--rute) 1px, transparent 1px),
+          linear-gradient(90deg, var(--rute) 1px, transparent 1px);
+        background-size: 22px 22px;
+        border: 1px solid var(--strek);
+        border-radius: 10px;
       }
       .tavle {
+        position: relative;
+        max-width: 760px;
+        margin: 0 auto;
         background: var(--tavle);
-        color: #eaf1ed;
-        border-radius: 4px;
+        color: var(--kritt);
+        border-radius: 3px;
+        border-bottom: 7px solid var(--krittkant);
+        box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.05);
         text-align: center;
-        padding: 9px;
-        font-size: 15px;
-        letter-spacing: 0.06em;
-        font-weight: 600;
+        padding: 10px;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+      .speilet .tavle {
+        border-bottom: 0;
+        border-top: 7px solid var(--krittkant);
       }
       .pulter {
         display: flex;
         flex-direction: column;
-        gap: 14px;
-        margin: 20px 0;
+        gap: 16px;
+        margin: 26px 0 4px;
+      }
+      .speilet .pulter {
+        margin: 4px 0 26px;
       }
       .pultrad {
         display: flex;
@@ -576,50 +613,57 @@
         width: var(--pultbredde, 132px);
         height: var(--pulthoyde, 76px);
         font-size: var(--pultskrift, 15px);
-        border: 1px solid var(--strek);
-        border-radius: 5px;
-        background: var(--flate);
+        border: 1px solid var(--pult-kant);
+        border-bottom-width: 4px;
+        border-radius: 4px;
+        background: var(--pult);
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 6px 7px;
         cursor: pointer;
         text-align: center;
-        font-weight: 600;
-        line-height: 1.2;
-        box-shadow: 0 1px 0 rgba(24, 36, 32, 0.06);
+        font-weight: 700;
+        line-height: 1.15;
+        color: var(--ink);
       }
       .plass:hover {
-        border-color: #8fa39b;
+        border-color: #b39463;
       }
       .plass.tom {
-        color: var(--ink-svak);
-        font-weight: 400;
-        font-style: italic;
-        background: #f6f8f7;
+        background: var(--pult-tom);
+        border-color: #e5d6ba;
+      }
+      /* gruppefarge: en farget stripe øverst og en lys tone over pulten */
+      .plass.farget {
+        background: color-mix(in srgb, var(--gf) 17%, #fff);
+        border-color: color-mix(in srgb, var(--gf) 45%, #fff);
+        border-bottom-color: color-mix(in srgb, var(--gf) 70%, #555);
+        border-top: 7px solid var(--gf);
+        padding-top: 2px;
+      }
+      .plass.farget.tom {
+        background: color-mix(in srgb, var(--gf) 8%, #fff);
       }
       .plass.laast {
-        border-color: var(--laast);
-        border-width: 2px;
-        background: var(--laast-bg);
+        outline: 2px solid var(--laast);
+        outline-offset: 2px;
       }
       .plass.sperret {
         background: repeating-linear-gradient(
           135deg,
-          #e7ebe9 0 6px,
-          #dde3e0 6px 12px
+          #e4e9ec 0 6px,
+          #d9e0e4 6px 12px
         );
+        border: 1px dashed #b5c0c6;
         color: var(--sperret);
-        font-weight: 400;
-        font-style: normal;
-        border-style: dashed;
       }
       .plass.dratt {
         opacity: 0.35;
       }
       .plass.maal {
-        border-color: var(--fokus);
-        border-width: 2px;
+        outline: 2px solid var(--fokus);
+        outline-offset: 2px;
       }
       .plass .navn {
         overflow-wrap: anywhere;
@@ -632,11 +676,57 @@
       }
       .plass .naal {
         position: absolute;
-        top: 3px;
-        right: 5px;
+        top: 2px;
+        right: 4px;
         font-size: 11px;
+        line-height: 1;
         color: var(--laast);
-        font-weight: 700;
+      }
+
+      /* fargevelger og gruppeoversikt */
+      .farger {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 10px 0 2px;
+      }
+      .fargeknapp {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px var(--strek);
+        background: var(--gf);
+        cursor: pointer;
+        padding: 0;
+      }
+      .fargeknapp.ingen {
+        background:
+          linear-gradient(
+            135deg,
+            transparent 45%,
+            var(--varsel) 45% 55%,
+            transparent 55%
+          ),
+          #fff;
+      }
+      .fargeknapp[aria-pressed='true'] {
+        box-shadow:
+          0 0 0 2px var(--ink),
+          0 0 0 4px #fff;
+      }
+      .malerverktoy {
+        background: var(--flate);
+        border: 1px solid var(--strek);
+        border-radius: 7px;
+        padding: 10px 14px;
+      }
+      .malerverktoy .farger {
+        margin: 0;
+      }
+      .malerverktoy .hjelp {
+        flex-basis: 100%;
+        margin: 0;
       }
       .melding {
         max-width: 1180px;
@@ -824,17 +914,23 @@
         align-items: center;
         justify-content: center;
         gap: 3px;
-        min-height: 74px;
-        padding: 8px;
-        background: #f3f6f4;
-        border-radius: 5px;
+        min-height: 78px;
+        padding: 9px 8px;
+        background-color: var(--papir);
+        background-image:
+          linear-gradient(var(--rute) 1px, transparent 1px),
+          linear-gradient(90deg, var(--rute) 1px, transparent 1px);
+        background-size: 8px 8px;
+        border: 1px solid var(--strek);
+        border-radius: 6px;
       }
       .mini-tavle {
         width: 55%;
-        height: 4px;
-        margin-bottom: 3px;
+        height: 5px;
+        margin-bottom: 4px;
         background: var(--tavle);
-        border-radius: 2px;
+        border-bottom: 2px solid var(--krittkant);
+        border-radius: 1px;
       }
       .mini-rad {
         display: flex;
@@ -847,13 +943,13 @@
       .mini-plass {
         width: 9px;
         height: 6px;
-        background: #fff;
-        border: 1px solid var(--strek);
+        background: var(--pult-tom);
+        border: 1px solid var(--pult-kant);
         border-radius: 1.5px;
       }
       .mini-plass.full {
-        background: var(--fokus);
-        border-color: var(--fokus);
+        background: #b8955f;
+        border-color: #9c7b48;
       }
       .mini-plass.sperret {
         background: transparent;
@@ -921,6 +1017,17 @@
         }
         .utskrift {
           display: inline;
+        }
+        .kart,
+        .plass,
+        .tavle {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .kart {
+          background-image: none;
+          border: 0;
+          padding: 0;
         }
         .rom {
           padding: 0;
@@ -1064,16 +1171,28 @@
             <button class="knapp" id="tomKart">Tøm</button>
           </div>
           <div class="grp">
+            <button class="knapp" id="grupperKnapp">Grupper ▾</button>
+          </div>
+          <div class="grp">
             <button class="knapp" id="brukKart">Bruk dette kartet</button>
             <button class="knapp" id="tidligere">Tidligere kart ▾</button>
           </div>
           <div class="grp">
-            <button class="knapp" id="endreRom">Endre rommet</button>
             <button class="knapp" id="speil" aria-pressed="false">
               Sett fra tavla
             </button>
             <button class="knapp" id="skrivut">Skriv ut</button>
           </div>
+        </div>
+        <div class="verktoy malerverktoy" id="malerverktoy" hidden>
+          <div class="farger" id="malerfarger"></div>
+          <span class="grp" style="margin-left: auto">
+            <button class="knapp hoved" id="malerFerdig">Ferdig</button>
+          </span>
+          <p class="hjelp">
+            Velg en farge og klikk på pultene som skal høre til gruppen. Klikk
+            igjen for å fjerne fargen.
+          </p>
         </div>
         <div class="verktoy romverktoy" id="romverktoy" hidden>
           <label class="rad" style="gap: 8px"
@@ -1092,10 +1211,13 @@
             <span id="tittel">Klassekart</span
             ><span class="utskrift" id="tittelRom"></span>
           </h1>
-          <label class="romvelger"
-            >Rom
-            <select id="velgRom"></select
-          ></label>
+          <div class="romvelger">
+            <label class="rad" style="gap: 8px"
+              >Rom
+              <select id="velgRom"></select
+            ></label>
+            <button class="knapp" id="endreRom">Endre rommet</button>
+          </div>
         </div>
         <div class="kart" id="kart"></div>
         <div class="melding gul" id="melding" hidden></div>
@@ -1138,6 +1260,10 @@
             id="innPassord"
             autocomplete="current-password"
           />
+          <label class="bryter"
+            ><input type="checkbox" id="innHusk" checked /> Forbli innlogget på
+            denne maskinen</label
+          >
           <div id="innGjentaBoks" hidden>
             <label class="felt" for="innGjenta">Gjenta passordet</label>
             <input type="password" id="innGjenta" autocomplete="new-password" />
@@ -1337,6 +1463,7 @@
             spre: false,
             nyeNaboer: true,
             speil: false,
+            farger: {},
           },
         };
       }
@@ -1360,6 +1487,7 @@
             rom: D.aktiv.rom,
             plasser: kopi(D.aktiv.plasser),
             laaste: D.aktiv.laaste.slice(),
+            farger: kopi(D.aktiv.farger),
           };
       }
       function gjenopprett(n) {
@@ -1373,6 +1501,7 @@
           if (ids.has(id)) D.aktiv.plasser[p] = id;
         });
         D.aktiv.laaste = (s.laaste || []).slice();
+        D.aktiv.farger = kopi(s.farger || {});
       }
       function apneKlasse(n, merkBrukt) {
         huskOppsett();
@@ -1422,6 +1551,9 @@
           (k) => gyldige.has(k) && !erSperret(k),
         );
         rommet().sperret.forEach((k) => delete D.aktiv.plasser[k]);
+        Object.keys(D.aktiv.farger).forEach((k) => {
+          if (!gyldige.has(k) || erSperret(k)) delete D.aktiv.farger[k];
+        });
         const idSett = new Set(elever().map((e) => e.id));
         Object.keys(D.aktiv.plasser).forEach((k) => {
           if (!idSett.has(D.aktiv.plasser[k])) delete D.aktiv.plasser[k];
@@ -1565,6 +1697,7 @@
         Object.entries(beste || {}).forEach(([k, v]) => {
           if (v) D.aktiv.plasser[k] = v;
         });
+        if (D.aktiv.makker) lagMakkergrupper();
         tegn(brudd(c));
       }
       function brudd(c) {
@@ -1623,6 +1756,7 @@
         angrestabel.push({
           plasser: kopi(D.aktiv.plasser),
           laaste: D.aktiv.laaste.slice(),
+          farger: kopi(D.aktiv.farger),
         });
         if (angrestabel.length > 25) angrestabel.shift();
         $('angre').disabled = false;
@@ -1632,6 +1766,7 @@
         if (!f) return;
         D.aktiv.plasser = f.plasser;
         D.aktiv.laaste = f.laaste;
+        D.aktiv.farger = f.farger;
         $('angre').disabled = angrestabel.length === 0;
         tegn();
       }
@@ -1661,7 +1796,7 @@
         const kart = $('kart');
         const rader = rommet().rader;
         if (!rader.length) return;
-        const plass = fastBredde || kart.clientWidth || 900;
+        const plass = (fastBredde || kart.clientWidth || 900) - 46;
         const trangt = plass < 620;
         const midtgang = trangt ? 16 : 30;
         const pultgap = trangt ? 5 : 8;
@@ -1710,6 +1845,7 @@
         kart.innerHTML = '';
         kart.classList.toggle('redigerer', romModus);
         const speil = D.aktiv.speil && !romModus;
+        kart.classList.toggle('speilet', speil);
         const tavle = document.createElement('div');
         tavle.className = 'tavle';
         tavle.textContent = 'Tavle';
@@ -1842,12 +1978,18 @@
         });
         D.aktiv.plasser = plasser;
         D.aktiv.laaste = D.aktiv.laaste.map(flytt).filter(Boolean);
+        const farger = {};
+        Object.entries(D.aktiv.farger).forEach(([k, f]) => {
+          if (ny[k]) farger[ny[k]] = f;
+        });
+        D.aktiv.farger = farger;
         tegn();
       }
       function fjernPult(S, r, g) {
         S[r][g].pop();
       }
       function settRomModus(paa) {
+        if (paa && malerModus) settMalerModus(false);
         romModus = paa;
         lukkPanel();
         $('verktoy').hidden = paa;
@@ -1879,7 +2021,7 @@
                   : '');
             n.textContent = e.navn;
             el.appendChild(n);
-            el.draggable = !romModus;
+            el.draggable = !romModus && !malerModus;
           } else {
             el.classList.add('tom');
             el.textContent = '';
@@ -1892,9 +2034,16 @@
             el.appendChild(naal);
           }
         }
+        const f = D.aktiv.farger[k];
+        if (f !== undefined && !erSperret(k)) {
+          el.classList.add('farget');
+          el.style.setProperty('--gf', FARGER[f].hex);
+          el.title = 'Gruppe ' + FARGER[f].navn.toLowerCase();
+        }
         el.addEventListener('click', (ev) => {
           ev.stopPropagation();
           if (romModus) sperrPult(k);
+          else if (malerModus) malPult(k);
           else apnePanel(k, el);
         });
         el.addEventListener('dragstart', (ev) => {
@@ -2018,6 +2167,16 @@
             )
             .join('');
         velg.disabled = sperret;
+        const fargerad = document.createElement('div');
+        fargerad.className = 'farger';
+        if (!sperret)
+          fargeknapper(fargerad, D.aktiv.farger[k], (f) => {
+            lagreAngre();
+            if (f === null) delete D.aktiv.farger[k];
+            else D.aktiv.farger[k] = f;
+            tegn();
+            lukkPanel();
+          });
         velg.addEventListener('change', () => {
           lagreAngre();
           const id = velg.value || null;
@@ -2054,6 +2213,7 @@
         });
         rad.appendChild(bLaas);
         rad.appendChild(bSperr);
+        if (!sperret) boks.appendChild(fargerad);
         boks.appendChild(rad);
 
         visPopup(boks, el, 'midt');
@@ -2430,10 +2590,11 @@
           };
           valg('Fordel gutter og jenter jevnt', 'spre');
           valg('Unngå naboer fra tidligere kart', 'nyeNaboer');
+          valg('Del inn i makkergrupper etter trekningen', 'makker');
           const h = document.createElement('p');
           h.className = 'hjelp';
           h.textContent =
-            'Tidligere naboer hentes fra de tre siste kartene du har brukt. Låste pulter blir stående.';
+            'Tidligere naboer hentes fra de tre siste kartene du har brukt. Makkergrupper er 3–5 elever som sitter nær hverandre. Låste pulter blir stående.';
           boks.appendChild(h);
         }),
       );
@@ -2466,7 +2627,11 @@
           return;
         }
         const siste = kartForKlasse()[0];
-        if (siste && sammePlasser(siste[1].plasser, D.aktiv.plasser)) {
+        if (
+          siste &&
+          sammePlasser(siste[1].plasser, D.aktiv.plasser) &&
+          sammePlasser(siste[1].farger || {}, D.aktiv.farger)
+        ) {
           if (!stille) visBeskjed('Dette kartet er allerede lagret.');
           return;
         }
@@ -2476,6 +2641,7 @@
           rom: D.aktiv.rom,
           plasser: kopi(D.aktiv.plasser),
           laaste: D.aktiv.laaste.slice(),
+          farger: kopi(D.aktiv.farger),
           endret: naa.toISOString(),
         };
         // ta vare på de 30 siste per klasse
@@ -2518,6 +2684,7 @@
               if (D.rom[x.rom]) D.aktiv.rom = x.rom;
               D.aktiv.plasser = kopi(x.plasser);
               D.aktiv.laaste = (x.laaste || []).slice();
+              D.aktiv.farger = kopi(x.farger || {});
               tegn();
               visBeskjed('Hentet kartet fra ' + kartTittel(x) + '.');
             });
@@ -2542,6 +2709,195 @@
           });
         }),
       );
+
+      /* ============ grupper ============
+         Fargene hører til pultene i dette kartet. Bytter elever plass, blir
+         fargene stående, så en ny trekning gir nye grupper. */
+      const FARGER = [
+        { navn: 'Rød', hex: '#d64545' },
+        { navn: 'Blå', hex: '#3a6fc4' },
+        { navn: 'Gul', hex: '#dcae1d' },
+        { navn: 'Grønn', hex: '#4c9a48' },
+        { navn: 'Lilla', hex: '#8456b8' },
+        { navn: 'Oransje', hex: '#e8833a' },
+        { navn: 'Turkis', hex: '#2a9d99' },
+        { navn: 'Rosa', hex: '#d35c9a' },
+        { navn: 'Brun', hex: '#8c6239' },
+        { navn: 'Grå', hex: '#6f7a80' },
+      ];
+      function fargeknapper(boks, valgt, velg, utenIngen) {
+        FARGER.forEach((f, i) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'fargeknapp';
+          b.style.setProperty('--gf', f.hex);
+          b.title = f.navn;
+          b.setAttribute('aria-label', f.navn);
+          b.setAttribute('aria-pressed', valgt === i);
+          b.addEventListener('click', (e) => {
+            e.stopPropagation();
+            velg(i);
+          });
+          boks.appendChild(b);
+        });
+        if (utenIngen) return;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'fargeknapp ingen';
+        b.title = 'Ingen farge';
+        b.setAttribute('aria-label', 'Ingen farge');
+        b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          velg(null);
+        });
+        boks.appendChild(b);
+      }
+
+      let malerModus = false,
+        malerFarge = 0;
+      function settMalerModus(paa) {
+        if (paa && romModus) settRomModus(false);
+        malerModus = paa;
+        lukkPanel();
+        $('verktoy').hidden = paa;
+        $('malerverktoy').hidden = !paa;
+        if (paa) tegnMalerfarger();
+        tegn();
+      }
+      function tegnMalerfarger() {
+        const b = $('malerfarger');
+        b.innerHTML = '';
+        fargeknapper(
+          b,
+          malerFarge,
+          (f) => {
+            malerFarge = f;
+            tegnMalerfarger();
+          },
+          true,
+        );
+      }
+      function malPult(k) {
+        if (erSperret(k)) return;
+        lagreAngre();
+        if (D.aktiv.farger[k] === malerFarge) delete D.aktiv.farger[k];
+        else D.aktiv.farger[k] = malerFarge;
+        tegn();
+      }
+      vedKlikk('malerFerdig', () => settMalerModus(false));
+      vedKlikk('grupperKnapp', () =>
+        apneMeny($('grupperKnapp'), (boks) => {
+          menyvalg(boks, 'Del inn i makkergrupper', () => {
+            lagreAngre();
+            lagMakkergrupper(true);
+            tegn();
+          });
+          menyvalg(boks, 'Fargelegg pulter selv', () => settMalerModus(true));
+          if (Object.keys(D.aktiv.farger).length)
+            menyvalg(
+              boks,
+              'Fjern alle farger',
+              () => {
+                lagreAngre();
+                D.aktiv.farger = {};
+                tegn();
+              },
+              true,
+            );
+          const h = document.createElement('p');
+          h.className = 'hjelp';
+          h.textContent =
+            'Makkergrupper er 3–5 elever som sitter nær hverandre. Du kan også gi en enkelt pult farge ved å klikke på den.';
+          boks.appendChild(h);
+        }),
+      );
+
+      /* Deler elevene som har plass, inn i grupper på 4 (±1) nabopulter.
+         Pultene får koordinater (rader litt lenger fra hverandre enn pulter
+         side om side, midtgang som ekstra avstand), grupper vokser fra
+         fremste venstre pult, og bytter mellom gruppene gjør dem tettere. */
+      function lagMakkergrupper(varsle) {
+        const pos = {};
+        rommet().rader.forEach((rad, r) => {
+          let x = 0;
+          rad.forEach((ant, g) => {
+            for (let i = 0; i < ant; i++)
+              pos[nokkel(r, g, i)] = { x: x + i, y: r * 1.25 };
+            x += ant + 0.9;
+          });
+        });
+        const seter = Object.keys(D.aktiv.plasser).filter(
+          (k) => pos[k] && !erSperret(k),
+        );
+        const n = seter.length;
+        if (n < 2) {
+          if (varsle)
+            visBeskjed(
+              'Plasser elevene først – gruppene lages av dem som sitter nær hverandre.',
+              true,
+            );
+          return;
+        }
+        const antall = Math.max(1, Math.round(n / 4));
+        const storrelser = Array.from(
+          { length: antall },
+          (_, i) => Math.floor(n / antall) + (i < n % antall ? 1 : 0),
+        );
+        const avst = (a, b) =>
+          Math.hypot(pos[a].x - pos[b].x, pos[a].y - pos[b].y);
+        const lesefolge = (a, b) => pos[a].y - pos[b].y || pos[a].x - pos[b].x;
+
+        const igjen = new Set(seter);
+        const grupper = storrelser.map((st) => {
+          const start = [...igjen].sort(lesefolge)[0];
+          const g = [start];
+          igjen.delete(start);
+          while (g.length < st && igjen.size) {
+            let beste = null,
+              besteAvst = Infinity;
+            igjen.forEach((c) => {
+              const a =
+                Math.min(...g.map((m) => avst(m, c))) + 0.01 * avst(start, c);
+              if (a < besteAvst) {
+                besteAvst = a;
+                beste = c;
+              }
+            });
+            g.push(beste);
+            igjen.delete(beste);
+          }
+          return g;
+        });
+        const spredning = (g) => {
+          let sum = 0;
+          for (let i = 0; i < g.length; i++)
+            for (let j = i + 1; j < g.length; j++) sum += avst(g[i], g[j]) ** 2;
+          return sum;
+        };
+        for (let runde = 0; runde < 30; runde++) {
+          let bedre = false;
+          for (let a = 0; a < grupper.length; a++)
+            for (let b = a + 1; b < grupper.length; b++) {
+              const A = grupper[a],
+                B = grupper[b];
+              for (let i = 0; i < A.length; i++)
+                for (let j = 0; j < B.length; j++) {
+                  const foer = spredning(A) + spredning(B);
+                  [A[i], B[j]] = [B[j], A[i]];
+                  if (spredning(A) + spredning(B) < foer - 1e-9) bedre = true;
+                  else [A[i], B[j]] = [B[j], A[i]];
+                }
+            }
+          if (!bedre) break;
+        }
+        const forste = (g) => g.slice().sort(lesefolge)[0];
+        grupper.sort((a, b) => lesefolge(forste(a), forste(b)));
+        D.aktiv.farger = {};
+        grupper.forEach((g, i) =>
+          g.forEach((k) => (D.aktiv.farger[k] = i % FARGER.length)),
+        );
+        if (varsle) visBeskjed(grupper.length + ' makkergrupper laget.');
+      }
 
       /* ---- konto ---- */
       vedKlikk('tilKlasser', visOversikt);
@@ -2584,6 +2940,7 @@
       function visOversikt() {
         lukkPanel();
         if (romModus) settRomModus(false);
+        if (malerModus) settMalerModus(false);
         document.querySelector('.app').hidden = true;
         $('oversikt').hidden = false;
         $('topp').hidden = false;
@@ -2617,7 +2974,7 @@
           year: dager > 300 ? 'numeric' : undefined,
         });
       }
-      function miniKart(romnavn, plasser, ids) {
+      function miniKart(romnavn, plasser, ids, farger) {
         const m = document.createElement('div');
         m.className = 'mini';
         const R = D.rom[romnavn];
@@ -2641,6 +2998,14 @@
                   : ids.has(plasser[k])
                     ? ' full'
                     : '');
+              const f = (farger || {})[k];
+              if (f !== undefined && !R.sperret.includes(k))
+                p.style.cssText =
+                  'background:' +
+                  FARGER[f].hex +
+                  ';border-color:' +
+                  FARGER[f].hex +
+                  (ids.has(plasser[k]) ? '' : ';opacity:.35');
               gr.appendChild(p);
             }
             radEl.appendChild(gr);
@@ -2689,18 +3054,23 @@
           const brukt = naar(k.brukt);
           const delt = (iSky() && sky.medlemmer[k._id]) || [];
           info.innerHTML =
-            esc(k.elever.length + ' elever · rom ' + romnavn) +
+            esc(
+              k.elever.length +
+                (k.elever.length === 1 ? ' elev' : ' elever') +
+                ' i ' +
+                romnavn,
+            ) +
             '<br>' +
             esc(
-              antKart +
-                (antKart === 1 ? ' lagret kart' : ' lagrede kart') +
-                (brukt ? ' · åpnet ' + brukt : ''),
+              (antKart
+                ? antKart + (antKart === 1 ? ' lagret kart' : ' lagrede kart')
+                : 'Ingen lagrede kart') + (brukt ? ', åpnet ' + brukt : ''),
             ) +
             (delt.length
               ? '<br>' + esc('Delt med ' + delt.map(kortEpost).join(', '))
               : '');
           apne.appendChild(tittel);
-          apne.appendChild(miniKart(romnavn, s.plasser || {}, ids));
+          apne.appendChild(miniKart(romnavn, s.plasser || {}, ids, s.farger));
           apne.appendChild(info);
           apne.addEventListener('click', () => {
             apneKlasse(n);
@@ -3462,8 +3832,10 @@
             spre: false,
             nyeNaboer: true,
             speil: false,
+            farger: {},
           };
         if (!D.rom[D.aktiv.rom]) D.aktiv.rom = Object.keys(D.rom)[0];
+        if (!D.aktiv.farger) D.aktiv.farger = {};
         Object.values(D.klasser).forEach((k) => {
           if (!k.historikk) k.historikk = [];
           k.elever.forEach((e) => {
@@ -3691,13 +4063,39 @@
               : 'Gjenopprettingskoden stemmer ikke.',
           );
         }
-        sky.privat = await crypto.subtle.importKey('pkcs8', pk, RSA, true, [
+        // ikke-eksporterbar: kan brukes, men aldri leses ut igjen som tekst
+        const privat = await crypto.subtle.importKey('pkcs8', pk, RSA, false, [
           'unwrapKey',
         ]);
-        sky.offentlig = await offentligNokkel(profil.offentlig_nokkel);
-        sky.egenNokkel = await pakkUt(profil.egen_nokkel, sky.privat);
+        await brukNokler(profil, privat);
         return pk;
       }
+      async function brukNokler(profil, privat) {
+        sky.offentlig = await offentligNokkel(profil.offentlig_nokkel);
+        sky.egenNokkel = await pakkUt(profil.egen_nokkel, privat);
+        sky.privat = privat;
+      }
+
+      /* ---- «Forbli innlogget»: den private nøkkelen lagres i nettleserens
+         IndexedDB som en ikke-eksporterbar CryptoKey ---- */
+      function nokkelbase(modus, fn) {
+        return new Promise((ok, feil) => {
+          const aapne = indexedDB.open('klassekart-nokler', 1);
+          aapne.onupgradeneeded = () =>
+            aapne.result.createObjectStore('nokler');
+          aapne.onerror = () => feil(aapne.error);
+          aapne.onsuccess = () => {
+            const tx = aapne.result.transaction('nokler', modus);
+            const req = fn(tx.objectStore('nokler'));
+            tx.oncomplete = () => ok(req.result);
+            tx.onerror = () => feil(tx.error);
+          };
+        }).catch(() => null);
+      }
+      const huskNokkel = (id, privat) =>
+        nokkelbase('readwrite', (s) => s.put(privat, id));
+      const husketNokkel = (id) => nokkelbase('readonly', (s) => s.get(id));
+      const glemNokler = () => nokkelbase('readwrite', (s) => s.clear());
 
       async function loggInn(epost, passord) {
         const { auth, kek } = await avledNokler(epost, passord);
@@ -3752,6 +4150,7 @@
               rom: x.rom,
               plasser: x.plasser,
               laaste: x.laaste,
+              farger: x.farger,
               endret: x.endret,
             };
         });
@@ -4259,6 +4658,7 @@
         await tomSynk();
         if (ulagret && !confirm('Noe er ikke lagret ennå. Logge ut likevel?'))
           return;
+        await glemNokler();
         await sky.klient.auth.signOut();
         location.reload(); // tømmer nøklene fra minnet
       }
@@ -4518,6 +4918,8 @@
         try {
           localStorage.setItem(MODUS, 'sky');
         } catch (err) {}
+        if ($('innHusk').checked) await huskNokkel(sky.id, sky.privat);
+        else await glemNokler();
         innStatus('Henter klassene …');
         (await hentSky())();
         sky.klar = true;
@@ -4558,6 +4960,32 @@
         tegn();
         visOversikt();
       }
+      /* Innlogget fra før, og nøkkelen er husket: rett inn uten passord */
+      async function laasOppAutomatisk(sesjon) {
+        const privat = await husketNokkel(sesjon.user.id);
+        if (!privat) return false;
+        sky.id = sesjon.user.id;
+        sky.epost = sesjon.user.email;
+        try {
+          const profil = await hentProfil();
+          if (!profil) return false;
+          try {
+            await brukNokler(profil, privat);
+          } catch (err) {
+            // nøkkelen passer ikke lenger (f.eks. nye nøkler etter «glemt
+            // passord»): glem den og be om passord
+            await glemNokler();
+            return false;
+          }
+          await startSky();
+          return true;
+        } catch (err) {
+          console.warn('Automatisk opplåsing feilet', err);
+          sky.privat = null;
+          sky.klar = false;
+          return false;
+        }
+      }
       (async function () {
         let modus = null;
         try {
@@ -4565,8 +4993,8 @@
         } catch (err) {}
         const fraGlemt = /type=recovery/.test(location.hash);
         if (modus === 'lokal' && !fraGlemt) return startLokal();
-        visInngang('stegInn');
         if (!window.supabase) {
+          visInngang('stegInn');
           innStatus(
             'Får ikke kontakt med skyen. Sjekk nettet, eller bruk uten konto.',
             true,
@@ -4578,6 +5006,13 @@
           if (hendelse === 'PASSWORD_RECOVERY') visPassordsteg('glemt');
         });
         const { data } = await sky.klient.auth.getSession();
+        if (
+          data.session &&
+          !fraGlemt &&
+          (await laasOppAutomatisk(data.session))
+        )
+          return;
+        visInngang('stegInn');
         if (fraGlemt) visPassordsteg('glemt');
         else if (data.session) {
           $('innEpost').value = data.session.user.email;
