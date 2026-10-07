@@ -995,6 +995,50 @@
         background: #f6f8f7;
       }
 
+      /* visning for klassen: bare tittel, tavle og pulter */
+      .visning .topp,
+      .visning .panel,
+      .visning .verktoy,
+      .visning .romvelger,
+      .visning .melding,
+      .visning .beskjed {
+        display: none !important;
+      }
+      .visning .app {
+        min-height: 100vh;
+      }
+      .visning .rom {
+        padding: 18px 28px 20px;
+      }
+      .visning .romtopp {
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+      .visning .romtopp h1 {
+        font-size: 30px;
+      }
+      .visning .kart {
+        max-width: none;
+      }
+      .visning .tavle {
+        font-size: 20px;
+        padding: 12px;
+      }
+      .visning .plass {
+        cursor: default;
+      }
+      .lukkvisning {
+        position: fixed;
+        top: 12px;
+        right: 14px;
+        z-index: 40;
+        opacity: 0.35;
+      }
+      .lukkvisning:hover,
+      .lukkvisning:focus-visible {
+        opacity: 1;
+      }
+
       @media print {
         @page {
           size: landscape;
@@ -1181,6 +1225,7 @@
             <button class="knapp" id="speil" aria-pressed="false">
               Sett fra tavla
             </button>
+            <button class="knapp" id="visKlassen">Vis for klassen</button>
             <button class="knapp" id="skrivut">Skriv ut</button>
           </div>
         </div>
@@ -1225,6 +1270,9 @@
     </div>
 
     <div class="beskjed" id="beskjed" role="status" hidden></div>
+    <button class="knapp lukkvisning" id="lukkVisning" hidden>
+      Lukk visningen (Esc)
+    </button>
     <input type="file" id="filvelger" accept="application/json,.json" hidden />
 
     <section class="oversikt" id="oversikt" hidden>
@@ -1316,6 +1364,33 @@
             </button>
           </div>
         </div>
+
+        <form id="stegSkole" novalidate hidden>
+          <h2>Hvilken skole jobber du på?</h2>
+          <p class="hjelp">
+            Rommene deles med kollegene på samme skole. Finnes skolen i listen,
+            velg den, så havner dere sammen.
+          </p>
+          <label class="felt" for="skoleNavn">Skole</label>
+          <input
+            type="text"
+            id="skoleNavn"
+            list="skoleliste"
+            autocomplete="organization"
+          />
+          <datalist id="skoleliste"></datalist>
+          <div class="knapprad">
+            <button class="knapp hoved" id="skoleKnapp" type="submit">
+              Fortsett
+            </button>
+          </div>
+          <p class="status" id="skoleStatus"></p>
+          <div class="lenker">
+            <button type="button" class="lenkeknapp" id="skoleAvbryt" hidden>
+              Avbryt
+            </button>
+          </div>
+        </form>
 
         <form id="stegPassord" novalidate hidden>
           <h2 id="pwTittel"></h2>
@@ -1796,11 +1871,14 @@
         const kart = $('kart');
         const rader = rommet().rader;
         if (!rader.length) return;
-        const plass = (fastBredde || kart.clientWidth || 900) - 46;
+        const plass =
+          (visning
+            ? window.innerWidth - 56
+            : fastBredde || kart.clientWidth || 900) - 46;
         const trangt = plass < 620;
         const midtgang = trangt ? 16 : 30;
         const pultgap = trangt ? 5 : 8;
-        let bredde = 148;
+        let bredde = visning ? 300 : 148;
         rader.forEach((rad) => {
           const pulter = rad.reduce((a, b) => a + b, 0);
           if (!pulter) return;
@@ -1809,6 +1887,12 @@
             (rad.length - 1) * midtgang;
           bredde = Math.min(bredde, (plass - gap - 6) / pulter);
         });
+        if (visning) {
+          // fyll skjermen i høyden også: tittel og tavle tar ca. 190 px
+          const n = rader.length;
+          const hoyde = (window.innerHeight - 190 - (n - 1) * 16) / n;
+          bredde = Math.min(bredde, hoyde / 0.58);
+        }
         bredde = Math.max(46, Math.floor(bredde));
         kart.style.setProperty('--pultbredde', bredde + 'px');
         kart.style.setProperty(
@@ -1817,7 +1901,10 @@
         );
         kart.style.setProperty(
           '--pultskrift',
-          Math.max(9.5, Math.min(15.5, bredde * 0.125)).toFixed(1) + 'px',
+          (visning
+            ? Math.max(12, Math.min(36, bredde * 0.16))
+            : Math.max(9.5, Math.min(15.5, bredde * 0.125))
+          ).toFixed(1) + 'px',
         );
         kart.style.setProperty('--midtgang', midtgang + 'px');
         kart.style.setProperty('--pultgap', pultgap + 'px');
@@ -1830,7 +1917,8 @@
       window.addEventListener('beforeprint', () => tilpassBredde(1010));
       window.addEventListener('afterprint', () => tilpassBredde());
 
-      let romModus = false;
+      let romModus = false,
+        visning = false;
       function tegn(meldinger) {
         ryddPlasser();
         const dato = new Date().toLocaleDateString('no-NO', {
@@ -2021,7 +2109,7 @@
                   : '');
             n.textContent = e.navn;
             el.appendChild(n);
-            el.draggable = !romModus && !malerModus;
+            el.draggable = !romModus && !malerModus && !visning;
           } else {
             el.classList.add('tom');
             el.textContent = '';
@@ -2042,6 +2130,7 @@
         }
         el.addEventListener('click', (ev) => {
           ev.stopPropagation();
+          if (visning) return;
           if (romModus) sperrPult(k);
           else if (malerModus) malPult(k);
           else apnePanel(k, el);
@@ -2120,7 +2209,10 @@
       };
       document.addEventListener('click', lukkPanel);
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') lukkPanel();
+        if (e.key === 'Escape') {
+          lukkPanel();
+          if (visning) settVisning(false);
+        }
         if (
           (e.ctrlKey || e.metaKey) &&
           e.key === 'z' &&
@@ -2602,6 +2694,22 @@
         D.aktiv.speil = !D.aktiv.speil;
         tegn();
       });
+      function settVisning(paa) {
+        visning = paa;
+        lukkPanel();
+        document.body.classList.toggle('visning', paa);
+        $('lukkVisning').hidden = !paa;
+        const fs = document.fullscreenElement;
+        if (paa && !fs && document.documentElement.requestFullscreen)
+          document.documentElement.requestFullscreen().catch(() => {});
+        if (!paa && fs) document.exitFullscreen().catch(() => {});
+        tegn();
+      }
+      vedKlikk('visKlassen', () => settVisning(true));
+      vedKlikk('lukkVisning', () => settVisning(false));
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && visning) settVisning(false);
+      });
       vedKlikk('skrivut', () => {
         brukKart(true);
         window.print();
@@ -2920,6 +3028,11 @@
                 );
               menyvalg(boks, 'Last ned kryptert kopi', lastNedKopi);
               menyvalg(boks, 'Hent inn kopi', () => $('filvelger').click());
+              menyvalg(
+                boks,
+                'Bytt skole' + (sky.skole ? ' (' + sky.skole + ')' : ''),
+                byttSkole,
+              );
               menyvalg(boks, 'Bytt passord', () => visPassordsteg('bytt'));
               menyvalg(boks, 'Logg ut', loggUt);
             } else {
@@ -3067,7 +3180,10 @@
                 : 'Ingen lagrede kart') + (brukt ? ', åpnet ' + brukt : ''),
             ) +
             (delt.length
-              ? '<br>' + esc('Delt med ' + delt.map(kortEpost).join(', '))
+              ? '<br>' +
+                esc(
+                  'Delt med ' + delt.map((m) => kortEpost(m.epost)).join(', '),
+                )
               : '');
           apne.appendChild(tittel);
           apne.appendChild(miniKart(romnavn, s.plasser || {}, ids, s.farger));
@@ -3092,8 +3208,12 @@
           if (iSky()) {
             const bDel = document.createElement('button');
             bDel.type = 'button';
-            bDel.textContent = 'Del';
-            bDel.addEventListener('click', () => delKlasse(n));
+            bDel.textContent = delt.length ? 'Delt ▾' : 'Del';
+            bDel.id = 'del-' + k._id;
+            bDel.addEventListener('click', (e) => {
+              e.stopPropagation();
+              delMeny(bDel, n);
+            });
             handl.appendChild(bDel);
             if (delt.length) bSlett.textContent = 'Forlat';
           }
@@ -3155,7 +3275,7 @@
           ? 'Forlate ' +
             n +
             '? Klassen blir værende hos ' +
-            delt.map(kortEpost).join(', ') +
+            delt.map((m) => kortEpost(m.epost)).join(', ') +
             ', men du mister tilgangen.'
           : 'Slette klassen ' + n + ' med elever, regler og kart?';
         if (!confirm(sporsmal)) return;
@@ -3996,6 +4116,7 @@
         versjon: {}, // klasse-id → versjonsnummer i databasen
         lagret: {}, // klasse-id → sist lagrede innhold (ukryptert JSON)
         egenLagret: '',
+        skole: '',
         romLagret: {}, // rom-id → sist lagrede oppsett
         medlemmer: {}, // klasse-id → e-poster til andre medlemmer
       };
@@ -4071,6 +4192,7 @@
         return pk;
       }
       async function brukNokler(profil, privat) {
+        sky.skole = profil.skole || '';
         sky.offentlig = await offentligNokkel(profil.offentlig_nokkel);
         sky.egenNokkel = await pakkUt(profil.egen_nokkel, privat);
         sky.privat = privat;
@@ -4302,7 +4424,8 @@
           skyFeil(
             await sky.klient.rpc('medlemmer_i', { p_klasser: ids }),
           ).forEach((r) => {
-            if (r.bruker_id !== sky.id) (m[r.klasse_id] ||= []).push(r.epost);
+            if (r.bruker_id !== sky.id)
+              (m[r.klasse_id] ||= []).push({ id: r.bruker_id, epost: r.epost });
           });
         sky.medlemmer = m;
       }
@@ -4417,6 +4540,7 @@
             continue;
           }
           const felt = {
+            skole: sky.skole,
             navn: n,
             rader: R.rader,
             sperret: R.sperret,
@@ -4553,6 +4677,64 @@
       });
 
       /* ---- deling ---- */
+      function delMeny(knapp, n) {
+        apneMeny(knapp, (boks) => {
+          const delt = sky.medlemmer[D.klasser[n]._id] || [];
+          menyinfo(
+            boks,
+            delt.length
+              ? n + ' er delt med:'
+              : 'Bare du har tilgang til ' + n + '.',
+          );
+          delt.forEach((m) => {
+            const rad = document.createElement('div');
+            rad.className = 'kartrad';
+            const navn = document.createElement('span');
+            navn.className = 'menyvalg';
+            navn.style.cursor = 'default';
+            navn.textContent = m.epost;
+            const fjern = document.createElement('button');
+            fjern.type = 'button';
+            fjern.className = 'knapp liten';
+            fjern.textContent = 'Fjern';
+            fjern.addEventListener('click', () => {
+              lukkPanel();
+              fjernKollega(n, m);
+            });
+            rad.appendChild(navn);
+            rad.appendChild(fjern);
+            boks.appendChild(rad);
+          });
+          menyvalg(boks, 'Del med en kollega …', () => delKlasse(n));
+        });
+      }
+      async function fjernKollega(n, m) {
+        if (
+          !confirm(
+            'Fjerne ' +
+              m.epost +
+              ' fra ' +
+              n +
+              '? Kollegaen mister tilgangen til klassen.',
+          )
+        )
+          return;
+        try {
+          skyFeil(
+            await sky.klient
+              .from('klassemedlemmer')
+              .delete()
+              .eq('klasse_id', D.klasser[n]._id)
+              .eq('bruker_id', m.id),
+          );
+          await hentMedlemmer();
+          tegnOversikt();
+          visBeskjed(m.epost + ' har ikke lenger tilgang til ' + n + '.');
+        } catch (err) {
+          console.error(err);
+          visBeskjed('Klarte ikke å fjerne kollegaen: ' + err.message, true);
+        }
+      }
       async function delKlasse(n) {
         const epost = (
           prompt('E-postadressen til kollegaen du vil dele ' + n + ' med') || ''
@@ -4672,7 +4854,7 @@
         document.querySelector('.app').hidden = true;
         $('oversikt').hidden = true;
         $('inngang').hidden = false;
-        ['stegInn', 'stegKode', 'stegPassord'].forEach(
+        ['stegInn', 'stegKode', 'stegPassord', 'stegSkole'].forEach(
           (s) => ($(s).hidden = s !== steg),
         );
       }
@@ -4914,12 +5096,67 @@
         return ny.kode;
       }
 
+      /* Skolen avgjør hvilke rom du ser. Løses når skolen er lagret. */
+      let skoleFerdig = null;
+      async function velgSkole(kanAvbryte) {
+        visInngang('stegSkole');
+        $('skoleAvbryt').hidden = !kanAvbryte;
+        $('skoleNavn').value = sky.skole || '';
+        $('skoleStatus').textContent = '';
+        try {
+          $('skoleliste').innerHTML = skyFeil(await sky.klient.rpc('skoler'))
+            .map((x) => '<option value="' + esc(x.skole) + '"></option>')
+            .join('');
+        } catch (err) {}
+        $('skoleNavn').focus();
+        return new Promise((ferdig) => (skoleFerdig = ferdig));
+      }
+      $('stegSkole').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const st = (t, v) => {
+          $('skoleStatus').textContent = t;
+          $('skoleStatus').className = 'status' + (v ? ' varsel' : '');
+        };
+        const navn = $('skoleNavn').value.trim();
+        if (!navn) return st('Skriv inn navnet på skolen.', true);
+        $('skoleKnapp').disabled = true;
+        try {
+          sky.skole = skyFeil(
+            await sky.klient.rpc('sett_skole', { p_skole: navn }),
+          );
+          const f = skoleFerdig;
+          skoleFerdig = null;
+          if (f) f(true);
+        } catch (err) {
+          st(err.message || String(err), true);
+        } finally {
+          $('skoleKnapp').disabled = false;
+        }
+      });
+      $('skoleAvbryt').addEventListener('click', () => {
+        const f = skoleFerdig;
+        skoleFerdig = null;
+        if (f) f(false);
+      });
+      async function byttSkole() {
+        await tomSynk();
+        const endret = await velgSkole(true);
+        if (endret) {
+          (await hentSky())();
+          await hentMedlemmer();
+          visBeskjed('Du ser nå rommene til ' + sky.skole + '.');
+        }
+        lukkInngang();
+        visOversikt();
+      }
+
       async function startSky() {
         try {
           localStorage.setItem(MODUS, 'sky');
         } catch (err) {}
         if ($('innHusk').checked) await huskNokkel(sky.id, sky.privat);
         else await glemNokler();
+        if (!sky.skole) await velgSkole(false);
         innStatus('Henter klassene …');
         (await hentSky())();
         sky.klar = true;

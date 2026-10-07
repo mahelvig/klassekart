@@ -56,6 +56,12 @@ create table if not exists public.rom (
   endret_av    uuid references public.profiler on delete set null
 );
 
+-- Rom deles med kollegene på samme skole. Skolen velges ved første innlogging.
+alter table public.profiler add column if not exists skole text;
+alter table public.rom      add column if not exists skole text;
+alter table public.rom drop constraint if exists rom_navn_key;
+create unique index if not exists rom_skole_navn on public.rom (skole, navn);
+
 
 
 -- ============================================================
@@ -77,6 +83,44 @@ language sql stable security definer set search_path = public as $$
   from profiler p
   where auth.uid() is not null and p.epost = lower(trim(p_epost));
 $$;
+
+-- Skolen til den som er innlogget
+create or replace function public.min_skole() returns text
+language sql stable security definer set search_path = public as $$
+  select skole from profiler where id = auth.uid();
+$$;
+
+-- Skoler som allerede finnes, så kolleger velger samme skrivemåte
+create or replace function public.skoler() returns table (skole text)
+language sql stable security definer set search_path = public as $$
+  select distinct p.skole from profiler p
+  where auth.uid() is not null and p.skole is not null
+  order by 1;
+$$;
+
+-- Velg skole. Finnes skolen fra før (uansett store/små bokstaver), brukes den
+-- skrivemåten. Rom jeg laget før skolen var valgt, følger med.
+create or replace function public.sett_skole(p_skole text) returns text
+language plpgsql security definer set search_path = public as $$
+declare
+  ren text;
+  finnes text;
+begin
+  if auth.uid() is null then
+    raise exception 'Ikke innlogget';
+  end if;
+  ren := nullif(btrim(regexp_replace(coalesce(p_skole, ''), '\s+', ' ', 'g')), '');
+  if ren is null then
+    raise exception 'Skriv inn navnet på skolen';
+  end if;
+  select p.skole into finnes from profiler p where lower(p.skole) = lower(ren) limit 1;
+  ren := coalesce(finnes, ren);
+  update profiler set skole = ren where id = auth.uid();
+  update rom set skole = ren where opprettet_av = auth.uid() and skole is null;
+  return ren;
+end $$;
+
+alter table public.rom alter column skole set default public.min_skole();
 
 -- Hvem er med i klassene jeg selv er med i?
 create or replace function public.medlemmer_i(p_klasser uuid[])
@@ -132,16 +176,18 @@ drop policy if exists "rom les"    on public.rom;
 drop policy if exists "rom ny"     on public.rom;
 drop policy if exists "rom endre"  on public.rom;
 drop policy if exists "rom slett"  on public.rom;
-create policy "rom les"   on public.rom for select to authenticated using (true);
-create policy "rom ny"    on public.rom for insert to authenticated with check (opprettet_av = auth.uid());
-create policy "rom endre" on public.rom for update to authenticated using (true) with check (true);
+create policy "rom les"   on public.rom for select to authenticated using (skole = min_skole());
+create policy "rom ny"    on public.rom for insert to authenticated with check (opprettet_av = auth.uid() and skole = min_skole());
+create policy "rom endre" on public.rom for update to authenticated using (skole = min_skole()) with check (skole = min_skole());
 -- bare den som laget rommet, kan slette det
-create policy "rom slett" on public.rom for delete to authenticated using (opprettet_av = auth.uid());
+create policy "rom slett" on public.rom for delete to authenticated using (opprettet_av = auth.uid() and skole = min_skole());
 
 revoke all on public.profiler, public.klasser, public.klassemedlemmer, public.rom from anon;
 grant select, insert, update, delete on public.profiler, public.klasser, public.klassemedlemmer, public.rom to authenticated;
-revoke execute on function public.er_medlem(uuid), public.finn_kollega(text), public.medlemmer_i(uuid[]) from public, anon;
-grant execute on function public.er_medlem(uuid), public.finn_kollega(text), public.medlemmer_i(uuid[]) to authenticated;
+revoke execute on function public.er_medlem(uuid), public.finn_kollega(text), public.medlemmer_i(uuid[]),
+  public.min_skole(), public.skoler(), public.sett_skole(text) from public, anon;
+grant execute on function public.er_medlem(uuid), public.finn_kollega(text), public.medlemmer_i(uuid[]),
+  public.min_skole(), public.skoler(), public.sett_skole(text) to authenticated;
 
 
 -- ============================================================
