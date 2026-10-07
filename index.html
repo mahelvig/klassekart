@@ -58,53 +58,193 @@
         border-radius: 3px;
       }
 
+      .topp {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        height: 54px;
+        padding: 0 20px;
+        background: var(--flate);
+        border-bottom: 1px solid var(--strek);
+      }
+      .topp-venstre,
+      .topp-hoyre {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+      .merke {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0;
+        white-space: nowrap;
+      }
+      .tilbake {
+        font-size: 14px;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .tilbake:hover {
+        text-decoration: underline;
+      }
       .app {
         display: flex;
-        min-height: 100vh;
+        min-height: calc(100vh - 55px);
         align-items: stretch;
       }
       .panel {
-        width: 318px;
-        flex: 0 0 318px;
+        width: 300px;
+        flex: 0 0 300px;
         background: var(--flate);
         border-right: 1px solid var(--strek);
         overflow-y: auto;
-        max-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-      .panel-topp {
-        padding: 20px 20px 14px;
-        border-bottom: 1px solid var(--strek);
+        position: sticky;
+        top: 55px;
+        max-height: calc(100vh - 55px);
       }
       .panel-kropp {
-        padding: 16px 20px 48px;
-        flex: 1;
+        padding: 18px 18px 48px;
       }
       .rom {
         flex: 1;
-        padding: 26px 24px 60px;
+        padding: 18px 24px 60px;
         min-width: 0;
       }
-
-      .merke {
-        font-size: 19px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        margin: 0 0 12px;
-      }
-      .velgerpar {
-        display: grid;
-        grid-template-columns: 44px 1fr auto;
-        gap: 6px 8px;
+      .verktoy {
+        display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        font-size: 13px;
+        gap: 10px 18px;
+        max-width: 1180px;
+        margin: 0 auto 18px;
       }
-      .velgerpar span {
+      .verktoy .grp {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .verktoy .knapp.hoved {
+        width: auto;
+        padding: 8px 18px;
+        font-size: 15px;
+      }
+      .knapp.del-hoyre {
+        padding-left: 8px;
+        padding-right: 8px;
+        background: var(--tavle);
+        color: #fff;
+        border-color: var(--tavle);
+        border-left-color: #3b6457;
+        margin-left: -7px;
+        border-radius: 0 5px 5px 0;
+      }
+      .knapp.del-hoyre:hover {
+        background: #1a352d;
+      }
+      .verktoy .knapp.hoved.med-del {
+        border-radius: 5px 0 0 5px;
+      }
+      .knapp[aria-pressed='true'] {
+        background: #e8f0ec;
+        border-color: var(--fokus);
+        color: var(--tavle);
+        font-weight: 600;
+      }
+      .romverktoy {
+        padding: 12px 14px;
+        background: var(--laast-bg);
+        border: 1px solid #e2c9a7;
+        border-radius: 7px;
+      }
+      .romverktoy input[type='text'] {
+        width: 170px;
+      }
+      .romverktoy .hjelp {
+        flex-basis: 100%;
+        margin: 0;
+      }
+      .romvelger {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13.5px;
         color: var(--ink-svak);
       }
-      .velgerpar select {
-        min-width: 0;
+      .romvelger select {
+        width: auto;
+        min-width: 150px;
+      }
+      .utskrift {
+        display: none;
+      }
+      .meny {
+        width: 270px;
+        padding: 6px;
+      }
+      .meny .menyinfo {
+        padding: 8px 10px 10px;
+        margin: 0 0 4px;
+        font-size: 12.5px;
+        color: var(--ink-svak);
+        border-bottom: 1px solid #edf1ef;
+      }
+      .menyvalg {
+        display: block;
+        width: 100%;
+        border: 0;
+        background: none;
+        text-align: left;
+        padding: 8px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .menyvalg:hover {
+        background: #f3f6f4;
+      }
+      .menyvalg.fare {
+        color: var(--varsel);
+      }
+      .meny .bryter {
+        margin: 6px 8px 8px;
+      }
+      .meny .hjelp {
+        margin: 2px 10px 8px;
+      }
+      .kartrad {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 4px 2px 0;
+      }
+      .kartrad .menyvalg {
+        flex: 1;
+      }
+      .kartrad .menyvalg small {
+        color: var(--ink-svak);
+      }
+      .beskjed {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        z-index: 30;
+        max-width: calc(100% - 32px);
+        padding: 10px 16px;
+        background: var(--ink);
+        color: #fff;
+        border-radius: 7px;
+        font-size: 14px;
+        box-shadow: 0 6px 20px rgba(24, 36, 32, 0.25);
+      }
+      .beskjed.varsel {
+        background: var(--varsel);
       }
       input[type='text'],
       input[type='search'],
@@ -121,36 +261,6 @@
       textarea {
         resize: vertical;
         line-height: 1.6;
-      }
-
-      .faner {
-        display: flex;
-        gap: 2px;
-        margin-top: 14px;
-      }
-      .fane {
-        flex: 1;
-        border: 1px solid transparent;
-        border-bottom: 0;
-        background: none;
-        padding: 7px 4px;
-        border-radius: 6px 6px 0 0;
-        cursor: pointer;
-        font-size: 13.5px;
-        color: var(--ink-svak);
-      }
-      .fane[aria-selected='true'] {
-        background: var(--flate);
-        border-color: var(--strek);
-        color: var(--ink);
-        font-weight: 650;
-        margin-bottom: -15px;
-        padding-bottom: 14px;
-      }
-      .faner-strek {
-        height: 1px;
-        background: var(--strek);
-        margin: 0 -20px;
       }
 
       .seksjon {
@@ -180,6 +290,9 @@
       .rad > * {
         min-width: 0;
       }
+      .rad > .knapp {
+        flex: 0 0 auto;
+      }
 
       .knapp {
         border: 1px solid var(--strek);
@@ -187,6 +300,7 @@
         border-radius: 5px;
         padding: 7px 12px;
         cursor: pointer;
+        white-space: nowrap;
       }
       .knapp:hover {
         background: #f3f6f4;
@@ -351,6 +465,65 @@
         color: var(--varsel);
       }
 
+      .kjonn {
+        flex: 0 0 auto;
+        width: 26px;
+        border: 1px solid var(--strek);
+        background: #fff;
+        border-radius: 9px;
+        font-size: 11px;
+        padding: 1px 0;
+        color: var(--ink-svak);
+        cursor: pointer;
+      }
+      .kjonn.satt {
+        background: #eef2f0;
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .regelboks .knapp.fjern {
+        margin-top: 14px;
+        width: 100%;
+        color: var(--varsel);
+      }
+      .gruppe-boks {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+      .ktrl {
+        display: flex;
+        gap: 4px;
+      }
+      .ktrl button {
+        border: 1px solid var(--strek);
+        background: #fff;
+        border-radius: 4px;
+        font-size: 12px;
+        line-height: 1;
+        padding: 3px 7px;
+        cursor: pointer;
+        color: var(--ink-svak);
+      }
+      .ktrl button:hover {
+        border-color: var(--fokus);
+        color: var(--fokus);
+      }
+      .rad-ktrl {
+        flex-direction: column;
+        align-self: center;
+      }
+      .ny-rad {
+        align-self: center;
+      }
+      .redigerer .plass {
+        cursor: pointer;
+      }
+      .redigerer .plass .navn {
+        opacity: 0.35;
+      }
+
       /* klasserom */
       .romtopp {
         display: flex;
@@ -392,7 +565,7 @@
       .pultrad {
         display: flex;
         gap: var(--midtgang, 34px);
-        justify-content: center;
+        justify-content: safe center;
       }
       .gruppe {
         display: flex;
@@ -737,10 +910,17 @@
         body {
           background: #fff;
         }
+        .topp,
         .panel,
+        .verktoy,
+        .romvelger,
         .popup,
-        .melding {
+        .melding,
+        .beskjed {
           display: none !important;
+        }
+        .utskrift {
+          display: inline;
         }
         .rom {
           padding: 0;
@@ -754,14 +934,15 @@
       }
       @media (max-width: 900px) {
         .app {
-          flex-direction: column;
+          flex-direction: column-reverse;
         }
         .panel {
           width: auto;
           flex: none;
+          position: static;
           max-height: none;
           border-right: 0;
-          border-bottom: 1px solid var(--strek);
+          border-top: 1px solid var(--strek);
         }
         .pultrad {
           gap: var(--midtgang, 20px);
@@ -770,329 +951,159 @@
     </style>
   </head>
   <body>
+    <header class="topp" id="topp" hidden>
+      <div class="topp-venstre">
+        <p class="merke">Klassekart</p>
+        <button type="button" class="lenkeknapp tilbake" id="tilKlasser">
+          ← Alle klasser
+        </button>
+      </div>
+      <div class="topp-hoyre">
+        <span class="skystatus" id="skystatus"></span>
+        <button type="button" class="knapp liten" id="kontoKnapp"></button>
+      </div>
+    </header>
+
     <div class="app" hidden>
       <aside class="panel">
-        <div class="panel-topp">
-          <p class="merke">
-            Klassekart<span class="skystatus" id="skystatus"></span>
-          </p>
-          <div class="velgerpar">
-            <span>Klasse</span
-            ><select id="velgKlasse"></select
-            ><button
-              class="knapp liten"
-              id="alleKlasser"
-              title="Vis alle klassene"
-            >
-              Alle
-            </button>
-            <span>Rom</span
-            ><select id="velgRom"></select
-            ><button class="knapp liten" id="nyRom">Ny</button>
-          </div>
-          <div class="faner" role="tablist">
-            <button
-              class="fane"
-              role="tab"
-              data-fane="trekning"
-              aria-selected="true"
-            >
-              Trekning
-            </button>
-            <button
-              class="fane"
-              role="tab"
-              data-fane="elever"
-              aria-selected="false"
-            >
-              Elever
-            </button>
-            <button
-              class="fane"
-              role="tab"
-              data-fane="rom"
-              aria-selected="false"
-            >
-              Rom
-            </button>
-            <button
-              class="fane"
-              role="tab"
-              data-fane="data"
-              aria-selected="false"
-            >
-              Data
-            </button>
-          </div>
-          <div class="faner-strek"></div>
-        </div>
-
         <div class="panel-kropp">
-          <!-- TREKNING -->
-          <div class="fanepanel" data-fane="trekning">
-            <div class="seksjon">
-              <button class="knapp hoved" id="trekk">Trekk plassering</button>
-              <label class="bryter"
-                ><input type="checkbox" id="spre" /> Fordel gutter og jenter
-                jevnt</label
-              >
-              <label class="bryter"
-                ><input type="checkbox" id="nyeNaboer" /> Unngå naboer fra
-                tidligere kart</label
-              >
-              <div class="knapprad">
-                <button class="knapp" id="angre" disabled>Angre</button>
-                <button class="knapp" id="tomKart">Tøm kartet</button>
-              </div>
-              <label class="bryter"
-                ><input type="checkbox" id="speil" /> Speilvend (sett fra
-                tavla)</label
-              >
-              <div class="knapprad">
-                <button class="knapp" id="skrivut">Skriv ut</button>
-              </div>
-              <p class="hjelp">
-                Klikk på en pult for å sette inn en bestemt elev, låse plassen
-                eller sperre den. Dra en elev over på en annen pult for å bytte.
-              </p>
+          <div class="rad" style="justify-content: space-between">
+            <h2 style="margin: 0; font-size: 15px" id="elevtelling">Elever</h2>
+            <span class="rad" style="gap: 6px; flex: 0 0 auto">
+              <button class="knapp liten" id="importmodus">Importer</button>
+              <button class="knapp liten" id="tekstmodus">Som tekst</button>
+            </span>
+          </div>
+          <div id="importboks" hidden>
+            <label class="felt" for="importtekst"
+              >Lim inn klasselisten – fra Skoleplattformen, Excel eller en
+              PDF</label
+            >
+            <textarea
+              id="importtekst"
+              style="height: 150px"
+              spellcheck="false"
+              placeholder="Merk tabellen på skjermen, kopier, og lim inn her."
+            ></textarea>
+            <p class="hjelp">
+              Bare fornavn tas vare på – med første bokstav i etternavnet der to
+              heter det samme. Det du limer inn, lagres ikke.
+            </p>
+            <p class="status" id="importstatus"></p>
+            <p class="hjelp" id="importfasit"></p>
+            <div id="importnavnboks">
+              <label class="felt" for="importnavn">Navn på klassen</label>
+              <input type="text" id="importnavn" />
             </div>
-
-            <div class="seksjon">
-              <h2>Lagrede kart</h2>
-              <div class="rad">
-                <select id="velgKart"></select>
-                <button class="knapp liten" id="slettKart">Slett</button>
-              </div>
-              <div class="knapprad">
-                <button class="knapp" id="lagreKart">Lagre dette kartet</button>
-              </div>
-              <p class="status" id="kartstatus"></p>
+            <div class="knapprad">
+              <button class="knapp" id="importNy">Lag ny klasse</button>
+              <button class="knapp" id="importLegg">Legg til her</button>
             </div>
-
-            <div class="seksjon">
-              <h2>Nabominne</h2>
-              <p class="status" id="minnestatus"></p>
-              <div class="knapprad">
-                <button class="knapp" id="huskNaboer">Husk naboene</button>
-                <button class="knapp" id="tomMinne">Tøm minnet</button>
-              </div>
-              <p class="hjelp">
-                Minnet fylles automatisk når du lagrer et kart. Bruk knappen
-                hvis du kjører et kart uten å lagre det.
-              </p>
+            <div class="knapprad">
+              <button class="knapp" id="importAvbryt">Avbryt</button>
             </div>
           </div>
-
-          <!-- ELEVER -->
-          <div class="fanepanel" data-fane="elever" hidden>
-            <div class="seksjon">
-              <div class="rad" style="justify-content: space-between">
-                <h2 style="margin: 0" id="elevtelling">Elever</h2>
-                <span class="rad" style="gap: 6px; flex: 0 0 auto">
-                  <button class="knapp liten" id="importmodus">Importer</button>
-                  <button class="knapp liten" id="tekstmodus">Som tekst</button>
-                </span>
-              </div>
-              <div id="importboks" hidden>
-                <label class="felt" for="importtekst"
-                  >Lim inn klasselisten – fra Skoleplattformen, Excel eller en
-                  PDF</label
-                >
-                <textarea
-                  id="importtekst"
-                  style="height: 150px"
-                  spellcheck="false"
-                  placeholder="Merk tabellen på skjermen, kopier, og lim inn her."
-                ></textarea>
-                <p class="hjelp">
-                  Bare fornavn tas vare på – med første bokstav i etternavnet
-                  der to heter det samme. Det du limer inn, lagres ikke.
-                </p>
-                <p class="status" id="importstatus"></p>
-                <p class="hjelp" id="importfasit"></p>
-                <div id="importnavnboks">
-                  <label class="felt" for="importnavn">Navn på klassen</label>
-                  <input type="text" id="importnavn" />
-                </div>
-                <div class="knapprad">
-                  <button class="knapp" id="importNy">Lag ny klasse</button>
-                  <button class="knapp" id="importLegg">Legg til her</button>
-                </div>
-                <div class="knapprad">
-                  <button class="knapp" id="importAvbryt">Avbryt</button>
-                </div>
-              </div>
-              <div id="elevtekstboks" hidden>
-                <label class="felt" for="elevtekst"
-                  >Ett navn per linje. <code>(g)</code> eller
-                  <code>(j)</code> bak navnet setter kjønn.</label
-                >
-                <textarea
-                  id="elevtekst"
-                  style="height: 260px"
-                  spellcheck="false"
-                ></textarea>
-                <div class="knapprad">
-                  <button class="knapp" id="lagreTekst">Bruk listen</button>
-                  <button class="knapp" id="avbrytTekst">Avbryt</button>
-                </div>
-                <p class="hjelp">
-                  Elever du beholder navnet på, beholder reglene sine.
-                </p>
-              </div>
-              <div id="elevlisteboks">
-                <p class="status" id="elevstatus" style="margin: 0 0 8px"></p>
-                <div class="elevliste" id="elevliste"></div>
-                <p class="hjelp" id="tomliste" hidden>
-                  Ingen elever ennå. Bruk <strong>Importer</strong> og lim inn
-                  klasselisten, eller skriv inn navn ett og ett.
-                </p>
-                <div class="rad" style="margin-top: 9px">
-                  <input
-                    type="text"
-                    id="nyttNavn"
-                    placeholder="Nytt elevnavn"
-                  />
-                  <button class="knapp" id="leggTil">Legg til</button>
-                </div>
-                <p class="hjelp">
-                  Haken slår av og på <em>borte i dag</em>. Tannhjulet åpner
-                  reglene for eleven.
-                </p>
-              </div>
+          <div id="elevtekstboks" hidden>
+            <label class="felt" for="elevtekst"
+              >Ett navn per linje. <code>(g)</code> eller <code>(j)</code> bak
+              navnet setter kjønn.</label
+            >
+            <textarea
+              id="elevtekst"
+              style="height: 260px"
+              spellcheck="false"
+            ></textarea>
+            <div class="knapprad">
+              <button class="knapp" id="lagreTekst">Bruk listen</button>
+              <button class="knapp" id="avbrytTekst">Avbryt</button>
             </div>
+            <p class="hjelp">
+              Elever du beholder navnet på, beholder reglene sine.
+            </p>
           </div>
-
-          <!-- ROM -->
-          <div class="fanepanel" data-fane="rom" hidden>
-            <div class="seksjon">
-              <h2>Pultoppsett</h2>
-              <label class="felt" for="radliste"
-                >Én rad per linje, pultgrupper skilt med +</label
-              >
-              <textarea
-                id="radliste"
-                style="
-                  height: 130px;
-                  font-family: ui-monospace, Consolas, monospace;
-                "
-                spellcheck="false"
-              ></textarea>
-              <div class="rad" style="margin-top: 9px">
-                <input type="text" id="allerader" placeholder="2+3+2" />
-                <button class="knapp" id="brukalle">Bruk på alle</button>
-              </div>
-              <div class="knapprad">
-                <button class="knapp" id="leggRad">Legg til rad</button>
-                <button class="knapp" id="fjernRad">Fjern siste</button>
-              </div>
-              <p class="status" id="plasstatus"></p>
+          <div id="elevlisteboks">
+            <p class="status" id="elevstatus" style="margin: 8px 0"></p>
+            <div
+              class="elevliste"
+              id="elevliste"
+              style="margin-top: 10px"
+            ></div>
+            <p class="hjelp" id="tomliste" hidden>
+              Ingen elever ennå. Bruk <strong>Importer</strong> og lim inn
+              klasselisten, eller skriv inn navn ett og ett.
+            </p>
+            <div class="rad" style="margin-top: 9px">
+              <input type="text" id="nyttNavn" placeholder="Nytt elevnavn" />
+              <button class="knapp" id="leggTil">Legg til</button>
             </div>
-            <div class="seksjon">
-              <h2>Rommet</h2>
-              <label class="felt" for="romnavn">Navn</label>
-              <input
-                type="text"
-                id="romnavn"
-                placeholder="F.eks. 218 eller Fysikklab"
-              />
-              <div class="knapprad">
-                <button class="knapp" id="dupliserRom">
-                  Lagre som nytt rom
-                </button>
-                <button class="knapp" id="slettRom">Slett rommet</button>
-              </div>
-              <p class="hjelp">
-                Sperrede pulter hører til rommet, så en ødelagt pult eller en
-                søyle følger med hver gang du velger dette rommet.
-              </p>
-            </div>
-          </div>
-
-          <!-- DATA -->
-          <div class="fanepanel" data-fane="data" hidden>
-            <div class="seksjon" id="kontoSeksjon" hidden>
-              <h2>Konto</h2>
-              <p class="hjelp" style="margin-top: 0" id="kontoInfo"></p>
-              <div class="knapprad">
-                <button class="knapp" id="byttPassord">Bytt passord</button>
-                <button class="knapp" id="loggUt">Logg ut</button>
-              </div>
-              <div class="knapprad" id="flyttBoks" hidden>
-                <button class="knapp" id="flyttLokale">
-                  Flytt klasser fra denne nettleseren hit
-                </button>
-              </div>
-              <p class="status" id="kontostatus"></p>
-            </div>
-            <div class="seksjon" id="tilSkySeksjon" hidden>
-              <h2>Lagre i skyen</h2>
-              <p class="hjelp" style="margin-top: 0">
-                Logg inn for å få klassene på alle maskiner og dele dem med
-                kolleger. Alt krypteres før det forlater maskinen.
-              </p>
-              <div class="knapprad">
-                <button class="knapp" id="tilSky">Logg inn</button>
-              </div>
-            </div>
-            <div class="seksjon" id="lokalBrukerSeksjon">
-              <h2>Hvem bruker kopien</h2>
-              <div class="rad">
-                <select id="velgBruker"></select>
-                <button class="knapp liten" id="nyBruker">Ny</button>
-              </div>
-              <p class="hjelp">
-                Deler dere maskin og pålogging, får hver lærer sine egne klasser
-                ved å velge seg selv her. Klasser og kart er adskilt per bruker.
-              </p>
-            </div>
-            <div class="seksjon">
-              <h2>Sikkerhetskopi</h2>
-              <p class="hjelp" style="margin-top: 0" id="kopiHjelp">
-                Alt ligger lagret i nettleseren på denne maskinen. Ta en kopi
-                hvis du bytter maskin eller tømmer nettleseren.
-              </p>
-              <div class="knapprad">
-                <button class="knapp" id="lastNed">Last ned kryptert</button>
-                <button class="knapp" id="hentFil">Hent inn fil</button>
-              </div>
-              <input
-                type="file"
-                id="filvelger"
-                accept="application/json,.json"
-                hidden
-              />
-              <label class="felt" for="jsontekst"
-                >Eller kopier teksten under / lim inn en kopi her</label
-              >
-              <textarea
-                id="jsontekst"
-                style="
-                  height: 170px;
-                  font-family: ui-monospace, Consolas, monospace;
-                  font-size: 12px;
-                "
-                spellcheck="false"
-              ></textarea>
-              <div class="knapprad">
-                <button class="knapp" id="visJson">Vis alt</button>
-                <button class="knapp" id="lesJson">Les inn teksten</button>
-              </div>
-              <p class="status" id="datastatus"></p>
-            </div>
+            <p class="hjelp">
+              Haken betyr <em>til stede i dag</em>. G/J setter kjønn, og
+              tannhjulet åpner reglene for eleven.
+            </p>
           </div>
         </div>
       </aside>
 
       <main class="rom">
+        <div class="verktoy" id="verktoy">
+          <div class="grp">
+            <button class="knapp hoved med-del" id="trekk">
+              Trekk plassering
+            </button>
+            <button
+              class="knapp del-hoyre"
+              id="trekkValg"
+              title="Valg for trekningen"
+              aria-label="Valg for trekningen"
+            >
+              ▾
+            </button>
+          </div>
+          <div class="grp">
+            <button class="knapp" id="angre" disabled>Angre</button>
+            <button class="knapp" id="tomKart">Tøm</button>
+          </div>
+          <div class="grp">
+            <button class="knapp" id="brukKart">Bruk dette kartet</button>
+            <button class="knapp" id="tidligere">Tidligere kart ▾</button>
+          </div>
+          <div class="grp">
+            <button class="knapp" id="endreRom">Endre rommet</button>
+            <button class="knapp" id="speil" aria-pressed="false">
+              Sett fra tavla
+            </button>
+            <button class="knapp" id="skrivut">Skriv ut</button>
+          </div>
+        </div>
+        <div class="verktoy romverktoy" id="romverktoy" hidden>
+          <label class="rad" style="gap: 8px"
+            >Navn <input type="text" id="romnavn"
+          /></label>
+          <span class="status" id="plasstatus" style="margin: 0"></span>
+          <span class="grp" style="margin-left: auto">
+            <button class="knapp" id="dupliserRom">Lagre som nytt rom</button>
+            <button class="knapp" id="slettRom">Slett rommet</button>
+            <button class="knapp hoved" id="romFerdig">Ferdig</button>
+          </span>
+          <p class="hjelp" id="romhjelp"></p>
+        </div>
         <div class="romtopp">
-          <h1 id="tittel">Klassekart</h1>
-          <span class="dato" id="dato"></span>
+          <h1>
+            <span id="tittel">Klassekart</span
+            ><span class="utskrift" id="tittelRom"></span>
+          </h1>
+          <label class="romvelger"
+            >Rom
+            <select id="velgRom"></select
+          ></label>
         </div>
         <div class="kart" id="kart"></div>
         <div class="melding gul" id="melding" hidden></div>
       </main>
     </div>
+
+    <div class="beskjed" id="beskjed" role="status" hidden></div>
+    <input type="file" id="filvelger" accept="application/json,.json" hidden />
 
     <section class="oversikt" id="oversikt" hidden>
       <div class="oversikt-topp">
@@ -1231,20 +1242,18 @@
 
       /* ============ oppsett for denne kopien ============ */
       const OPPSETT = {
-        eier: '', // tom streng = spør om navn første gang
         startklasse: '',
         brukStartelever: false,
       };
 
       /* ============ lagring ============ */
+      const LOKAL = 'klassekart:lokal';
+      // eldre versjoner hadde én lagringsplass per «bruker» på maskinen
       const PROFILER = 'klassekart:profiler';
       const SIST = 'klassekart:sist';
       const GAMMEL = 'klassekart:v3';
-      let bruker = '';
-      let profiler = [];
       const brukernokkel = (n) =>
         'klassekart:v3:' + String(n).toLowerCase().replace(/\s+/g, '_');
-      const dataNokkel = () => brukernokkel(bruker);
 
       const lager = {
         async hent(n) {
@@ -1381,7 +1390,7 @@
         endringsteller++;
         if (iSky()) return planleggSynk();
         clearTimeout(lagretimer);
-        lagretimer = setTimeout(() => lager.skriv(dataNokkel(), D), 350);
+        lagretimer = setTimeout(() => lager.skriv(LOKAL, D), 350);
       }
 
       /* ============ seter ============ */
@@ -1686,18 +1695,21 @@
       window.addEventListener('beforeprint', () => tilpassBredde(1010));
       window.addEventListener('afterprint', () => tilpassBredde());
 
+      let romModus = false;
       function tegn(meldinger) {
         ryddPlasser();
-        $('tittel').textContent =
-          'Klassekart ' + D.aktiv.klasse + ' · ' + D.aktiv.rom;
-        $('dato').textContent = new Date().toLocaleDateString('no-NO', {
+        const dato = new Date().toLocaleDateString('no-NO', {
           day: 'numeric',
           month: 'long',
           year: 'numeric',
         });
+        $('tittel').textContent = 'Klassekart ' + D.aktiv.klasse;
+        $('tittelRom').textContent = ' · ' + D.aktiv.rom + ' · ' + dato;
 
         const kart = $('kart');
         kart.innerHTML = '';
+        kart.classList.toggle('redigerer', romModus);
+        const speil = D.aktiv.speil && !romModus;
         const tavle = document.createElement('div');
         tavle.className = 'tavle';
         tavle.textContent = 'Tavle';
@@ -1705,23 +1717,71 @@
         pulter.className = 'pulter';
         const rader = rommet().rader;
         const ri = rader.map((_, i) => i);
-        (D.aktiv.speil ? ri.slice().reverse() : ri).forEach((r) => {
+        (speil ? ri.slice().reverse() : ri).forEach((r) => {
           const radEl = document.createElement('div');
           radEl.className = 'pultrad';
           const gi = rader[r].map((_, i) => i);
-          (D.aktiv.speil ? gi.slice().reverse() : gi).forEach((g) => {
+          (speil ? gi.slice().reverse() : gi).forEach((g) => {
             const gr = document.createElement('div');
             gr.className = 'gruppe';
             const pi = [];
             for (let i = 0; i < rader[r][g]; i++) pi.push(i);
-            (D.aktiv.speil ? pi.reverse() : pi).forEach((i) =>
+            (speil ? pi.reverse() : pi).forEach((i) =>
               gr.appendChild(lagPlass(r, g, i)),
             );
-            radEl.appendChild(gr);
+            if (!romModus) return radEl.appendChild(gr);
+            const boks = document.createElement('div');
+            boks.className = 'gruppe-boks';
+            boks.appendChild(gr);
+            boks.appendChild(
+              ktrl([
+                [
+                  '−',
+                  'Fjern en pult',
+                  () => endreRom((S) => fjernPult(S, r, g)),
+                ],
+                [
+                  '+',
+                  'Legg til en pult',
+                  () => endreRom((S) => S[r][g].push(null)),
+                ],
+              ]),
+            );
+            radEl.appendChild(boks);
           });
+          if (romModus) {
+            const k = ktrl([
+              [
+                '+ gruppe',
+                'Ny pultgruppe i raden',
+                () => endreRom((S) => S[r].push([null, null])),
+              ],
+              [
+                '× rad',
+                'Fjern raden',
+                () => endreRom((S) => S.length > 1 && S.splice(r, 1)),
+              ],
+            ]);
+            k.classList.add('rad-ktrl');
+            radEl.appendChild(k);
+          }
           pulter.appendChild(radEl);
         });
-        if (D.aktiv.speil) {
+        if (romModus) {
+          const k = ktrl([
+            [
+              '+ Legg til rad',
+              'Ny rad bakerst',
+              () =>
+                endreRom((S) =>
+                  S.push(S[S.length - 1].map((g) => g.map(() => null))),
+                ),
+            ],
+          ]);
+          k.classList.add('ny-rad');
+          pulter.appendChild(k);
+        }
+        if (speil) {
           kart.appendChild(pulter);
           kart.appendChild(tavle);
         } else {
@@ -1729,10 +1789,71 @@
           kart.appendChild(pulter);
         }
 
-        tilpassBredde();
+        tilpassBredde(romModus ? (kart.clientWidth || 900) - 90 : 0);
         visMelding(meldinger);
         tegnPanel();
         lagre();
+      }
+      function ktrl(knapper) {
+        const d = document.createElement('div');
+        d.className = 'ktrl';
+        knapper.forEach(([tekst, tittel, fn]) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = tekst;
+          b.title = tittel;
+          b.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fn();
+          });
+          d.appendChild(b);
+        });
+        return d;
+      }
+
+      /* Endrer pultoppsettet og flytter elever og sperrede pulter med.
+         S er rader → grupper → gamle pultnøkler (null for nye pulter). */
+      function endreRom(endring) {
+        const R = rommet();
+        const S = R.rader.map((rad, r) =>
+          rad.map((n, g) =>
+            Array.from({ length: n }, (_, i) => nokkel(r, g, i)),
+          ),
+        );
+        endring(S);
+        const rent = S.map((rad) => rad.filter((g) => g.length)).filter(
+          (rad) => rad.length,
+        );
+        if (!rent.length) rent.push([[null, null]]);
+        const ny = {};
+        rent.forEach((rad, r) =>
+          rad.forEach((g, gi) =>
+            g.forEach((gammel, i) => {
+              if (gammel) ny[gammel] = nokkel(r, gi, i);
+            }),
+          ),
+        );
+        const flytt = (k) => ny[k];
+        R.rader = rent.map((rad) => rad.map((g) => g.length));
+        R.sperret = R.sperret.map(flytt).filter(Boolean);
+        const plasser = {};
+        Object.entries(D.aktiv.plasser).forEach(([k, id]) => {
+          if (ny[k]) plasser[ny[k]] = id;
+        });
+        D.aktiv.plasser = plasser;
+        D.aktiv.laaste = D.aktiv.laaste.map(flytt).filter(Boolean);
+        tegn();
+      }
+      function fjernPult(S, r, g) {
+        S[r][g].pop();
+      }
+      function settRomModus(paa) {
+        romModus = paa;
+        lukkPanel();
+        $('verktoy').hidden = paa;
+        $('romverktoy').hidden = !paa;
+        if (paa) $('romnavn').value = D.aktiv.rom;
+        tegn();
       }
 
       function lagPlass(r, g, i) {
@@ -1758,7 +1879,7 @@
                   : '');
             n.textContent = e.navn;
             el.appendChild(n);
-            el.draggable = true;
+            el.draggable = !romModus;
           } else {
             el.classList.add('tom');
             el.textContent = '';
@@ -1773,7 +1894,8 @@
         }
         el.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          apnePanel(k, el);
+          if (romModus) sperrPult(k);
+          else apnePanel(k, el);
         });
         el.addEventListener('dragstart', (ev) => {
           ev.dataTransfer.setData('text/plain', k);
@@ -1813,6 +1935,16 @@
           linjer.unshift('Uten plass: ' + ute.map((e) => e.navn).join(', '));
         if (borte.length)
           linjer.push('Borte i dag: ' + borte.map((e) => e.navn).join(', '));
+        const ledige = seter().length - rommet().sperret.length,
+          tilStede = elever().length - borte.length;
+        if (ledige < tilStede)
+          linjer.unshift(
+            'Rommet har ' +
+              ledige +
+              ' pulter, men ' +
+              tilStede +
+              ' elever er til stede. Velg et annet rom eller trykk «Endre rommet».',
+          );
         if (!linjer.length) {
           boks.hidden = true;
           return;
@@ -1917,85 +2049,128 @@
         bSperr.className = 'knapp' + (sperret ? ' aktiv' : '');
         bSperr.textContent = sperret ? 'Åpne pulten' : 'Sperr pulten';
         bSperr.addEventListener('click', () => {
-          const R = rommet();
-          if (sperret) R.sperret = R.sperret.filter((x) => x !== k);
-          else {
-            R.sperret = R.sperret.concat(k);
-            delete D.aktiv.plasser[k];
-            D.aktiv.laaste = D.aktiv.laaste.filter((x) => x !== k);
-          }
-          tegn();
+          sperrPult(k);
           lukkPanel();
         });
         rad.appendChild(bLaas);
         rad.appendChild(bSperr);
         boks.appendChild(rad);
 
+        visPopup(boks, el, 'midt');
+        velg.focus();
+      }
+      function sperrPult(k) {
+        const R = rommet();
+        if (erSperret(k)) R.sperret = R.sperret.filter((x) => x !== k);
+        else {
+          R.sperret = R.sperret.concat(k);
+          delete D.aktiv.plasser[k];
+          D.aktiv.laaste = D.aktiv.laaste.filter((x) => x !== k);
+        }
+        tegn();
+      }
+      function visPopup(boks, el, justering) {
         document.body.appendChild(boks);
         const r = el.getBoundingClientRect(),
           b = boks.getBoundingClientRect();
-        let v = r.left + window.scrollX + r.width / 2 - b.width / 2;
+        let v =
+          justering === 'hoyre'
+            ? r.right - b.width
+            : justering === 'venstre'
+              ? r.left
+              : r.left + r.width / 2 - b.width / 2;
         v = Math.max(8, Math.min(v, window.innerWidth - b.width - 8));
         let t = r.bottom + window.scrollY + 6;
-        if (r.bottom + b.height + 20 > window.innerHeight)
+        if (r.bottom + b.height + 20 > window.innerHeight && r.top > b.height)
           t = r.top + window.scrollY - b.height - 6;
-        boks.style.left = v + 'px';
+        boks.style.left = v + window.scrollX + 'px';
         boks.style.top = t + 'px';
         apent = boks;
-        velg.focus();
+      }
+      /* Nedtrekksmeny under en knapp. bygg(boks) fyller den. */
+      function apneMeny(knapp, bygg, justering) {
+        const varApen = apent && apent.dataset.knapp === knapp.id;
+        lukkPanel();
+        if (varApen) return; // et nytt klikk lukker menyen
+        const boks = document.createElement('div');
+        boks.className = 'popup meny';
+        boks.dataset.knapp = knapp.id;
+        boks.addEventListener('click', (e) => e.stopPropagation());
+        bygg(boks);
+        visPopup(boks, knapp, justering || 'venstre');
+      }
+      function menyvalg(boks, tekst, fn, fare) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'menyvalg' + (fare ? ' fare' : '');
+        b.textContent = tekst;
+        b.addEventListener('click', () => {
+          lukkPanel();
+          fn();
+        });
+        boks.appendChild(b);
+        return b;
+      }
+      function menyinfo(boks, tekst) {
+        const p = document.createElement('p');
+        p.className = 'menyinfo';
+        p.textContent = tekst;
+        boks.appendChild(p);
+      }
+      let beskjedTimer = null;
+      function visBeskjed(tekst, varsel) {
+        const b = $('beskjed');
+        b.textContent = tekst;
+        b.className = 'beskjed' + (varsel ? ' varsel' : '');
+        b.hidden = false;
+        clearTimeout(beskjedTimer);
+        beskjedTimer = setTimeout(
+          () => (b.hidden = true),
+          varsel ? 7000 : 3500,
+        );
       }
 
       /* ============ sidepanel ============ */
       let apenElev = null;
 
       function tegnPanel() {
-        // velgere
-        fyll($('velgKlasse'), Object.keys(D.klasser).sort(), D.aktiv.klasse);
-        fyll($('velgRom'), Object.keys(D.rom).sort(), D.aktiv.rom);
-        const kartNavn = Object.keys(D.kart)
-          .filter((n) => D.kart[n].klasse === D.aktiv.klasse)
-          .sort();
-        const vk = $('velgKart');
-        vk.innerHTML = kartNavn.length
-          ? '<option value="">— velg lagret kart —</option>' +
-            kartNavn.map((n) => '<option>' + esc(n) + '</option>').join('')
-          : '<option value="">(ingen lagrede kart)</option>';
+        const sel = $('velgRom');
+        fyll(sel, Object.keys(D.rom).sort(sammenlign), D.aktiv.rom);
+        const nytt = document.createElement('option');
+        nytt.value = '';
+        nytt.textContent = '+ Nytt rom …';
+        sel.appendChild(nytt);
 
-        $('spre').checked = !!D.aktiv.spre;
-        $('nyeNaboer').checked = !!D.aktiv.nyeNaboer;
-        $('speil').checked = !!D.aktiv.speil;
+        $('speil').setAttribute('aria-pressed', !!D.aktiv.speil);
+        const antKart = kartForKlasse().length;
+        $('tidligere').textContent =
+          'Tidligere kart' + (antKart ? ' (' + antKart + ')' : '') + ' ▾';
 
-        fyll($('velgBruker'), profiler, bruker);
-
-        const h = klasse().historikk.length;
-        $('minnestatus').textContent = h
-          ? h + ' tidligere kart i minnet for ' + D.aktiv.klasse
-          : 'Ingen tidligere kart i minnet.';
-
-        const antall = seter().length,
-          sperret = rommet().sperret.length;
-        const tilgj = antall - sperret,
-          n = elever().filter((e) => !e.borte).length;
-        $('plasstatus').textContent =
-          rommet().rader.length +
-          ' rader · ' +
-          antall +
-          ' pulter' +
-          (sperret ? ' (' + sperret + ' sperret)' : '') +
-          ' · ' +
-          n +
-          ' elever til stede';
-        $('plasstatus').className = 'status' + (tilgj < n ? ' varsel' : '');
-        if (document.activeElement !== $('radliste'))
-          $('radliste').value = rommet()
-            .rader.map((r) => r.join('+'))
-            .join('\n');
-        if (document.activeElement !== $('romnavn'))
-          $('romnavn').value = D.aktiv.rom;
+        if (romModus) {
+          const antall = seter().length,
+            sperret = rommet().sperret.length;
+          $('plasstatus').textContent =
+            rommet().rader.length +
+            ' rader · ' +
+            (antall - sperret) +
+            ' pulter' +
+            (sperret ? ' (+' + sperret + ' sperret)' : '');
+          if (document.activeElement !== $('romnavn'))
+            $('romnavn').value = D.aktiv.rom;
+          const eier = rommet()._eier;
+          $('slettRom').hidden = iSky() && eier && eier !== sky.id;
+          $('romhjelp').textContent =
+            'Bruk − og + for pulter, og klikk på en pult for å sperre den.' +
+            (iSky()
+              ? ' Rommet deles med kollegene dine, så endringer gjelder for alle.'
+              : '');
+        }
 
         $('elevtelling').textContent = 'Elever (' + elever().length + ')';
         tegnElevliste();
       }
+      const sammenlign = (a, b) =>
+        a.localeCompare(b, 'no', { numeric: true, sensitivity: 'base' });
       function fyll(sel, navn, valgt) {
         sel.innerHTML = navn
           .map(
@@ -2052,12 +2227,15 @@
             m.textContent = e.gruppe;
             rad.appendChild(m);
           }
-          if (e.kjonn) {
-            const m = document.createElement('span');
-            m.className = 'merkelapp';
-            m.textContent = e.kjonn.toUpperCase();
-            rad.appendChild(m);
-          }
+          const kj = document.createElement('button');
+          kj.type = 'button';
+          kj.className = 'kjonn' + (e.kjonn ? ' satt' : '');
+          kj.textContent = e.kjonn ? e.kjonn.toUpperCase() : 'G/J';
+          kj.title = 'Kjønn: klikk for å bytte mellom gutt, jente og ikke satt';
+          kj.addEventListener('click', () => {
+            e.kjonn = e.kjonn === 'g' ? 'j' : e.kjonn === 'j' ? null : 'g';
+            tegn();
+          });
           const antRegler =
             (e.sone !== 'fri' ? 1 : 0) + e.sammen.length + e.unna.length;
           if (antRegler) {
@@ -2067,6 +2245,7 @@
             rad.appendChild(m);
           }
 
+          rad.appendChild(kj);
           const knapp = document.createElement('button');
           knapp.className = 'knapp liten';
           knapp.textContent = '⚙';
@@ -2077,24 +2256,6 @@
           });
           rad.appendChild(knapp);
 
-          const slett = document.createElement('button');
-          slett.className = 'knapp liten';
-          slett.textContent = '×';
-          slett.title = 'Fjern eleven';
-          slett.addEventListener('click', () => {
-            if (!confirm('Fjerne ' + e.navn + ' fra klassen?')) return;
-            const k = klasse();
-            k.elever = k.elever.filter((x) => x.id !== e.id);
-            k.elever.forEach((x) => {
-              x.sammen = x.sammen.filter((i) => i !== e.id);
-              x.unna = x.unna.filter((i) => i !== e.id);
-            });
-            Object.keys(D.aktiv.plasser).forEach((nk) => {
-              if (D.aktiv.plasser[nk] === e.id) delete D.aktiv.plasser[nk];
-            });
-            tegn();
-          });
-          rad.appendChild(slett);
           boks.appendChild(rad);
 
           if (apenElev === e.id) boks.appendChild(regelboks(e));
@@ -2104,22 +2265,6 @@
       function regelboks(e) {
         const b = document.createElement('div');
         b.className = 'regelboks';
-
-        b.appendChild(overskrift('Kjønn'));
-        b.appendChild(
-          segment(
-            [
-              ['–', null],
-              ['Gutt', 'g'],
-              ['Jente', 'j'],
-            ],
-            e.kjonn,
-            (v) => {
-              e.kjonn = v;
-              tegn();
-            },
-          ),
-        );
 
         b.appendChild(overskrift('Hvor i rommet'));
         b.appendChild(
@@ -2158,6 +2303,24 @@
             'Naboer er pulter i samme gruppe. Over en midtgang teller ikke som ved siden av.',
           ),
         );
+        const fjern = document.createElement('button');
+        fjern.className = 'knapp fjern';
+        fjern.textContent = 'Fjern ' + e.navn + ' fra klassen';
+        fjern.addEventListener('click', () => {
+          if (!confirm('Fjerne ' + e.navn + ' fra klassen?')) return;
+          const k = klasse();
+          k.elever = k.elever.filter((x) => x.id !== e.id);
+          k.elever.forEach((x) => {
+            x.sammen = x.sammen.filter((i) => i !== e.id);
+            x.unna = x.unna.filter((i) => i !== e.id);
+          });
+          Object.keys(D.aktiv.plasser).forEach((nk) => {
+            if (D.aktiv.plasser[nk] === e.id) delete D.aktiv.plasser[nk];
+          });
+          apenElev = null;
+          tegn();
+        });
+        b.appendChild(fjern);
         return b;
       }
       function overskrift(t) {
@@ -2235,97 +2398,197 @@
         return d;
       }
 
-      /* ============ faner ============ */
-      document.querySelectorAll('.fane').forEach((f) =>
-        f.addEventListener('click', () => {
-          document
-            .querySelectorAll('.fane')
-            .forEach((x) => x.setAttribute('aria-selected', x === f));
-          document
-            .querySelectorAll('.fanepanel')
-            .forEach((p) => (p.hidden = p.dataset.fane !== f.dataset.fane));
-        }),
-      );
-
-      /* ============ hendelser: trekning ============ */
-      $('trekk').addEventListener('click', trekkPlassering);
-      $('angre').addEventListener('click', angre);
-      $('tomKart').addEventListener('click', () => {
+      /* ============ verktøylinje ============ */
+      const vedKlikk = (id, fn) =>
+        $(id).addEventListener('click', (e) => {
+          e.stopPropagation();
+          fn(e);
+        });
+      vedKlikk('trekk', trekkPlassering);
+      vedKlikk('angre', angre);
+      vedKlikk('tomKart', () => {
         lagreAngre();
         D.aktiv.plasser = {};
         D.aktiv.laaste = [];
         tegn();
       });
-      $('spre').addEventListener('change', (e) => {
-        D.aktiv.spre = e.target.checked;
-        lagre();
-      });
-      $('nyeNaboer').addEventListener('change', (e) => {
-        D.aktiv.nyeNaboer = e.target.checked;
-        lagre();
-      });
-      $('speil').addEventListener('change', (e) => {
-        D.aktiv.speil = e.target.checked;
+      vedKlikk('trekkValg', () =>
+        apneMeny($('trekkValg'), (boks) => {
+          const valg = (tekst, felt) => {
+            const l = document.createElement('label');
+            l.className = 'bryter';
+            const c = document.createElement('input');
+            c.type = 'checkbox';
+            c.checked = !!D.aktiv[felt];
+            c.addEventListener('change', () => {
+              D.aktiv[felt] = c.checked;
+              lagre();
+            });
+            l.appendChild(c);
+            l.appendChild(document.createTextNode(' ' + tekst));
+            boks.appendChild(l);
+          };
+          valg('Fordel gutter og jenter jevnt', 'spre');
+          valg('Unngå naboer fra tidligere kart', 'nyeNaboer');
+          const h = document.createElement('p');
+          h.className = 'hjelp';
+          h.textContent =
+            'Tidligere naboer hentes fra de tre siste kartene du har brukt. Låste pulter blir stående.';
+          boks.appendChild(h);
+        }),
+      );
+      vedKlikk('speil', () => {
+        D.aktiv.speil = !D.aktiv.speil;
         tegn();
       });
-      $('skrivut').addEventListener('click', () => window.print());
-      $('huskNaboer').addEventListener('click', huskNaboer);
-      $('tomMinne').addEventListener('click', () => {
-        klasse().historikk = [];
-        tegn();
+      vedKlikk('skrivut', () => {
+        brukKart(true);
+        window.print();
       });
 
-      $('lagreKart').addEventListener('click', () => {
-        const forslag =
-          D.aktiv.klasse +
-          ' · ' +
-          D.aktiv.rom +
-          ' · ' +
-          new Date().toLocaleDateString('no-NO');
-        const navn = prompt('Navn på kartet', forslag);
-        if (!navn) return;
-        D.kart[navn.trim()] = {
+      /* ---- lagrede kart ----
+         «Bruk dette kartet» legger kartet i historikken med dato, og naboene
+         huskes slik at neste trekning kan gi nye naboer. */
+      const kartForKlasse = () =>
+        Object.entries(D.kart)
+          .filter(([, x]) => x.klasse === D.aktiv.klasse)
+          .sort((a, b) => (b[1].endret || '').localeCompare(a[1].endret || ''));
+      const sammePlasser = (a, b) =>
+        JSON.stringify(Object.entries(a).sort()) ===
+        JSON.stringify(Object.entries(b).sort());
+      function brukKart(stille) {
+        if (!Object.keys(D.aktiv.plasser).length) {
+          if (!stille)
+            visBeskjed(
+              'Kartet er tomt – trekk eller plasser elever først.',
+              true,
+            );
+          return;
+        }
+        const siste = kartForKlasse()[0];
+        if (siste && sammePlasser(siste[1].plasser, D.aktiv.plasser)) {
+          if (!stille) visBeskjed('Dette kartet er allerede lagret.');
+          return;
+        }
+        const naa = new Date();
+        D.kart[D.aktiv.klasse + ' · ' + naa.toISOString()] = {
           klasse: D.aktiv.klasse,
           rom: D.aktiv.rom,
           plasser: kopi(D.aktiv.plasser),
           laaste: D.aktiv.laaste.slice(),
-          endret: new Date().toISOString(),
+          endret: naa.toISOString(),
         };
+        // ta vare på de 30 siste per klasse
+        kartForKlasse()
+          .slice(30)
+          .forEach(([n]) => delete D.kart[n]);
         huskNaboer();
-        $('kartstatus').textContent =
-          'Lagret som «' + navn.trim() + '». Naboene er husket.';
         tegn();
-      });
-      $('velgKart').addEventListener('change', (e) => {
-        const k = D.kart[e.target.value];
-        if (!k) return;
-        lagreAngre();
-        if (D.rom[k.rom]) D.aktiv.rom = k.rom;
-        D.aktiv.plasser = kopi(k.plasser);
-        D.aktiv.laaste = (k.laaste || []).slice();
-        $('kartstatus').textContent = 'Hentet «' + e.target.value + '».';
-        tegn();
-      });
-      $('slettKart').addEventListener('click', () => {
-        const n = $('velgKart').value;
-        if (!n || !D.kart[n]) return;
-        if (!confirm('Slette kartet «' + n + '»?')) return;
-        delete D.kart[n];
-        tegn();
-      });
+        if (!stille)
+          visBeskjed('Kartet er lagret. Neste trekning unngår disse naboene.');
+      }
+      vedKlikk('brukKart', () => brukKart(false));
+      function kartTittel(x) {
+        const d = new Date(x.endret || 0);
+        return (
+          d.toLocaleDateString('no-NO', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          }) +
+          ' kl. ' +
+          d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+        );
+      }
+      vedKlikk('tidligere', () =>
+        apneMeny($('tidligere'), (boks) => {
+          const liste = kartForKlasse();
+          if (!liste.length) {
+            menyinfo(
+              boks,
+              'Ingen kart ennå. Trykk «Bruk dette kartet» når du er fornøyd – da havner det her, og naboene huskes til neste trekning.',
+            );
+            return;
+          }
+          liste.forEach(([n, x]) => {
+            const rad = document.createElement('div');
+            rad.className = 'kartrad';
+            const b = menyvalg(rad, '', () => {
+              lagreAngre();
+              if (D.rom[x.rom]) D.aktiv.rom = x.rom;
+              D.aktiv.plasser = kopi(x.plasser);
+              D.aktiv.laaste = (x.laaste || []).slice();
+              tegn();
+              visBeskjed('Hentet kartet fra ' + kartTittel(x) + '.');
+            });
+            b.innerHTML =
+              esc(x.endret ? kartTittel(x) : n) +
+              '<br><small>' +
+              esc((D.rom[x.rom] ? 'Rom ' : 'Rom (slettet) ') + x.rom) +
+              '</small>';
+            const slett = document.createElement('button');
+            slett.type = 'button';
+            slett.className = 'knapp liten';
+            slett.textContent = '×';
+            slett.title = 'Slett dette kartet';
+            slett.addEventListener('click', () => {
+              if (!confirm('Slette kartet fra ' + kartTittel(x) + '?')) return;
+              delete D.kart[n];
+              lukkPanel();
+              tegn();
+            });
+            rad.appendChild(slett);
+            boks.appendChild(rad);
+          });
+        }),
+      );
 
-      /* ============ hendelser: klasse ============ */
-      $('velgKlasse').addEventListener('change', (e) => {
-        apneKlasse(e.target.value);
-        tegn();
-      });
-      $('alleKlasser').addEventListener('click', visOversikt);
+      /* ---- konto ---- */
+      vedKlikk('tilKlasser', visOversikt);
+      vedKlikk('kontoKnapp', () =>
+        apneMeny(
+          $('kontoKnapp'),
+          (boks) => {
+            if (iSky()) {
+              menyinfo(
+                boks,
+                'Innlogget som ' +
+                  sky.epost +
+                  '. Klassene lagres kryptert – bare du og kollegaene du deler med kan lese dem.',
+              );
+              if (lokaleData().length)
+                menyvalg(
+                  boks,
+                  'Flytt klasser fra denne nettleseren hit',
+                  flyttLokale,
+                );
+              menyvalg(boks, 'Last ned kryptert kopi', lastNedKopi);
+              menyvalg(boks, 'Hent inn kopi', () => $('filvelger').click());
+              menyvalg(boks, 'Bytt passord', () => visPassordsteg('bytt'));
+              menyvalg(boks, 'Logg ut', loggUt);
+            } else {
+              menyinfo(
+                boks,
+                'Uten konto lagres alt bare i denne nettleseren. Med konto får du klassene på alle maskiner og kan dele dem med kolleger.',
+              );
+              menyvalg(boks, 'Logg inn eller opprett konto', tilSky);
+              menyvalg(boks, 'Last ned kryptert kopi', lastNedKopi);
+              menyvalg(boks, 'Hent inn kopi', () => $('filvelger').click());
+            }
+          },
+          'hoyre',
+        ),
+      );
 
       /* ============ klasseoversikt ============ */
       function visOversikt() {
         lukkPanel();
+        if (romModus) settRomModus(false);
         document.querySelector('.app').hidden = true;
         $('oversikt').hidden = false;
+        $('topp').hidden = false;
+        $('tilKlasser').hidden = true;
+        oppdaterKontoUi();
         $('klassesok').value = '';
         tegnOversikt();
         lagre();
@@ -2334,6 +2597,9 @@
       function visKart() {
         $('oversikt').hidden = true;
         document.querySelector('.app').hidden = false;
+        $('topp').hidden = false;
+        $('tilKlasser').hidden = false;
+        window.scrollTo(0, 0);
         tegn();
       }
       function naar(iso) {
@@ -2388,9 +2654,7 @@
         const sok = $('klassesok').value.trim().toLowerCase();
         $('klassesok').hidden = alle.length < 6;
         $('oversiktinfo').textContent =
-          (bruker ? bruker + ' · ' : '') +
-          alle.length +
-          (alle.length === 1 ? ' klasse' : ' klasser');
+          alle.length + (alle.length === 1 ? ' klasse' : ' klasser');
         const navn = alle
           .filter((n) => n.toLowerCase().includes(sok))
           .sort(
@@ -2497,7 +2761,6 @@
         D.klasser[n] = { elever: [], historikk: [] };
         apneKlasse(n);
         visKart();
-        document.querySelector('.fane[data-fane=elever]').click();
         $('importmodus').click();
       }
       function omdoepKlasse(n) {
@@ -2968,101 +3231,84 @@
       });
 
       /* ============ hendelser: rom ============ */
-      function lesRader(tekst) {
-        const r = tekst
-          .split('\n')
-          .map((l) => l.trim())
-          .filter(Boolean)
-          .map((l) =>
-            l
-              .split(/[+,\s]+/)
-              .map((n) => parseInt(n, 10))
-              .filter((n) => n > 0 && n < 20),
-          )
-          .filter((x) => x.length);
-        return r.length ? r : [[2, 3, 2]];
-      }
-      $('radliste').addEventListener('input', (e) => {
-        rommet().rader = lesRader(e.target.value);
-        tegn();
+      const nyttRomOppsett = () => ({
+        rader: [
+          [2, 3, 2],
+          [2, 3, 2],
+          [2, 3, 2],
+          [2, 3, 2],
+        ],
+        sperret: [],
       });
-      $('brukalle').addEventListener('click', () => {
-        const m = lesRader($('allerader').value || '2+3+2')[0];
-        const R = rommet();
-        R.rader = R.rader.map(() => m.slice());
-        tegn();
-      });
-      $('allerader').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') $('brukalle').click();
-      });
-      $('leggRad').addEventListener('click', () => {
-        const R = rommet();
-        R.rader.push((R.rader[R.rader.length - 1] || [2, 3, 2]).slice());
-        tegn();
-      });
-      $('fjernRad').addEventListener('click', () => {
-        const R = rommet();
-        if (R.rader.length > 1) {
-          R.rader.pop();
-          tegn();
-        }
-      });
-      $('velgRom').addEventListener('change', (e) => {
-        D.aktiv.rom = e.target.value;
-        D.aktiv.plasser = {};
-        D.aktiv.laaste = [];
-        tegn();
-      });
-      $('nyRom').addEventListener('click', () => {
-        const n = (prompt('Navn på rommet') || '').trim();
-        if (!n || D.rom[n]) return;
-        D.rom[n] = {
-          rader: [
-            [2, 3, 2],
-            [2, 3, 2],
-            [2, 3, 2],
-          ],
-          sperret: [],
-        };
+      function byttRom(n) {
         D.aktiv.rom = n;
         D.aktiv.plasser = {};
         D.aktiv.laaste = [];
         tegn();
+      }
+      $('velgRom').addEventListener('change', (e) => {
+        if (e.target.value) return byttRom(e.target.value);
+        const n = (prompt('Navn på det nye rommet, f.eks. 218') || '').trim();
+        if (!n) return tegn();
+        if (D.rom[n]) return byttRom(n);
+        D.rom[n] = nyttRomOppsett();
+        byttRom(n);
+        settRomModus(true);
       });
+      vedKlikk('endreRom', () => settRomModus(true));
+      vedKlikk('romFerdig', () => settRomModus(false));
       $('romnavn').addEventListener('change', (e) => {
         const nytt = e.target.value.trim();
-        if (!nytt || nytt === D.aktiv.rom || D.rom[nytt]) {
-          e.target.value = D.aktiv.rom;
-          return;
+        const gammelt = D.aktiv.rom;
+        if (!nytt || nytt === gammelt) return (e.target.value = gammelt);
+        if (D.rom[nytt]) {
+          visBeskjed(
+            'Det finnes allerede et rom som heter ' + nytt + '.',
+            true,
+          );
+          return (e.target.value = gammelt);
         }
-        D.rom[nytt] = D.rom[D.aktiv.rom];
-        delete D.rom[D.aktiv.rom];
+        D.rom[nytt] = D.rom[gammelt];
+        delete D.rom[gammelt];
         Object.values(D.kart).forEach((k) => {
-          if (k.rom === D.aktiv.rom) k.rom = nytt;
+          if (k.rom === gammelt) k.rom = nytt;
+        });
+        Object.values(D.klasser).forEach((k) => {
+          if (k.sist && k.sist.rom === gammelt) k.sist.rom = nytt;
         });
         D.aktiv.rom = nytt;
         tegn();
       });
-      $('dupliserRom').addEventListener('click', () => {
+      vedKlikk('dupliserRom', () => {
         const n = (
           prompt('Navn på det nye rommet', D.aktiv.rom + ' (kopi)') || ''
         ).trim();
-        if (!n || D.rom[n]) return;
-        D.rom[n] = kopi(rommet());
+        if (!n) return;
+        if (D.rom[n])
+          return visBeskjed(
+            'Det finnes allerede et rom som heter ' + n + '.',
+            true,
+          );
+        const R = rommet();
+        D.rom[n] = { rader: kopi(R.rader), sperret: R.sperret.slice() };
         D.aktiv.rom = n;
         tegn();
       });
-      $('slettRom').addEventListener('click', () => {
-        if (Object.keys(D.rom).length < 2) {
-          $('plasstatus').textContent = 'Du må ha minst ett rom.';
+      vedKlikk('slettRom', () => {
+        if (Object.keys(D.rom).length < 2)
+          return visBeskjed('Du må ha minst ett rom.', true);
+        if (
+          !confirm(
+            'Slette rommet ' +
+              D.aktiv.rom +
+              '?' +
+              (iSky() ? ' Det forsvinner også for kollegaene dine.' : ''),
+          )
+        )
           return;
-        }
-        if (!confirm('Slette rommet ' + D.aktiv.rom + '?')) return;
         delete D.rom[D.aktiv.rom];
-        D.aktiv.rom = Object.keys(D.rom).sort()[0];
-        D.aktiv.plasser = {};
-        D.aktiv.laaste = [];
-        tegn();
+        settRomModus(false);
+        byttRom(Object.keys(D.rom).sort(sammenlign)[0]);
       });
 
       /* ============ hendelser: data ============ */
@@ -3075,17 +3321,17 @@
         a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 2000);
       }
-      $('lastNed').addEventListener('click', async () => {
+      async function lastNedKopi() {
         const pw = prompt(
           'Velg et passord for sikkerhetskopien (minst 8 tegn). Du trenger det for å lese kopien inn igjen.',
         );
         if (pw === null) return;
         if (pw.length < 8) {
-          $('datastatus').textContent = 'Passordet må ha minst 8 tegn.';
+          visBeskjed('Passordet må ha minst 8 tegn.', true);
           return;
         }
         try {
-          $('datastatus').textContent = 'Krypterer …';
+          visBeskjed('Krypterer …');
           const salt = crypto.getRandomValues(new Uint8Array(16));
           const bits = await passordBits(pw, salt);
           const data = await krypter(
@@ -3105,13 +3351,11 @@
               '.json',
             'application/json',
           );
-          $('datastatus').textContent = 'Kryptert kopi lastet ned.';
+          visBeskjed('Kryptert kopi lastet ned.');
         } catch (err) {
-          $('datastatus').textContent =
-            'Nedlasting blokkert her – bruk «Vis alt» og kopier teksten i stedet.';
+          visBeskjed('Nettleseren stoppet nedlastingen.', true);
         }
-      });
-      $('hentFil').addEventListener('click', () => $('filvelger').click());
+      }
       $('filvelger').addEventListener('change', (e) => {
         const f = e.target.files[0];
         e.target.value = '';
@@ -3136,34 +3380,25 @@
           );
           lesInn(avkoder.decode(ren));
         } catch (err) {
-          $('datastatus').textContent = 'Feil passord for sikkerhetskopien.';
+          visBeskjed('Feil passord for sikkerhetskopien.', true);
         }
       }
-      $('visJson').addEventListener('click', () => {
-        $('jsontekst').value = JSON.stringify(D, null, 2);
-        $('jsontekst').select();
-        $('datastatus').textContent = 'Kopier teksten og ta vare på den.';
-      });
-      $('lesJson').addEventListener('click', () =>
-        lesInn($('jsontekst').value),
-      );
       function lesInn(tekst) {
         let ny;
         try {
           ny = JSON.parse(tekst);
           if (!ny || !ny.klasser || !ny.rom) throw new Error('feil format');
         } catch (err) {
-          $('datastatus').textContent =
-            'Fant ikke gyldig sikkerhetskopi i teksten.';
+          visBeskjed('Filen er ikke en sikkerhetskopi fra Klassekart.', true);
           return;
         }
         if (iSky()) {
           // i skyen legges klassene til – vi sletter ikke delte klasser
           if (!confirm('Legge klassene i kopien til i kontoen din?')) return;
           const ant = slaaSammen(ny);
-          $('datastatus').textContent =
-            ant + (ant === 1 ? ' klasse' : ' klasser') + ' lagt til.';
+          visBeskjed(ant + (ant === 1 ? ' klasse' : ' klasser') + ' lagt til.');
           tegn();
+          if (!$('oversikt').hidden) tegnOversikt();
           return;
         }
         if (!confirm('Erstatte alt som ligger her nå med innholdet i kopien?'))
@@ -3172,8 +3407,9 @@
         normaliser();
         angrestabel = [];
         $('angre').disabled = true;
-        $('datastatus').textContent = 'Kopien er lest inn.';
+        visBeskjed('Kopien er lest inn.');
         tegn();
+        if (!$('oversikt').hidden) tegnOversikt();
       }
 
       /* Legger klassene i en annen datamengde inn i D, uten å overskrive */
@@ -3239,33 +3475,25 @@
           });
         });
       }
-      async function lastBruker(navn) {
-        bruker = navn;
-        await lager.skriv(SIST, bruker);
-        const lagret = await lager.hent(dataNokkel());
-        D = lagret && lagret.klasser && lagret.rom ? lagret : standarddata();
-        normaliser();
-        angrestabel = [];
-        $('angre').disabled = true;
-        apenElev = null;
-        tegn();
-        visOversikt();
+      /* Data fra eldre versjoner, der hver «bruker» hadde sin egen kopi */
+      function gamleData() {
+        const ut = [];
+        try {
+          const navn = JSON.parse(localStorage.getItem(PROFILER) || '[]');
+          const sist = JSON.parse(localStorage.getItem(SIST) || 'null');
+          navn
+            .sort((a, b) => (b === sist) - (a === sist))
+            .forEach((n) => {
+              const d = JSON.parse(
+                localStorage.getItem(brukernokkel(n)) || 'null',
+              );
+              if (d && d.klasser) ut.push(d);
+            });
+          const v3 = JSON.parse(localStorage.getItem(GAMMEL) || 'null');
+          if (!ut.length && v3 && v3.klasser) ut.push(v3);
+        } catch (err) {}
+        return ut;
       }
-      $('velgBruker').addEventListener('change', async (e) => {
-        clearTimeout(lagretimer);
-        await lager.skriv(dataNokkel(), D);
-        await lastBruker(e.target.value);
-      });
-      $('nyBruker').addEventListener('click', async () => {
-        const n = (prompt('Navn på den nye brukeren') || '').trim();
-        if (!n || profiler.includes(n)) return;
-        clearTimeout(lagretimer);
-        await lager.skriv(dataNokkel(), D);
-        profiler = profiler.concat(n).sort();
-        await lager.skriv(PROFILER, profiler);
-        await lager.skriv(brukernokkel(n), standarddata(false));
-        await lastBruker(n);
-      });
 
       /* ============ kryptering ============
          Passordet blir til to nøkler i nettleseren: én til innloggingen hos
@@ -3396,6 +3624,7 @@
         versjon: {}, // klasse-id → versjonsnummer i databasen
         lagret: {}, // klasse-id → sist lagrede innhold (ukryptert JSON)
         egenLagret: '',
+        romLagret: {}, // rom-id → sist lagrede oppsett
         medlemmer: {}, // klasse-id → e-poster til andre medlemmer
       };
       function iSky() {
@@ -3541,7 +3770,6 @@
         });
         const a = D.aktiv;
         return {
-          rom: D.rom,
           aktiv: {
             klasse: (D.klasser[a.klasse] || {})._id || null,
             rom: a.rom,
@@ -3552,6 +3780,9 @@
           brukt,
         };
       }
+      /* Rom er ikke personopplysninger og deles ukryptert med kollegene */
+      const romPakke = (n, R) =>
+        JSON.stringify({ navn: n, rader: R.rader, sperret: R.sperret });
       function klasseFraPakke(ny, p, id, brukt) {
         let n = p.navn,
           i = 1;
@@ -3594,13 +3825,29 @@
                 ),
             )
           : [];
+        const romrader = skyFeil(
+          await k.from('rom').select('id, navn, rader, sperret, opprettet_av'),
+        );
         const egen = profil.egendata
           ? await dekrypterJson(sky.egenNokkel, profil.egendata)
           : {};
         const ny = standarddata(false);
         ny.klasser = {};
         ny.kart = {};
-        if (egen.rom && Object.keys(egen.rom).length) ny.rom = egen.rom;
+        ny.rom = {};
+        romrader.forEach((x) => {
+          ny.rom[x.navn] = {
+            rader: x.rader,
+            sperret: x.sperret || [],
+            _id: x.id,
+            _eier: x.opprettet_av,
+          };
+        });
+        // rom fra før rommene ble delt, flyttes over til de delte
+        Object.entries(egen.rom || {}).forEach(([n, R]) => {
+          if (!ny.rom[n])
+            ny.rom[n] = { rader: R.rader, sperret: R.sperret || [] };
+        });
         const nokler = {},
           versjon = {};
         for (const m of medl) {
@@ -3638,6 +3885,10 @@
             if (kl._id) sky.lagret[kl._id] = JSON.stringify(klassePakke(n, kl));
           });
           sky.egenLagret = JSON.stringify(egenPakke());
+          sky.romLagret = {};
+          Object.entries(D.rom).forEach(([n, R]) => {
+            if (R._id) sky.romLagret[R._id] = romPakke(n, R);
+          });
           angrestabel = [];
           $('angre').disabled = true;
           apenElev = null;
@@ -3741,6 +3992,7 @@
         for (const id of Object.keys(sky.lagret))
           if (!finnes.has(id)) await fjernSkyklasse(id);
 
+        await synkRom();
         const e = JSON.stringify(egenPakke());
         if (e !== sky.egenLagret) {
           skyFeil(
@@ -3755,6 +4007,61 @@
           if (!$('oversikt').hidden) tegnOversikt();
           else tegn(meldinger);
         }
+      }
+      async function synkRom() {
+        const k = sky.klient;
+        const finnes = new Set();
+        for (const [n, R] of Object.entries(D.rom)) {
+          const s = romPakke(n, R);
+          if (R._id && s === sky.romLagret[R._id]) {
+            finnes.add(R._id);
+            continue;
+          }
+          const felt = {
+            navn: n,
+            rader: R.rader,
+            sperret: R.sperret,
+            endret: new Date().toISOString(),
+            endret_av: sky.id,
+          };
+          if (R._id) {
+            skyFeil(await k.from('rom').update(felt).eq('id', R._id));
+          } else {
+            const id = crypto.randomUUID();
+            const r = await k
+              .from('rom')
+              .insert({ ...felt, id, opprettet_av: sky.id });
+            if (r.error && r.error.code === '23505') {
+              // en kollega har et rom med samme navn: bruk deres
+              const deres = skyFeil(
+                await k
+                  .from('rom')
+                  .select('id, rader, sperret, opprettet_av')
+                  .eq('navn', n)
+                  .single(),
+              );
+              Object.assign(R, {
+                rader: deres.rader,
+                sperret: deres.sperret || [],
+                _id: deres.id,
+                _eier: deres.opprettet_av,
+              });
+              sky.romLagret[R._id] = romPakke(n, R);
+              finnes.add(R._id);
+              continue;
+            }
+            skyFeil(r);
+            R._id = id;
+            R._eier = sky.id;
+          }
+          sky.romLagret[R._id] = s;
+          finnes.add(R._id);
+        }
+        for (const id of Object.keys(sky.romLagret))
+          if (!finnes.has(id)) {
+            skyFeil(await k.from('rom').delete().eq('id', id));
+            delete sky.romLagret[id];
+          }
       }
       async function opprettSkyklasse(kl, s) {
         const k = sky.klient;
@@ -3897,21 +4204,24 @@
 
       /* ---- klasser lagret lokalt i denne nettleseren ---- */
       function lokaleData() {
-        const ut = [];
+        let ut = [];
         try {
-          JSON.parse(localStorage.getItem(PROFILER) || '[]').forEach((n) => {
-            const d = JSON.parse(
-              localStorage.getItem(brukernokkel(n)) || 'null',
-            );
-            if (
-              d &&
-              d.klasser &&
-              Object.values(d.klasser).some((k) => k.elever && k.elever.length)
-            )
-              ut.push(d);
-          });
+          const d = JSON.parse(localStorage.getItem(LOKAL) || 'null');
+          ut = d && d.klasser ? [d] : gamleData();
         } catch (err) {}
-        return ut;
+        return ut.filter((d) =>
+          Object.values(d.klasser).some((k) => k.elever && k.elever.length),
+        );
+      }
+      function slettLokaleData() {
+        try {
+          JSON.parse(localStorage.getItem(PROFILER) || '[]').forEach((n) =>
+            localStorage.removeItem(brukernokkel(n)),
+          );
+          [LOKAL, PROFILER, SIST, GAMMEL].forEach((x) =>
+            localStorage.removeItem(x),
+          );
+        } catch (err) {}
       }
       function flyttLokale() {
         let ant = 0;
@@ -3925,53 +4235,40 @@
               (ant === 1 ? ' klasse er' : ' klasser er') +
               ' flyttet til kontoen. Slette den lokale kopien fra denne nettleseren?',
           )
-        ) {
-          try {
-            JSON.parse(localStorage.getItem(PROFILER) || '[]').forEach((n) =>
-              localStorage.removeItem(brukernokkel(n)),
-            );
-            [PROFILER, SIST, GAMMEL].forEach((x) => localStorage.removeItem(x));
-          } catch (err) {}
-        }
-        oppdaterKontoUi();
+        )
+          slettLokaleData();
       }
-      $('flyttLokale').addEventListener('click', flyttLokale);
 
       function oppdaterKontoUi() {
-        const s = iSky();
-        $('lokalBrukerSeksjon').hidden = s;
-        $('kontoSeksjon').hidden = !s;
-        $('tilSkySeksjon').hidden = s;
-        if (s) {
-          $('kontoInfo').textContent =
-            'Innlogget som ' +
-            sky.epost +
-            '. Klassene lagres kryptert – bare du og kollegaene du deler med kan lese dem.';
-          $('flyttBoks').hidden = !lokaleData().length;
-        } else visSkystatus('');
-        $('kopiHjelp').textContent = s
-          ? 'Klassene ligger kryptert i skyen. Du kan i tillegg ta en kryptert kopi som fil.'
-          : 'Alt ligger lagret i nettleseren på denne maskinen. Ta en kryptert kopi hvis du bytter maskin eller tømmer nettleseren.';
+        const k = $('kontoKnapp');
+        if (iSky()) {
+          const n = kortEpost(sky.epost).split(/[._-]/)[0];
+          k.textContent = n.charAt(0).toUpperCase() + n.slice(1) + ' ▾';
+        } else {
+          k.textContent = 'Uten konto ▾';
+          visSkystatus('');
+        }
       }
-      $('tilSky').addEventListener('click', () => {
+      function tilSky() {
         try {
           localStorage.setItem(MODUS, 'sky');
         } catch (err) {}
         location.reload();
-      });
-      $('loggUt').addEventListener('click', async () => {
+      }
+      async function loggUt() {
         await tomSynk();
         if (ulagret && !confirm('Noe er ikke lagret ennå. Logge ut likevel?'))
           return;
         await sky.klient.auth.signOut();
         location.reload(); // tømmer nøklene fra minnet
-      });
-      $('byttPassord').addEventListener('click', () => visPassordsteg('bytt'));
+      }
 
       /* ============ innlogging ============ */
       let nyKonto = false,
         passordModus = 'bytt';
       function visInngang(steg) {
+        lukkPanel();
+        $('topp').hidden = true;
         document.querySelector('.app').hidden = true;
         $('oversikt').hidden = true;
         $('inngang').hidden = false;
@@ -4133,7 +4430,7 @@
             await byttPassord($('pwGammel').value, ny);
             lukkInngang();
             visOversikt();
-            $('kontostatus').textContent = 'Passordet er byttet.';
+            visBeskjed('Passordet er byttet.');
           } else {
             const kode = await passordEtterGlemt(
               $('pwKode').value,
@@ -4223,7 +4520,6 @@
         } catch (err) {}
         innStatus('Henter klassene …');
         (await hentSky())();
-        bruker = sky.epost;
         sky.klar = true;
         await hentMedlemmer();
         lukkInngang();
@@ -4245,25 +4541,22 @@
 
       /* ============ oppstart ============ */
       async function startLokal() {
-        oppdaterKontoUi();
-        profiler = (await lager.hent(PROFILER)) || [];
-        if (!profiler.length) {
-          let navn = OPPSETT.eier;
-          if (!navn)
-            navn = (
-              prompt(
-                'Hvem bruker denne kopien? Fornavn holder – det skiller dine klasser fra andres hvis dere deler pålogging.',
-              ) || ''
-            ).trim();
-          if (!navn) navn = 'Lærer';
-          profiler = [navn];
-          await lager.skriv(PROFILER, profiler);
-          const gammelt = await lager.hent(GAMMEL);
-          if (gammelt && gammelt.klasser)
-            await lager.skriv(brukernokkel(navn), gammelt);
+        const lagret = await lager.hent(LOKAL);
+        if (lagret && lagret.klasser && lagret.rom) D = lagret;
+        else {
+          // første gang med denne versjonen: hent fra eldre lagring
+          const gamle = gamleData();
+          D = gamle.length ? gamle[0] : standarddata();
+          normaliser();
+          gamle.slice(1).forEach((d) => slaaSammen(d));
         }
-        const sist = await lager.hent(SIST);
-        await lastBruker(profiler.includes(sist) ? sist : profiler[0]);
+        normaliser();
+        angrestabel = [];
+        $('angre').disabled = true;
+        apenElev = null;
+        oppdaterKontoUi();
+        tegn();
+        visOversikt();
       }
       (async function () {
         let modus = null;

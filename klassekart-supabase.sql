@@ -45,6 +45,17 @@ create table if not exists public.klassemedlemmer (
 );
 create index if not exists klassemedlemmer_bruker on public.klassemedlemmer (bruker_id);
 
+-- Rom (pultoppsett) er ikke personopplysninger og deles ukryptert med alle kolleger
+create table if not exists public.rom (
+  id           uuid primary key default gen_random_uuid(),
+  navn         text not null unique,
+  rader        jsonb not null,           -- pulter per gruppe per rad, f.eks. [[2,3,2],[2,3,2]]
+  sperret      jsonb not null default '[]',
+  opprettet_av uuid default auth.uid() references public.profiler on delete set null,
+  endret       timestamptz not null default now(),
+  endret_av    uuid references public.profiler on delete set null
+);
+
 
 
 -- ============================================================
@@ -116,8 +127,19 @@ create policy "medlem ny"    on public.klassemedlemmer for insert to authenticat
 create policy "medlem endre" on public.klassemedlemmer for update to authenticated using (er_medlem(klasse_id));
 create policy "medlem slett" on public.klassemedlemmer for delete to authenticated using (er_medlem(klasse_id) or bruker_id = auth.uid());
 
-revoke all on public.profiler, public.klasser, public.klassemedlemmer from anon;
-grant select, insert, update, delete on public.profiler, public.klasser, public.klassemedlemmer to authenticated;
+alter table public.rom enable row level security;
+drop policy if exists "rom les"    on public.rom;
+drop policy if exists "rom ny"     on public.rom;
+drop policy if exists "rom endre"  on public.rom;
+drop policy if exists "rom slett"  on public.rom;
+create policy "rom les"   on public.rom for select to authenticated using (true);
+create policy "rom ny"    on public.rom for insert to authenticated with check (opprettet_av = auth.uid());
+create policy "rom endre" on public.rom for update to authenticated using (true) with check (true);
+-- bare den som laget rommet, kan slette det
+create policy "rom slett" on public.rom for delete to authenticated using (opprettet_av = auth.uid());
+
+revoke all on public.profiler, public.klasser, public.klassemedlemmer, public.rom from anon;
+grant select, insert, update, delete on public.profiler, public.klasser, public.klassemedlemmer, public.rom to authenticated;
 revoke execute on function public.er_medlem(uuid), public.finn_kollega(text), public.medlemmer_i(uuid[]) from public, anon;
 grant execute on function public.er_medlem(uuid), public.finn_kollega(text), public.medlemmer_i(uuid[]) to authenticated;
 
