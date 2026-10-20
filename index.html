@@ -125,6 +125,54 @@
         top: 55px;
         max-height: calc(100vh - 55px);
       }
+      .uten-elever .panel {
+        display: none;
+      }
+      /* skjult elevliste: en smal stripe langs venstre kant */
+      .elevstripe {
+        flex: 0 0 38px;
+        position: sticky;
+        top: 55px;
+        height: calc(100vh - 55px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 0;
+        border: 0;
+        border-right: 1px solid var(--strek);
+        background: var(--flate);
+        cursor: pointer;
+      }
+      .elevstripe:hover {
+        background: #f3f6f4;
+      }
+      .elevstripe .pil,
+      .panelknapp {
+        font-size: 20px;
+        line-height: 1;
+        color: var(--ink-svak);
+      }
+      .elevstripe .stripetekst {
+        writing-mode: vertical-rl;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      .panelknapp {
+        width: 24px;
+        height: 28px;
+        margin-right: -8px;
+        padding: 0;
+        border: 0;
+        border-radius: 5px;
+        background: none;
+        cursor: pointer;
+      }
+      .panelknapp:hover {
+        background: #f3f6f4;
+        color: var(--ink);
+      }
       .panel-kropp {
         padding: 18px 18px 48px;
       }
@@ -132,6 +180,7 @@
         flex: 1;
         padding: 18px 24px 60px;
         min-width: 0;
+        container-type: inline-size;
       }
       .verktoy {
         display: flex;
@@ -140,6 +189,12 @@
         gap: 10px 18px;
         max-width: 1180px;
         margin: 0 auto 18px;
+      }
+      /* får alle knappene plass på én rad, fyller de hele bredden */
+      @container (min-width: 1090px) {
+        #verktoy {
+          justify-content: space-between;
+        }
       }
       .verktoy .grp {
         display: flex;
@@ -396,12 +451,6 @@
       .elevliste .elevrad:first-child {
         border-top: 0;
       }
-      .elevrad.borte {
-        color: var(--sperret);
-      }
-      .elevrad.borte .elevnavn {
-        text-decoration: line-through;
-      }
       .elevnavn {
         flex: 1;
         overflow: hidden;
@@ -547,7 +596,8 @@
         justify-content: space-between;
         align-items: baseline;
         gap: 16px;
-        margin-bottom: 14px;
+        max-width: 1180px;
+        margin: 0 auto 14px;
       }
       .romtopp h1 {
         font-size: 20px;
@@ -775,6 +825,167 @@
         font-weight: 600;
       }
 
+      /* tilfeldige grupper: egen dialog over kartet */
+      .dialogbakgrunn {
+        position: fixed;
+        inset: 0;
+        z-index: 25;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 6vh 16px 16px;
+        overflow-y: auto;
+        background: rgba(24, 36, 32, 0.38);
+      }
+      .dialog {
+        width: 100%;
+        max-width: 1120px;
+        background: var(--flate);
+        border-radius: 9px;
+        box-shadow: 0 16px 48px rgba(24, 36, 32, 0.28);
+        padding: 18px 20px 16px;
+      }
+      .dialog.smal {
+        max-width: 440px;
+      }
+      .dialogtopp {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px 14px;
+      }
+      .dialogtopp h2 {
+        margin: 0;
+        font-size: 19px;
+      }
+      .dialogtopp .grp {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .dialog .knapp.hoved {
+        width: auto;
+        padding: 7px 14px;
+        font-size: 15px;
+      }
+      .dialog .knapprad .knapp.hoved {
+        flex: 2;
+        padding: 10px;
+      }
+      .dialog input[type='number'] {
+        width: 110px;
+        padding: 7px 9px;
+        border: 1px solid var(--strek);
+        border-radius: 5px;
+        background: #fff;
+      }
+      .gruppegrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+        gap: 10px;
+        margin: 14px 0 10px;
+      }
+      .gruppekort {
+        display: flex;
+        flex-direction: column;
+        min-height: 130px;
+        background: #fff;
+        border: 1px solid var(--strek);
+        border-top: 5px solid var(--gf);
+        border-radius: 6px;
+      }
+      .gruppekort.uten {
+        border-style: dashed;
+        border-top-style: solid;
+      }
+      .gruppekort.kan-motta {
+        cursor: pointer;
+      }
+      .gruppekort.maal {
+        outline: 2px solid var(--fokus);
+        outline-offset: 2px;
+      }
+      .gruppehode {
+        position: relative;
+        padding: 7px 10px 8px;
+        background: color-mix(in srgb, var(--gf) 12%, #fff);
+        border-bottom: 1px solid color-mix(in srgb, var(--gf) 30%, #fff);
+      }
+      .gruppehode strong {
+        display: block;
+        font-size: 15px;
+      }
+      .gruppehode em {
+        display: block;
+        font-size: 13px;
+        color: var(--ink-svak);
+      }
+      .gruppefjern {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: none;
+        color: var(--ink-svak);
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .gruppefjern:hover {
+        background: rgba(0, 0, 0, 0.07);
+        color: var(--varsel);
+      }
+      .gruppeelever {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 6px;
+      }
+      .gruppeelev {
+        border: 1px solid transparent;
+        background: none;
+        border-radius: 4px;
+        padding: 5px 8px;
+        text-align: left;
+        font-size: 14.5px;
+        cursor: grab;
+      }
+      .gruppeelev:hover {
+        background: #f3f6f4;
+        border-color: var(--strek);
+      }
+      .gruppeelev.valgt {
+        background: var(--laast-bg);
+        border-color: var(--laast);
+        font-weight: 700;
+      }
+      .gruppeelev.dratt {
+        opacity: 0.35;
+      }
+      .gruppeelev.maal {
+        background: #eef6f2;
+        border-color: var(--fokus);
+      }
+      .gruppetom {
+        margin: 0;
+        padding: 5px 8px;
+        font-size: 12.5px;
+        color: var(--ink-svak);
+      }
+      .gruppevarsel {
+        margin: 0;
+        padding: 6px 10px 8px;
+        font-size: 12.5px;
+        color: var(--varsel);
+        border-top: 1px solid #f1dcd3;
+      }
+
       /* innlogging */
       .inngang {
         min-height: 100vh;
@@ -998,6 +1209,7 @@
       /* visning for klassen: bare tittel, tavle og pulter */
       .visning .topp,
       .visning .panel,
+      .visning .elevstripe,
       .visning .verktoy,
       .visning .romvelger,
       .visning .melding,
@@ -1011,6 +1223,7 @@
         padding: 18px 28px 20px;
       }
       .visning .romtopp {
+        max-width: none;
         justify-content: center;
         margin-bottom: 12px;
       }
@@ -1052,9 +1265,11 @@
         }
         .topp,
         .panel,
+        .elevstripe,
         .verktoy,
         .romvelger,
         .popup,
+        .dialogbakgrunn,
         .melding,
         .beskjed {
           display: none !important;
@@ -1098,6 +1313,51 @@
         .pultrad {
           gap: var(--midtgang, 20px);
         }
+        .elevstripe {
+          flex: none;
+          position: static;
+          height: auto;
+          flex-direction: row;
+          justify-content: center;
+          padding: 12px;
+          border-right: 0;
+          border-top: 1px solid var(--strek);
+        }
+        .elevstripe .pil {
+          transform: rotate(90deg);
+        }
+        .elevstripe .stripetekst {
+          writing-mode: horizontal-tb;
+        }
+      }
+      /* mobil: mindre luft rundt kartet, og romvalget får egen linje */
+      @media (max-width: 600px) {
+        .rom {
+          padding: 14px 12px 40px;
+        }
+        .verktoy {
+          gap: 8px 10px;
+        }
+        .romtopp {
+          flex-wrap: wrap;
+          gap: 8px 16px;
+        }
+        .romvelger {
+          flex: 1 1 100%;
+        }
+        .romvelger .rad {
+          flex: 1;
+        }
+        .romvelger select {
+          flex: 1;
+          min-width: 0;
+        }
+        .kart {
+          padding: 10px;
+        }
+        .plass {
+          padding: 3px 2px;
+        }
       }
     </style>
   </head>
@@ -1119,10 +1379,22 @@
       <aside class="panel">
         <div class="panel-kropp">
           <div class="rad" style="justify-content: space-between">
-            <h2 style="margin: 0; font-size: 15px" id="elevtelling">Elever</h2>
+            <h2
+              style="margin: 0; font-size: 15px; white-space: nowrap"
+              id="elevtelling"
+            >Elever</h2>
             <span class="rad" style="gap: 6px; flex: 0 0 auto">
               <button class="knapp liten" id="importmodus">Importer</button>
               <button class="knapp liten" id="tekstmodus">Som tekst</button>
+              <button
+                type="button"
+                class="panelknapp"
+                id="skjulElever"
+                title="Skjul elevlisten"
+                aria-label="Skjul elevlisten"
+              >
+                ‹
+              </button>
             </span>
           </div>
           <div id="importboks" hidden>
@@ -1188,12 +1460,21 @@
               <button class="knapp" id="leggTil">Legg til</button>
             </div>
             <p class="hjelp">
-              Haken betyr <em>til stede i dag</em>. G/J setter kjønn, og
-              tannhjulet åpner reglene for eleven.
+              G/J setter kjønn, og tannhjulet åpner reglene for eleven.
             </p>
           </div>
         </div>
       </aside>
+      <button
+        type="button"
+        class="elevstripe"
+        id="visElever"
+        title="Vis elevlisten"
+        hidden
+      >
+        <span class="pil" aria-hidden="true">›</span>
+        <span class="stripetekst" id="stripetekst">Elever</span>
+      </button>
 
       <main class="rom">
         <div class="verktoy" id="verktoy">
@@ -1218,7 +1499,7 @@
             <button class="knapp" id="grupperKnapp">Grupper ▾</button>
           </div>
           <div class="grp">
-            <button class="knapp" id="brukKart">Bruk dette kartet</button>
+            <button class="knapp" id="brukKart">Lagre dette kartet</button>
             <button class="knapp" id="tidligere">Tidligere kart ▾</button>
           </div>
           <div class="grp">
@@ -1270,6 +1551,15 @@
     </div>
 
     <div class="beskjed" id="beskjed" role="status" hidden></div>
+    <div class="dialogbakgrunn" id="gruppedialog" hidden>
+      <div
+        class="dialog"
+        id="gruppeboks"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="gruppetittel"
+      ></div>
+    </div>
     <button class="knapp lukkvisning" id="lukkVisning" hidden>
       Lukk visningen (Esc)
     </button>
@@ -1504,7 +1794,6 @@
           navn,
           kjonn: kjonn || null,
           gruppe: gruppe || null,
-          borte: false,
           sone: 'fri',
           sammen: [],
           unna: [],
@@ -1652,13 +1941,7 @@
         const sammenPar = [];
         elever().forEach((e) =>
           e.sammen.forEach((id) => {
-            if (
-              e.id < id &&
-              elevKart.has(id) &&
-              !e.borte &&
-              !elevKart.get(id).borte
-            )
-              sammenPar.push([e.id, id]);
+            if (e.id < id && elevKart.has(id)) sammenPar.push([e.id, id]);
           }),
         );
         return {
@@ -1719,7 +2002,7 @@
           .filter((s) => !erSperret(s.k) && !erLaast(s.k))
           .map((s) => s.k);
         const pool = elever()
-          .filter((e) => !e.borte && !laasteElever.has(e.id))
+          .filter((e) => !laasteElever.has(e.id))
           .map((e) => e.id);
 
         const fast = {};
@@ -1871,13 +2154,20 @@
         const kart = $('kart');
         const rader = rommet().rader;
         if (!rader.length) return;
+        // innerbredden: kartets egen polstring trekkes fra (mindre på mobil)
+        const cs = getComputedStyle(kart);
+        const kant =
+          visning || fastBredde || !kart.clientWidth
+            ? 46
+            : parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 2;
         const plass =
           (visning
             ? window.innerWidth - 56
-            : fastBredde || kart.clientWidth || 900) - 46;
-        const trangt = plass < 620;
-        const midtgang = trangt ? 16 : 30;
-        const pultgap = trangt ? 5 : 8;
+            : fastBredde || kart.clientWidth || 900) - kant;
+        const trangt = plass < 620,
+          svaertTrangt = plass < 420;
+        const midtgang = svaertTrangt ? 10 : trangt ? 16 : 30;
+        const pultgap = svaertTrangt ? 3 : trangt ? 5 : 8;
         let bredde = visning ? 300 : 148;
         rader.forEach((rad) => {
           const pulter = rad.reduce((a, b) => a + b, 0);
@@ -1893,7 +2183,7 @@
           const hoyde = (window.innerHeight - 190 - (n - 1) * 16) / n;
           bredde = Math.min(bredde, hoyde / 0.58);
         }
-        bredde = Math.max(46, Math.floor(bredde));
+        bredde = Math.max(svaertTrangt ? 36 : 46, Math.floor(bredde));
         kart.style.setProperty('--pultbredde', bredde + 'px');
         kart.style.setProperty(
           '--pulthoyde',
@@ -2167,21 +2457,17 @@
         const boks = $('melding');
         const linjer = (ekstra || []).slice();
         const plassert = new Set(Object.values(D.aktiv.plasser));
-        const ute = elever().filter((e) => !e.borte && !plassert.has(e.id));
-        const borte = elever().filter((e) => e.borte);
+        const ute = elever().filter((e) => !plassert.has(e.id));
         if (ute.length && plassert.size)
           linjer.unshift('Uten plass: ' + ute.map((e) => e.navn).join(', '));
-        if (borte.length)
-          linjer.push('Borte i dag: ' + borte.map((e) => e.navn).join(', '));
-        const ledige = seter().length - rommet().sperret.length,
-          tilStede = elever().length - borte.length;
-        if (ledige < tilStede)
+        const ledige = seter().length - rommet().sperret.length;
+        if (ledige < elever().length)
           linjer.unshift(
             'Rommet har ' +
               ledige +
-              ' pulter, men ' +
-              tilStede +
-              ' elever er til stede. Velg et annet rom eller trykk «Endre rommet».',
+              ' pulter, men klassen har ' +
+              elever().length +
+              ' elever. Velg et annet rom eller trykk «Endre rommet».',
           );
         if (!linjer.length) {
           boks.hidden = true;
@@ -2209,6 +2495,8 @@
       };
       document.addEventListener('click', lukkPanel);
       document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !$('gruppedialog').hidden)
+          return lukkGrupper();
         if (e.key === 'Escape') {
           lukkPanel();
           if (visning) settVisning(false);
@@ -2250,11 +2538,7 @@
                 (e.id === D.aktiv.plasser[k] ? ' selected' : '') +
                 '>' +
                 esc(e.navn) +
-                (e.borte
-                  ? ' (borte)'
-                  : brukt.has(e.id)
-                    ? ' (sitter alt)'
-                    : '') +
+                (brukt.has(e.id) ? ' (sitter alt)' : '') +
                 '</option>',
             )
             .join('');
@@ -2419,6 +2703,7 @@
         }
 
         $('elevtelling').textContent = 'Elever (' + elever().length + ')';
+        $('stripetekst').textContent = 'Elever (' + elever().length + ')';
         tegnElevliste();
       }
       const sammenlign = (a, b) =>
@@ -2443,21 +2728,7 @@
         if (tomt) tomt.hidden = elever().length > 0;
         elever().forEach((e) => {
           const rad = document.createElement('div');
-          rad.className = 'elevrad' + (e.borte ? ' borte' : '');
-
-          const hake = document.createElement('input');
-          hake.type = 'checkbox';
-          hake.checked = !e.borte;
-          hake.title = 'Til stede i dag';
-          hake.style.accentColor = 'var(--tavle)';
-          hake.addEventListener('change', () => {
-            e.borte = !hake.checked;
-            if (e.borte)
-              Object.keys(D.aktiv.plasser).forEach((k) => {
-                if (D.aktiv.plasser[k] === e.id) delete D.aktiv.plasser[k];
-              });
-            tegn();
-          });
+          rad.className = 'elevrad';
 
           const navn = document.createElement('span');
           navn.className = 'elevnavn';
@@ -2471,7 +2742,6 @@
             }
           });
 
-          rad.appendChild(hake);
           rad.appendChild(navn);
           if (e.gruppe) {
             const m = document.createElement('span');
@@ -2705,6 +2975,23 @@
         if (!paa && fs) document.exitFullscreen().catch(() => {});
         tegn();
       }
+      /* Elevlisten kan skjules så kartet får mer plass. Valget huskes bare
+         i denne nettleseren. */
+      const SKJUL_ELEVER = 'klassekart:skjulElever';
+      function settElevliste(vis) {
+        document.querySelector('.app').classList.toggle('uten-elever', !vis);
+        $('visElever').hidden = vis;
+        try {
+          if (vis) localStorage.removeItem(SKJUL_ELEVER);
+          else localStorage.setItem(SKJUL_ELEVER, '1');
+        } catch (err) {}
+        tilpassBredde();
+      }
+      vedKlikk('skjulElever', () => settElevliste(false));
+      vedKlikk('visElever', () => settElevliste(true));
+      try {
+        if (localStorage.getItem(SKJUL_ELEVER)) settElevliste(false);
+      } catch (err) {}
       vedKlikk('visKlassen', () => settVisning(true));
       vedKlikk('lukkVisning', () => settVisning(false));
       document.addEventListener('fullscreenchange', () => {
@@ -2716,7 +3003,7 @@
       });
 
       /* ---- lagrede kart ----
-         «Bruk dette kartet» legger kartet i historikken med dato, og naboene
+         «Lagre dette kartet» legger kartet i historikken med dato, og naboene
          huskes slik at neste trekning kan gi nye naboer. */
       const kartForKlasse = () =>
         Object.entries(D.kart)
@@ -2780,7 +3067,7 @@
           if (!liste.length) {
             menyinfo(
               boks,
-              'Ingen kart ennå. Trykk «Bruk dette kartet» når du er fornøyd – da havner det her, og naboene huskes til neste trekning.',
+              'Ingen kart ennå. Trykk «Lagre dette kartet» når du er fornøyd – da havner det her, og naboene huskes til neste trekning.',
             );
             return;
           }
@@ -2895,6 +3182,11 @@
       vedKlikk('malerFerdig', () => settMalerModus(false));
       vedKlikk('grupperKnapp', () =>
         apneMeny($('grupperKnapp'), (boks) => {
+          menyvalg(
+            boks,
+            gruppesett() ? 'Vis grupper' : 'Tilfeldige grupper …',
+            apneGrupper,
+          );
           menyvalg(boks, 'Del inn i makkergrupper', () => {
             lagreAngre();
             lagMakkergrupper(true);
@@ -2915,7 +3207,7 @@
           const h = document.createElement('p');
           h.className = 'hjelp';
           h.textContent =
-            'Makkergrupper er 3–5 elever som sitter nær hverandre. Du kan også gi en enkelt pult farge ved å klikke på den.';
+            'Tilfeldige grupper følger reglene og endrer ikke kartet. Makkergrupper er 3–5 elever som sitter nær hverandre. Du kan også gi en enkelt pult farge ved å klikke på den.';
           boks.appendChild(h);
         }),
       );
@@ -3005,6 +3297,606 @@
           g.forEach((k) => (D.aktiv.farger[k] = i % FARGER.length)),
         );
         if (varsle) visBeskjed(grupper.length + ' makkergrupper laget.');
+      }
+
+      /* ============ tilfeldige grupper ============
+         Et eget verktøy som aldri endrer kartet. Klassen husker bare det
+         siste settet (klasse().grupper), og det krypteres sammen med resten
+         av klassen. Gruppenavnet er ett adjektiv og ett substantiv. */
+      const ADJEKTIV = [
+        'Atomic', 'Galactic', 'Quantum', 'Cosmic', 'Bionic', 'Martian',
+        'Lunar', 'Solar', 'Stellar', 'Orbiting', 'Electric', 'Magnetic',
+        'Clockwork', 'Invisible', 'Celestial', 'Enchanted', 'Victorian',
+        'Arthurian', 'Olympian', 'Homeric', 'Arabian', 'Gothic', 'Mythic',
+        'Dickensian', 'Mysterious', 'Secret', 'Hidden', 'Wandering',
+        'Curious', 'Peculiar', 'Golden', 'Silver', 'Emerald', 'Crimson',
+        'Midnight', 'Moonlit', 'Starlit', 'Phantom', 'Royal', 'Noble',
+        'Ancient', 'Legendary', 'Mighty', 'Fearless', 'Gallant', 'Jolly',
+        'Flying', 'Frozen', 'Whispering', 'Wondrous',
+      ];
+      const SUBSTANTIV = [
+        'Pirates', 'Astronauts', 'Trolls', 'Quasars', 'Dragons', 'Goblins',
+        'Mermaids', 'Robots', 'Wizards', 'Knights', 'Explorers', 'Pilgrims',
+        'Hobbits', 'Wayfarers', 'Comets', 'Rockets', 'Starships', 'Androids',
+        'Cyborgs', 'Voyagers', 'Navigators', 'Musketeers', 'Inventors',
+        'Giants', 'Elves', 'Unicorns', 'Griffins', 'Phoenixes', 'Centaurs',
+        'Sphinxes', 'Krakens', 'Detectives', 'Castaways', 'Mariners',
+        'Lilliputians', 'Samurai', 'Genies', 'Argonauts', 'Titans', 'Oracles',
+        'Satellites', 'Nebulas', 'Meteors', 'Vikings', 'Valkyries', 'Gnomes',
+        'Ghosts', 'Owls', 'Foxes', 'Rangers',
+      ];
+      function gruppenavn(antall) {
+        const a = stokk(ADJEKTIV),
+          s = stokk(SUBSTANTIV);
+        return Array.from(
+          { length: antall },
+          (_, i) => a[i % a.length] + ' ' + s[i % s.length],
+        );
+      }
+      function antallGrupper(valg, n) {
+        const t = Math.max(1, Math.floor(valg.tall) || 1);
+        const a = valg.maate === 'antall' ? t : Math.round(n / t);
+        return Math.max(1, Math.min(n, a));
+      }
+
+      /* «Ikke sammen» skal i hver sin gruppe, «sammen» i samme gruppe */
+      function regelpar(ids) {
+        const inn = new Set(ids),
+          unna = new Map(),
+          sammen = new Map();
+        elever().forEach((e) => {
+          if (!inn.has(e.id)) return;
+          e.unna.forEach((id) => {
+            if (inn.has(id)) unna.set(parN(e.id, id), [e.id, id]);
+          });
+          e.sammen.forEach((id) => {
+            if (inn.has(id)) sammen.set(parN(e.id, id), [e.id, id]);
+          });
+        });
+        return { unna: [...unna.values()], sammen: [...sammen.values()] };
+      }
+      function delInnGrupper(ids, antall) {
+        const n = ids.length;
+        const storrelser = Array.from(
+          { length: antall },
+          (_, i) => Math.floor(n / antall) + (i < n % antall ? 1 : 0),
+        );
+        const r = regelpar(ids);
+        const kost = (hvor) => {
+          let k = 0;
+          for (const [a, b] of r.unna) if (hvor[a] === hvor[b]) k += 80;
+          for (const [a, b] of r.sammen) if (hvor[a] !== hvor[b]) k += 60;
+          return k;
+        };
+        let beste = null,
+          bestekost = Infinity;
+        for (let start = 0; start < 20 && bestekost > 0; start++) {
+          const p = stokk(ids),
+            hvor = {};
+          let i = 0;
+          storrelser.forEach((st, g) => {
+            for (let j = 0; j < st; j++) hvor[p[i++]] = g;
+          });
+          let k = kost(hvor);
+          for (let it = 0; it < 3000 && k > 0; it++) {
+            const a = ids[Math.floor(Math.random() * n)],
+              b = ids[Math.floor(Math.random() * n)];
+            if (hvor[a] === hvor[b]) continue;
+            [hvor[a], hvor[b]] = [hvor[b], hvor[a]];
+            const ny = kost(hvor);
+            if (ny <= k) k = ny;
+            else [hvor[a], hvor[b]] = [hvor[b], hvor[a]];
+          }
+          if (k < bestekost) {
+            bestekost = k;
+            beste = hvor;
+          }
+        }
+        const grupper = storrelser.map(() => []);
+        stokk(ids).forEach((id) => grupper[beste[id]].push(id));
+        return grupper;
+      }
+      /* Regelbrudd per gruppe, til varselet nederst i hvert gruppekort */
+      function gruppebrudd(liste) {
+        const hvor = new Map();
+        liste.forEach((g, i) => g.elever.forEach((id) => hvor.set(id, i)));
+        const ut = liste.map(() => []);
+        const r = regelpar([...hvor.keys()]);
+        r.unna.forEach(([a, b]) => {
+          if (hvor.get(a) === hvor.get(b))
+            ut[hvor.get(a)].push(
+              navnAv(a) + ' og ' + navnAv(b) + ' skal ikke være sammen.',
+            );
+        });
+        r.sammen.forEach(([a, b]) => {
+          if (hvor.get(a) === hvor.get(b)) return;
+          const t = navnAv(a) + ' og ' + navnAv(b) + ' skal være sammen.';
+          ut[hvor.get(a)].push(t);
+          ut[hvor.get(b)].push(t);
+        });
+        return ut;
+      }
+
+      let gruppeValgt = null,
+        gruppeOppsett = false,
+        gruppevalg = null;
+      const gruppesett = () => {
+        const g = klasse().grupper;
+        return g && g.liste && g.liste.length ? g : null;
+      };
+      // indeksen til gruppen eleven er i, -1 er «ikke med»
+      const gruppeAv = (id) =>
+        gruppesett().liste.findIndex((g) => g.elever.includes(id));
+
+      function apneGrupper() {
+        lukkPanel();
+        gruppeValgt = null;
+        gruppevalg = null;
+        gruppeOppsett = !gruppesett();
+        $('gruppedialog').hidden = false;
+        tegnGrupper();
+        const b = $('gruppeboks').querySelector('.knapp.hoved');
+        if (b) b.focus();
+      }
+      function lukkGrupper() {
+        $('gruppedialog').hidden = true;
+        $('grupperKnapp').focus();
+      }
+      $('gruppedialog').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (e.target === e.currentTarget) lukkGrupper();
+        else if (gruppeValgt && !e.target.closest('.gruppekort, .knapp')) {
+          gruppeValgt = null;
+          tegnGrupper();
+        }
+      });
+
+      function tegnGrupper() {
+        const boks = $('gruppeboks');
+        boks.innerHTML = '';
+        boks.classList.toggle('smal', gruppeOppsett);
+        const topp = document.createElement('div');
+        topp.className = 'dialogtopp';
+        const h = document.createElement('h2');
+        h.id = 'gruppetittel';
+        h.textContent = 'Tilfeldige grupper · ' + D.aktiv.klasse;
+        const knapper = document.createElement('div');
+        knapper.className = 'grp';
+        topp.append(h, knapper);
+        boks.appendChild(topp);
+        const knapp = (tekst, fn, hoved) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'knapp' + (hoved ? ' hoved' : '');
+          b.textContent = tekst;
+          b.addEventListener('click', fn);
+          knapper.appendChild(b);
+        };
+        if (!gruppeOppsett) {
+          knapp('Kopier tabell', kopierGrupper, true);
+          knapp('Nye navn', nyeGruppenavn);
+          knapp('Trekk nye grupper', () => {
+            gruppeOppsett = true;
+            gruppeValgt = null;
+            tegnGrupper();
+          });
+        }
+        knapp('Lukk', lukkGrupper);
+        if (gruppeOppsett) tegnGruppeoppsett(boks);
+        else tegnGruppeliste(boks);
+      }
+
+      function tegnGruppeoppsett(boks) {
+        const n = elever().length;
+        if (!gruppevalg)
+          gruppevalg = kopi(
+            (klasse().grupper || {}).valg || { maate: 'storrelse', tall: 4 },
+          );
+        const v = gruppevalg;
+        const felt = (tekst, id) => {
+          const l = document.createElement('label');
+          l.className = 'felt';
+          l.textContent = tekst;
+          if (id) l.htmlFor = id;
+          boks.appendChild(l);
+        };
+        felt('Del inn etter');
+        boks.appendChild(
+          segment(
+            [
+              ['Elever per gruppe', 'storrelse'],
+              ['Antall grupper', 'antall'],
+            ],
+            v.maate,
+            (m) => {
+              if (m === v.maate) return;
+              const a = antallGrupper(v, Math.max(n, 1));
+              v.tall = m === 'antall' ? a : Math.max(1, Math.round(n / a));
+              v.maate = m;
+              tegnGrupper();
+            },
+          ),
+        );
+        felt(
+          v.maate === 'antall' ? 'Antall grupper' : 'Elever per gruppe',
+          'gruppetall',
+        );
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.id = 'gruppetall';
+        inp.min = 1;
+        inp.max = Math.max(1, n);
+        inp.value = v.tall;
+        boks.appendChild(inp);
+        const status = document.createElement('p');
+        status.className = 'status';
+        boks.appendChild(status);
+        boks.appendChild(
+          hint(
+            'Reglene for hvem som skal og ikke skal sitte sammen, gjelder også i gruppene. Kartet endres ikke.',
+          ),
+        );
+        const rad = document.createElement('div');
+        rad.className = 'knapprad';
+        const trekk = document.createElement('button');
+        trekk.type = 'button';
+        trekk.className = 'knapp hoved';
+        trekk.textContent = 'Trekk grupper';
+        trekk.addEventListener('click', trekkGrupper);
+        rad.appendChild(trekk);
+        if (gruppesett()) {
+          const avbryt = document.createElement('button');
+          avbryt.type = 'button';
+          avbryt.className = 'knapp';
+          avbryt.textContent = 'Avbryt';
+          avbryt.addEventListener('click', () => {
+            gruppeOppsett = false;
+            tegnGrupper();
+          });
+          rad.appendChild(avbryt);
+        }
+        boks.appendChild(rad);
+
+        const oppdater = () => {
+          v.tall = parseInt(inp.value, 10) || 1;
+          trekk.disabled = n < 2;
+          if (n < 2) {
+            status.textContent =
+              'Det må være minst to elever i klassen for å lage grupper.';
+            return;
+          }
+          const a = antallGrupper(v, n),
+            min = Math.floor(n / a),
+            maks = Math.ceil(n / a);
+          status.textContent =
+            n +
+            ' elever gir ' +
+            a +
+            (a === 1 ? ' gruppe' : ' grupper') +
+            ' med ' +
+            (min === maks ? min : min + '–' + maks) +
+            ' elever.';
+        };
+        inp.addEventListener('input', oppdater);
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !trekk.disabled) trekkGrupper();
+        });
+        oppdater();
+      }
+
+      function trekkGrupper() {
+        const ids = elever().map((e) => e.id);
+        if (ids.length < 2) return;
+        const a = antallGrupper(gruppevalg, ids.length);
+        const navn = gruppenavn(a);
+        klasse().grupper = {
+          valg: kopi(gruppevalg),
+          liste: delInnGrupper(ids, a).map((g, i) => ({
+            navn: navn[i],
+            elever: g,
+          })),
+        };
+        gruppeOppsett = false;
+        gruppeValgt = null;
+        lagre();
+        tegnGrupper();
+      }
+      function nyeGruppenavn() {
+        const liste = gruppesett().liste;
+        const navn = gruppenavn(liste.length);
+        liste.forEach((g, i) => (g.navn = navn[i]));
+        lagre();
+        tegnGrupper();
+      }
+
+      function tegnGruppeliste(boks) {
+        const sett = gruppesett();
+        // elever som er slettet fra klassen, forsvinner også fra gruppene
+        const finnes = new Set(elever().map((e) => e.id));
+        sett.liste.forEach(
+          (g) => (g.elever = g.elever.filter((id) => finnes.has(id))),
+        );
+        const med = new Set(sett.liste.flatMap((g) => g.elever));
+        const uten = elever()
+          .filter((e) => !med.has(e.id))
+          .map((e) => e.id);
+        if (gruppeValgt && !finnes.has(gruppeValgt)) gruppeValgt = null;
+        boks.appendChild(
+          hint(
+            gruppeValgt
+              ? 'Klikk på en elev i en annen gruppe for å bytte med ' +
+                  navnAv(gruppeValgt) +
+                  ', eller på en gruppe for å flytte ' +
+                  navnAv(gruppeValgt) +
+                  ' dit.'
+              : 'Dra en elev til en annen gruppe, eller klikk på to elever for å bytte dem.',
+          ),
+        );
+        const brudd = gruppebrudd(sett.liste);
+        const grid = document.createElement('div');
+        grid.className = 'gruppegrid';
+        sett.liste.forEach((g, i) =>
+          grid.appendChild(
+            gruppekort(
+              i,
+              'Gruppe ' + (i + 1),
+              g.navn,
+              g.elever,
+              FARGER[i % FARGER.length].hex,
+              brudd[i],
+            ),
+          ),
+        );
+        if (uten.length)
+          grid.appendChild(
+            gruppekort(-1, 'Ikke med', 'Dra inn i en gruppe', uten, null, []),
+          );
+        boks.appendChild(grid);
+        boks.appendChild(
+          hint(
+            'Kopier tabell legger tabellen på utklippstavla, klar til å limes inn.',
+          ),
+        );
+      }
+
+      function gruppekort(gi, tittel, undertittel, ids, farge, varsler) {
+        const kort = document.createElement('section');
+        kort.className =
+          'gruppekort' +
+          (gi < 0 ? ' uten' : '') +
+          (gruppeValgt ? ' kan-motta' : '');
+        kort.style.setProperty('--gf', farge || 'var(--sperret)');
+        const hode = document.createElement('div');
+        hode.className = 'gruppehode';
+        const s = document.createElement('strong');
+        s.textContent = tittel;
+        const em = document.createElement('em');
+        em.textContent = undertittel;
+        hode.append(s, em);
+        if (gi >= 0 && !ids.length) {
+          const x = document.createElement('button');
+          x.type = 'button';
+          x.className = 'gruppefjern';
+          x.textContent = '×';
+          x.title = 'Fjern ' + tittel.toLowerCase();
+          x.setAttribute('aria-label', x.title);
+          x.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            fjernGruppe(gi);
+          });
+          hode.appendChild(x);
+          hode.style.paddingRight = '32px';
+        }
+        kort.appendChild(hode);
+
+        const liste = document.createElement('div');
+        liste.className = 'gruppeelever';
+        ids.forEach((id) => {
+          const e = elevMed(id);
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'gruppeelev' + (id === gruppeValgt ? ' valgt' : '');
+          b.textContent = e.navn;
+          b.draggable = true;
+          b.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            velgGruppeelev(id);
+          });
+          b.addEventListener('dragstart', (ev) => {
+            ev.dataTransfer.setData('text/plain', id);
+            ev.dataTransfer.effectAllowed = 'move';
+            b.classList.add('dratt');
+          });
+          b.addEventListener('dragend', () => b.classList.remove('dratt'));
+          b.addEventListener('dragover', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            b.classList.add('maal');
+          });
+          b.addEventListener('dragleave', () => b.classList.remove('maal'));
+          b.addEventListener('drop', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const fra = ev.dataTransfer.getData('text/plain');
+            if (fra && fra !== id) flyttGruppeelev(fra, gi, id);
+          });
+          liste.appendChild(b);
+        });
+        if (!ids.length) {
+          const p = document.createElement('p');
+          p.className = 'gruppetom';
+          p.textContent = 'Tom gruppe – dra elever hit.';
+          liste.appendChild(p);
+        }
+        kort.appendChild(liste);
+        varsler.forEach((t) => {
+          const p = document.createElement('p');
+          p.className = 'gruppevarsel';
+          p.textContent = '⚠ ' + t;
+          kort.appendChild(p);
+        });
+
+        kort.addEventListener('click', () => {
+          if (gruppeValgt) flyttGruppeelev(gruppeValgt, gi);
+        });
+        kort.addEventListener('dragover', (ev) => {
+          ev.preventDefault();
+          kort.classList.add('maal');
+        });
+        kort.addEventListener('dragleave', (ev) => {
+          if (!kort.contains(ev.relatedTarget)) kort.classList.remove('maal');
+        });
+        kort.addEventListener('drop', (ev) => {
+          ev.preventDefault();
+          kort.classList.remove('maal');
+          const fra = ev.dataTransfer.getData('text/plain');
+          if (fra) flyttGruppeelev(fra, gi);
+        });
+        return kort;
+      }
+
+      // en tom gruppe kan fjernes; gruppene etter får nytt nummer
+      function fjernGruppe(gi) {
+        gruppesett().liste.splice(gi, 1);
+        gruppeValgt = null;
+        if (!gruppesett()) gruppeOppsett = true;
+        lagre();
+        tegnGrupper();
+      }
+      /* Klikk på én elev og så en i en annen gruppe bytter dem */
+      function velgGruppeelev(id) {
+        if (gruppeValgt && gruppeValgt !== id) {
+          const fra = gruppeValgt;
+          if (gruppeAv(fra) !== gruppeAv(id))
+            return flyttGruppeelev(fra, gruppeAv(id), id);
+          gruppeValgt = id;
+        } else gruppeValgt = gruppeValgt === id ? null : id;
+        tegnGrupper();
+      }
+      /* Flytter eleven til gruppe til (-1 er «ikke med»). Med bytt bytter
+         de to elevene plass i stedet. */
+      function flyttGruppeelev(id, til, bytt) {
+        const liste = gruppesett().liste;
+        const fra = gruppeAv(id);
+        gruppeValgt = null;
+        if (fra === til || !elevMed(id)) return tegnGrupper();
+        const ut = (g, x) => {
+          if (g >= 0) liste[g].elever = liste[g].elever.filter((y) => y !== x);
+        };
+        const inn = (g, x, i) => {
+          if (g >= 0) liste[g].elever.splice(i ?? liste[g].elever.length, 0, x);
+        };
+        if (bytt) {
+          const ia = fra >= 0 ? liste[fra].elever.indexOf(id) : undefined,
+            ib = til >= 0 ? liste[til].elever.indexOf(bytt) : undefined;
+          ut(fra, id);
+          ut(til, bytt);
+          inn(til, id, ib);
+          inn(fra, bytt, ia);
+        } else {
+          ut(fra, id);
+          inn(til, id);
+        }
+        lagre();
+        tegnGrupper();
+      }
+
+      /* Kopien har både en tabell (Word, Docs, Teams) og tekst med
+         tabulator (Excel), med høyst seks grupper i bredden */
+      function lysere(hex, andel) {
+        const v = parseInt(hex.slice(1), 16);
+        return (
+          '#' +
+          [16, 8, 0]
+            .map((s) =>
+              Math.round(((v >> s) & 255) * (1 - andel) + 255 * andel)
+                .toString(16)
+                .padStart(2, '0'),
+            )
+            .join('')
+        );
+      }
+      async function kopierGrupper() {
+        const liste = gruppesett().liste;
+        const celle =
+          'border:1px solid #c9d1d6;padding:4pt 8pt;text-align:left;vertical-align:top;';
+        const html = [],
+          tekst = [];
+        for (let s = 0; s < liste.length; s += 6) {
+          const del = liste.slice(s, s + 6);
+          let t =
+            '<table style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:11pt"><tr>';
+          del.forEach((g, j) => {
+            const f = FARGER[(s + j) % FARGER.length].hex;
+            t +=
+              '<th style="' +
+              celle +
+              'border-top:4px solid ' +
+              f +
+              ';background:' +
+              lysere(f, 0.85) +
+              '">Gruppe ' +
+              (s + j + 1) +
+              '<br><i style="font-weight:normal">' +
+              esc(g.navn) +
+              '</i></th>';
+          });
+          t += '</tr>';
+          tekst.push(
+            del.map((g, j) => 'Gruppe ' + (s + j + 1) + ' – ' + g.navn).join('\t'),
+          );
+          const rader = Math.max(...del.map((g) => g.elever.length));
+          for (let r = 0; r < rader; r++) {
+            const navn = del.map((g) =>
+              g.elever[r] ? navnAv(g.elever[r]) : '',
+            );
+            t +=
+              '<tr>' +
+              navn
+                .map((x) => '<td style="' + celle + '">' + esc(x) + '</td>')
+                .join('') +
+              '</tr>';
+            tekst.push(navn.join('\t'));
+          }
+          html.push(t + '</table>');
+          tekst.push('');
+        }
+        const h = html.join('<p></p>'),
+          p = tekst.join('\n').trim() + '\n';
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'text/html': new Blob([h], { type: 'text/html' }),
+              'text/plain': new Blob([p], { type: 'text/plain' }),
+            }),
+          ]);
+        } catch (err) {
+          if (!kopierMarkert(h))
+            return visBeskjed(
+              'Nettleseren stoppet kopieringen. Prøv igjen, eller bruk en annen nettleser.',
+              true,
+            );
+        }
+        visBeskjed('Tabellen er kopiert.');
+      }
+      // reserve for nettlesere uten ClipboardItem
+      function kopierMarkert(html) {
+        const d = document.createElement('div');
+        d.innerHTML = html;
+        d.style.cssText = 'position:fixed;left:-9999px;top:0';
+        document.body.appendChild(d);
+        const r = document.createRange();
+        r.selectNodeContents(d);
+        const s = getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
+        let ok = false;
+        try {
+          ok = document.execCommand('copy');
+        } catch (err) {}
+        s.removeAllRanges();
+        d.remove();
+        return ok;
       }
 
       /* ---- konto ---- */
@@ -3914,6 +4806,7 @@
             elever: k.elever,
             historikk: k.historikk || [],
             sist: k.sist || null,
+            grupper: k.grupper || null,
           };
           Object.entries(ny.kart || {}).forEach(([kn, x]) => {
             if (x.klasse !== n) return;
@@ -3964,6 +4857,7 @@
             if (!e.sone) e.sone = 'fri';
             if (e.gruppe === undefined) e.gruppe = null;
             delete e.fullt; // fullt navn lagres ikke lenger
+            delete e.borte; // tilstedeværelse er tatt bort
           });
         });
       }
@@ -4281,6 +5175,7 @@
           elever: k.elever,
           historikk: k.historikk,
           sist: k.sist || null,
+          grupper: k.grupper || null,
           kart,
         };
       }
@@ -4312,6 +5207,7 @@
           elever: p.elever || [],
           historikk: p.historikk || [],
           sist: p.sist || null,
+          grupper: p.grupper || null,
           _id: id,
           brukt,
         };
