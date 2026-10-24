@@ -1457,11 +1457,21 @@
             </p>
             <div class="rad" style="margin-top: 9px">
               <input type="text" id="nyttNavn" placeholder="Nytt elevnavn" />
+              <input
+                type="text"
+                id="nyKlasse"
+                list="klasseforslag"
+                placeholder="Klasse"
+                style="flex: 0 0 25%; min-width: 0"
+                aria-label="Klasse"
+              />
               <button class="knapp" id="leggTil">Legg til</button>
             </div>
             <p class="hjelp">
-              G/J setter kjønn, og tannhjulet åpner reglene for eleven.
+              G/J setter kjønn, og tannhjulet åpner reglene for eleven, også
+              hvilken klasse eleven hører til.
             </p>
+            <datalist id="klasseforslag"></datalist>
           </div>
         </div>
       </aside>
@@ -1825,6 +1835,7 @@
             plasser: {},
             laaste: [],
             spre: false,
+            spreKlasse: false,
             nyeNaboer: true,
             speil: false,
             farger: {},
@@ -1952,6 +1963,7 @@
           gamle,
           sammenPar,
           spre: D.aktiv.spre,
+          spreKlasse: D.aktiv.spreKlasse,
           foranMaks: gs.foranMaks,
           bakMin: gs.bakMin,
         };
@@ -1973,6 +1985,7 @@
           if (ea.unna.includes(ib) || eb.unna.includes(ia)) kost += 80;
           if (c.spre && ea.kjonn && eb.kjonn && ea.kjonn === eb.kjonn)
             kost += 3;
+          if (c.spreKlasse && ea.gruppe && ea.gruppe === eb.gruppe) kost += 4;
           if (c.gamle.size && c.gamle.has(parN(ia, ib))) kost += 10;
         }
         for (const [a, b] of c.sammenPar) {
@@ -2090,6 +2103,19 @@
                 ' og ' +
                 eb.navn +
                 ' havnet ved siden av hverandre likevel.',
+            );
+        }
+        if (c.spreKlasse) {
+          let likeKlasser = 0;
+          for (const [a, b] of c.par) {
+            const ea = c.elevKart.get(t[a]),
+              eb = c.elevKart.get(t[b]);
+            if (ea && eb && ea.gruppe && ea.gruppe === eb.gruppe) likeKlasser++;
+          }
+          if (likeKlasser)
+            ut.push(
+              likeKlasser +
+                ' nabopar fra samme klasse lot seg ikke skille.',
             );
         }
         for (const s of c.seter) {
@@ -2721,7 +2747,15 @@
           .join('');
       }
 
+      function klasseforslag() {
+        return [...new Set(elever().map((e) => e.gruppe).filter(Boolean))].sort(
+          sammenlign,
+        );
+      }
       function tegnElevliste() {
+        $('klasseforslag').innerHTML = klasseforslag()
+          .map((g) => '<option value="' + esc(g) + '"></option>')
+          .join('');
         const boks = $('elevliste');
         boks.innerHTML = '';
         const tomt = $('tomliste');
@@ -2787,6 +2821,21 @@
       function regelboks(e) {
         const b = document.createElement('div');
         b.className = 'regelboks';
+
+        b.appendChild(overskrift('Klasse'));
+        const kl = document.createElement('input');
+        kl.type = 'text';
+        kl.setAttribute('list', 'klasseforslag');
+        kl.placeholder = 'F.eks. 2STA';
+        kl.value = e.gruppe || '';
+        kl.addEventListener('change', () => {
+          e.gruppe = kl.value.trim() || null;
+          tegn();
+        });
+        b.appendChild(kl);
+        b.appendChild(
+          hint('Brukes når du velger å spre elever fra samme klasse.'),
+        );
 
         b.appendChild(overskrift('Hvor i rommet'));
         b.appendChild(
@@ -2951,12 +3000,14 @@
             boks.appendChild(l);
           };
           valg('Fordel gutter og jenter jevnt', 'spre');
+          if (klasseforslag().length > 1)
+            valg('Spre elever fra samme klasse', 'spreKlasse');
           valg('Unngå naboer fra tidligere kart', 'nyeNaboer');
           valg('Del inn i makkergrupper etter trekningen', 'makker');
           const h = document.createElement('p');
           h.className = 'hjelp';
           h.textContent =
-            'Tidligere naboer hentes fra de tre siste kartene du har brukt. Makkergrupper er 3–5 elever som sitter nær hverandre. Låste pulter blir stående.';
+            'Tidligere naboer hentes fra de tre siste kartene du har brukt. «Spre elever fra samme klasse» bruker klassen som står bak hvert elevnavn, slik at elever fra ulike klasser blir kjent. Makkergrupper er 3–5 elever som sitter nær hverandre. Låste pulter blir stående.';
           boks.appendChild(h);
         }),
       );
@@ -4186,7 +4237,7 @@
         const felt = $('nyttNavn'),
           v = felt.value.trim();
         if (!v) return;
-        klasse().elever.push(nyElev(v));
+        klasse().elever.push(nyElev(v, null, $('nyKlasse').value.trim()));
         felt.value = '';
         felt.focus();
         tegn();
@@ -4843,6 +4894,7 @@
             plasser: {},
             laaste: [],
             spre: false,
+            spreKlasse: false,
             nyeNaboer: true,
             speil: false,
             farger: {},
@@ -5190,6 +5242,7 @@
             klasse: (D.klasser[a.klasse] || {})._id || null,
             rom: a.rom,
             spre: a.spre,
+            spreKlasse: a.spreKlasse,
             nyeNaboer: a.nyeNaboer,
             speil: a.speil,
           },
