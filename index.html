@@ -1616,6 +1616,10 @@
             <label class="felt" for="innGjenta">Gjenta passordet</label>
             <input type="password" id="innGjenta" autocomplete="new-password" />
             <p class="hjelp">Minst 12 tegn. En setning du husker, er fint.</p>
+            <p class="hjelp">
+              Bare e-postadresser som slutter på @osloskolen.no kan opprette
+              konto.
+            </p>
           </div>
           <div class="knapprad">
             <button class="knapp hoved" id="innKnapp" type="submit">
@@ -5193,6 +5197,8 @@
         await laasOpp(profil, kek, 'privat_passord');
         return kode;
       }
+      // må stemme med tillatt_domene() i klassekart-supabase.sql
+      const TILLATT_DOMENE = 'osloskolen.no';
       async function registrer(epost, passord) {
         const { auth } = await avledNokler(epost, passord);
         const r = await sky.klient.auth.signUp({
@@ -5203,7 +5209,9 @@
         if (r.error)
           throw new Error(
             /database error|domene/i.test(r.error.message)
-              ? 'Bare e-postadresser fra skolen kan opprette konto.'
+              ? 'Bare adresser som slutter på @' +
+                TILLATT_DOMENE +
+                ' kan opprette konto.'
               : r.error.message,
           );
         return !!r.data.session;
@@ -5867,6 +5875,12 @@
               throw new Error('Passordet må ha minst 12 tegn.');
             if (pw !== $('innGjenta').value)
               throw new Error('Passordene er ikke like.');
+            if (!epost.toLowerCase().endsWith('@' + TILLATT_DOMENE))
+              throw new Error(
+                'Bare adresser som slutter på @' +
+                  TILLATT_DOMENE +
+                  ' kan opprette konto.',
+              );
             innStatus('Oppretter konto …');
             if (!(await registrer(epost, pw))) {
               settNyKonto(false);
