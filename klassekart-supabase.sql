@@ -56,6 +56,11 @@ create table if not exists public.rom (
   endret_av    uuid references public.profiler on delete set null
 );
 
+-- Skoler man kan velge mellom. Brukerne kan bare lese listen (se seksjon 4).
+create table if not exists public.skoleliste (
+  navn text primary key
+);
+
 -- Rom deles med kollegene på samme skole. Skolen velges ved første innlogging.
 alter table public.profiler add column if not exists skole text;
 alter table public.rom      add column if not exists skole text;
@@ -90,16 +95,17 @@ language sql stable security definer set search_path = public as $$
   select skole from profiler where id = auth.uid();
 $$;
 
--- Skoler som allerede finnes, så kolleger velger samme skrivemåte
+-- Skolene man kan velge mellom. Legges til manuelt (se bunnen av filen), så alle
+-- bruker samme skrivemåte.
 create or replace function public.skoler() returns table (skole text)
 language sql stable security definer set search_path = public as $$
-  select distinct p.skole from profiler p
-  where auth.uid() is not null and p.skole is not null
+  select s.navn from skoleliste s
+  where auth.uid() is not null
   order by 1;
 $$;
 
--- Velg skole. Finnes skolen fra før (uansett store/små bokstaver), brukes den
--- skrivemåten. Rom jeg laget før skolen var valgt, følger med.
+-- Velg skole. Må finnes i skolelisten (uansett store/små bokstaver). Rom jeg
+-- laget før skolen var valgt, følger med.
 create or replace function public.sett_skole(p_skole text) returns text
 language plpgsql security definer set search_path = public as $$
 declare
@@ -111,10 +117,13 @@ begin
   end if;
   ren := nullif(btrim(regexp_replace(coalesce(p_skole, ''), '\s+', ' ', 'g')), '');
   if ren is null then
-    raise exception 'Skriv inn navnet på skolen';
+    raise exception 'Velg skolen din';
   end if;
-  select p.skole into finnes from profiler p where lower(p.skole) = lower(ren) limit 1;
-  ren := coalesce(finnes, ren);
+  select s.navn into finnes from skoleliste s where lower(s.navn) = lower(ren) limit 1;
+  if finnes is null then
+    raise exception 'Skolen finnes ikke i listen ennå. Send e-post til hvemsitterhvor@gmail.com, så blir den lagt til.';
+  end if;
+  ren := finnes;
   update profiler set skole = ren where id = auth.uid();
   update rom set skole = ren where opprettet_av = auth.uid() and skole is null;
   return ren;
@@ -182,6 +191,10 @@ create policy "rom endre" on public.rom for update to authenticated using (skole
 -- bare den som laget rommet, kan slette det
 create policy "rom slett" on public.rom for delete to authenticated using (opprettet_av = auth.uid() and skole = min_skole());
 
+-- skolelisten: ingen policyer, så bare skoler() (security definer) leser den
+alter table public.skoleliste enable row level security;
+revoke all on public.skoleliste from anon, authenticated;
+
 revoke all on public.profiler, public.klasser, public.klassemedlemmer, public.rom from anon;
 grant select, insert, update, delete on public.profiler, public.klasser, public.klassemedlemmer, public.rom to authenticated;
 revoke execute on function public.er_medlem(uuid), public.finn_kollega(text), public.medlemmer_i(uuid[]),
@@ -206,3 +219,30 @@ drop trigger if exists klassekart_sjekk_domene on auth.users;
 create trigger klassekart_sjekk_domene
   before insert on auth.users
   for each row execute function public.sjekk_domene();
+
+
+-- ============================================================
+-- 6. Slett egen konto
+--    Brukeren fjernes fra innloggingen, og profil og medlemskap følger med
+--    (on delete cascade). Klasser ingen andre er med i, slettes. Klasser som er
+--    delt med kolleger, blir hos dem. Rom er delt med skolen og blir stående.
+-- ============================================================
+create or replace function public.slett_min_konto() returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  meg uuid := auth.uid();
+begin
+  if meg is null then
+    raise exception 'Ikke innlogget';
+  end if;
+  delete from klasser k
+  where (k.opprettet_av = meg
+         or exists (select 1 from klassemedlemmer m
+                    where m.klasse_id = k.id and m.bruker_id = meg))
+    and not exists (select 1 from klassemedlemmer m
+                    where m.klasse_id = k.id and m.bruker_id <> meg);
+  delete from auth.users where id = meg;
+end $$;
+
+revoke execute on function public.slett_min_konto() from public, anon;
+grant execute on function public.slett_min_konto() to authenticated;

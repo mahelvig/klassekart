@@ -4,13 +4,48 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Klassekart</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
     <style>
+      /* Atkinson Hyperlegible (SIL OFL), lagret her så ingen tredjepart får IP-adressen */
+      @font-face {
+        font-family: 'Atkinson Hyperlegible';
+        font-weight: 400;
+        font-display: swap;
+        src: url(fonts/atkinson-400-latin-ext.woff2) format('woff2');
+        unicode-range:
+          U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+          U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+          U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+      }
+      @font-face {
+        font-family: 'Atkinson Hyperlegible';
+        font-weight: 400;
+        font-display: swap;
+        src: url(fonts/atkinson-400-latin.woff2) format('woff2');
+        unicode-range:
+          U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+          U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191,
+          U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'Atkinson Hyperlegible';
+        font-weight: 700;
+        font-display: swap;
+        src: url(fonts/atkinson-700-latin-ext.woff2) format('woff2');
+        unicode-range:
+          U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+          U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+          U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+      }
+      @font-face {
+        font-family: 'Atkinson Hyperlegible';
+        font-weight: 700;
+        font-display: swap;
+        src: url(fonts/atkinson-700-latin.woff2) format('woff2');
+        unicode-range:
+          U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+          U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191,
+          U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
       :root {
         /* blekk og papir */
         --ink: #1d2b36;
@@ -1609,7 +1644,7 @@
             autocomplete="current-password"
           />
           <label class="bryter"
-            ><input type="checkbox" id="innHusk" checked /> Forbli innlogget på
+            ><input type="checkbox" id="innHusk" /> Forbli innlogget på
             denne maskinen</label
           >
           <div id="innGjentaBoks" hidden>
@@ -1637,6 +1672,7 @@
             <button type="button" class="lenkeknapp" id="innLokal">
               Bruk uten konto – lagres bare i denne nettleseren
             </button>
+            <a class="lenkeknapp" href="personvern.html">Personvern</a>
           </div>
         </form>
 
@@ -1672,15 +1708,18 @@
         <form id="stegSkole" novalidate hidden>
           <h2>Hvilken skole jobber du på?</h2>
           <p class="hjelp">
-            Rommene deles med kollegene på samme skole. Finnes skolen i listen,
-            velg den, så havner dere sammen.
+            Rommene deles med kollegene på samme skole. Står ikke skolen din i
+            listen, send e-post til
+            <a href="mailto:hvemsitterhvor@gmail.com">hvemsitterhvor@gmail.com</a>,
+            så legger vi den til.
           </p>
           <label class="felt" for="skoleNavn">Skole</label>
           <input
             type="text"
             id="skoleNavn"
             list="skoleliste"
-            autocomplete="organization"
+            autocomplete="off"
+            placeholder="Begynn å skrive, og velg fra listen"
           />
           <datalist id="skoleliste"></datalist>
           <div class="knapprad">
@@ -1740,7 +1779,13 @@
       </div>
     </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Fast versjon + integritetssjekk. Ved oppgradering: bytt versjon og hash
+         (openssl dgst -sha384 -binary supabase.js | openssl base64 -A) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"
+      integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK"
+      crossorigin="anonymous"
+    ></script>
 
     <script>
       'use strict';
@@ -3982,6 +4027,7 @@
               );
               menyvalg(boks, 'Bytt passord', () => visPassordsteg('bytt'));
               menyvalg(boks, 'Logg ut', loggUt);
+              menyvalg(boks, 'Slett kontoen min …', slettKonto, true);
             } else {
               menyinfo(
                 boks,
@@ -5801,6 +5847,37 @@
         await sky.klient.auth.signOut();
         location.reload(); // tømmer nøklene fra minnet
       }
+      async function slettKonto() {
+        if (
+          !confirm(
+            'Slette kontoen din?\n\n' +
+              '• Alt som er lagret på kontoen din, fjernes for godt. Det kan ikke angres.\n' +
+              '• Klasser du har delt med kolleger, blir værende hos dem.\n' +
+              '• Klasser bare du har tilgang til, slettes.\n' +
+              '• Klasser lagret lokalt i denne nettleseren (uten konto) berøres ikke.\n\n' +
+              'Tips: Last ned en kryptert kopi først, via kontomenyen.',
+          )
+        )
+          return;
+        const svar = prompt('Skriv SLETT for å bekrefte.');
+        if (!svar || svar.trim().toUpperCase() !== 'SLETT')
+          return visBeskjed('Kontoen ble ikke slettet.');
+        try {
+          const r = await sky.klient.rpc('slett_min_konto');
+          if (r.error) throw r.error;
+        } catch (err) {
+          console.error(err);
+          alert('Klarte ikke å slette kontoen: ' + (err.message || err));
+          return;
+        }
+        await glemNokler();
+        try {
+          await sky.klient.auth.signOut({ scope: 'local' });
+          localStorage.removeItem(MODUS);
+        } catch (err) {}
+        alert('Kontoen din er slettet.');
+        location.reload();
+      }
 
       /* ============ innlogging ============ */
       let nyKonto = false,
@@ -6060,17 +6137,21 @@
       }
 
       /* Skolen avgjør hvilke rom du ser. Løses når skolen er lagret. */
-      let skoleFerdig = null;
+      let skoleFerdig = null,
+        skolevalg = [];
       async function velgSkole(kanAvbryte) {
         visInngang('stegSkole');
         $('skoleAvbryt').hidden = !kanAvbryte;
-        $('skoleNavn').value = sky.skole || '';
         $('skoleStatus').textContent = '';
         try {
-          $('skoleliste').innerHTML = skyFeil(await sky.klient.rpc('skoler'))
-            .map((x) => '<option value="' + esc(x.skole) + '"></option>')
+          skolevalg = skyFeil(await sky.klient.rpc('skoler')).map(
+            (x) => x.skole,
+          );
+          $('skoleliste').innerHTML = skolevalg
+            .map((n) => '<option value="' + esc(n) + '"></option>')
             .join('');
         } catch (err) {}
+        $('skoleNavn').value = sky.skole || '';
         $('skoleNavn').focus();
         return new Promise((ferdig) => (skoleFerdig = ferdig));
       }
@@ -6080,8 +6161,16 @@
           $('skoleStatus').textContent = t;
           $('skoleStatus').className = 'status' + (v ? ' varsel' : '');
         };
-        const navn = $('skoleNavn').value.trim();
-        if (!navn) return st('Skriv inn navnet på skolen.', true);
+        const skrevet = $('skoleNavn').value.trim();
+        if (!skrevet) return st('Velg skolen din.', true);
+        const navn = skolevalg.find(
+          (n) => n.toLowerCase() === skrevet.toLowerCase(),
+        );
+        if (!navn)
+          return st(
+            'Velg en skole fra listen. Står den ikke der, send e-post til hvemsitterhvor@gmail.com.',
+            true,
+          );
         $('skoleKnapp').disabled = true;
         try {
           sky.skole = skyFeil(

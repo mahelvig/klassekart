@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Personvern – Klassekart</title>
+    <style>
+      @font-face {
+        font-family: 'Atkinson Hyperlegible';
+        font-weight: 400;
+        font-display: swap;
+        src: url(fonts/atkinson-400-latin.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC;
+      }
+      @font-face {
+        font-family: 'Atkinson Hyperlegible';
+        font-weight: 700;
+        font-display: swap;
+        src: url(fonts/atkinson-700-latin.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC;
+      }
+      :root {
+        --ink: #1d2b36;
+        --ink-svak: #5b6b76;
+        --bg: #e8edf0;
+        --flate: #ffffff;
+        --strek: #cdd6db;
+        --fokus: #2f7d63;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          'Atkinson Hyperlegible', 'Segoe UI', system-ui, -apple-system, Roboto,
+          Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.55;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+      article {
+        background: var(--flate);
+        border: 1px solid var(--strek);
+        border-radius: 8px;
+        padding: 24px 28px 32px;
+      }
+      a {
+        color: var(--fokus);
+      }
+      :focus-visible {
+        outline: 2px solid var(--fokus);
+        outline-offset: 2px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 32px 0 6px;
+      }
+      p,
+      ul {
+        margin: 8px 0;
+      }
+      ul {
+        padding-left: 22px;
+      }
+      li {
+        margin: 4px 0;
+      }
+      .tilbake {
+        display: inline-block;
+        margin-bottom: 12px;
+      }
+      .liten {
+        color: var(--ink-svak);
+        font-size: 14px;
+      }
+      .tabell {
+        overflow-x: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 15px;
+        margin: 10px 0;
+      }
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--strek);
+      }
+      th {
+        font-size: 14px;
+        color: var(--ink-svak);
+      }
+      @media (max-width: 520px) {
+        article {
+          padding: 18px 16px 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="tilbake" href="./">← Tilbake til Klassekart</a>
+      <article>
+        <h1>Personvern</h1>
+        <p class="liten">Sist oppdatert 26. oktober 2026</p>
+
+        <p>
+          Klassekart (hvemsitterhvor.no) er et verktøy for å lage klassekart med
+          trekning, regler for hvem som skal sitte sammen eller ikke, låste og
+          sperrede pulter og lagrede kart. Denne siden forklarer hva som
+          lagres, hvor, og hva du kan kreve.
+        </p>
+
+        <h2>Hvem som driver tjenesten</h2>
+        <p>
+          Klassekart drives av en ansatt i Osloskolen som et eget prosjekt. Den
+          som driver tjenesten, er ansvarlig for behandlingen av opplysningene
+          som beskrives på denne siden. Har du spørsmål om personvern, eller vil
+          du utøve rettighetene dine, send e-post til
+          <a href="mailto:hvemsitterhvor@gmail.com">hvemsitterhvor@gmail.com</a>.
+        </p>
+
+        <h2>Kort fortalt</h2>
+        <ul>
+          <li>
+            Elevnavn, regler og kart krypteres i nettleseren din før de sendes
+            til serveren. Driften kan ikke lese dem.
+          </li>
+          <li>
+            Importerte klasselister kortes ned til fornavn, og bare så mange
+            bokstaver av etternavnet som trengs for å skille like fornavn. Det
+            du limer inn, lagres ikke.
+          </li>
+          <li>
+            Uten konto lagres alt bare i nettleseren på maskinen du bruker.
+          </li>
+          <li>
+            Ingen reklame, ingen sporing og ingen analyseverktøy. Ingen
+            informasjonskapsler (cookies).
+          </li>
+        </ul>
+
+        <h2>Hva som lagres</h2>
+        <div class="tabell">
+          <table>
+            <thead>
+              <tr>
+                <th>Opplysning</th>
+                <th>Hvor</th>
+                <th>Lesbar for driften?</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>E-postadressen din og skolen du velger</td>
+                <td>Supabase (innlogging og database)</td>
+                <td>Ja</td>
+              </tr>
+              <tr>
+                <td>
+                  Elever (navn, kjønn, klassekode, plassering foran/bak, hvem
+                  som skal og ikke skal sitte sammen), lagrede kart, grupper og
+                  klassenavn
+                </td>
+                <td>Supabase, kryptert</td>
+                <td>Nei</td>
+              </tr>
+              <tr>
+                <td>
+                  Rom (navn og pultoppsett). Deles med kolleger på samme skole.
+                </td>
+                <td>Supabase</td>
+                <td>Ja. Skal ikke inneholde personopplysninger.</td>
+              </tr>
+              <tr>
+                <td>
+                  Hvem som deler klasser med hvem, og når noe sist ble endret
+                </td>
+                <td>Supabase</td>
+                <td>Ja</td>
+              </tr>
+              <tr>
+                <td>
+                  Krypteringsnøkler (din private nøkkel er kryptert med passordet
+                  ditt og gjenopprettingskoden)
+                </td>
+                <td>Supabase</td>
+                <td>Nei, bare i kryptert form</td>
+              </tr>
+              <tr>
+                <td>Alt du bruker uten konto</td>
+                <td>Bare i din egen nettleser</td>
+                <td>Nei, det forlater aldri maskinen din</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Passordet ditt sendes aldri til serveren. Nettleseren lager to nøkler
+          av det: én som brukes til innlogging, og én som låser opp
+          krypteringsnøklene dine.
+        </p>
+        <p>
+          <strong>Vær oppmerksom:</strong> Hvem som skal sitte foran, eller ikke
+          ved siden av hvem, kan si noe om en elev, for eksempel om syn, hørsel
+          eller konflikter. Navn du skriver inn selv, lagres slik du skrev dem,
+          så bruk helst bare fornavn. Ikke skriv sensitive opplysninger om
+          elever i noen felt.
+        </p>
+
+        <h2>Hvorfor vi behandler opplysningene</h2>
+        <ul>
+          <li>
+            <strong>Opprette og drifte kontoen din, og lagre kartene dine.</strong>
+            Dette er nødvendig for å levere tjenesten du ber om (avtale).
+          </li>
+          <li>
+            <strong>Sende e-post om bekreftelse av konto og nytt passord.</strong>
+            Dette er nødvendig for å levere tjenesten (avtale).
+          </li>
+          <li>
+            <strong>Sikkerhet og feilretting.</strong> Dette bygger på
+            berettiget interesse i å holde tjenesten trygg og i drift.
+          </li>
+        </ul>
+        <p>
+          Bare e-postadresser fra osloskolen.no kan opprette konto. Opplysningene
+          brukes ikke til markedsføring, og de selges eller utleveres ikke til
+          andre.
+        </p>
+        <p>
+          Du som bruker verktøyet, bestemmer selv hvilke elevopplysninger du
+          legger inn, og må sørge for at bruken er i tråd med skolens egne
+          rutiner for personvern. Legg bare inn det du trenger for å lage
+          klassekartet.
+        </p>
+
+        <h2>Hvem som får opplysningene</h2>
+        <p>Tjenesten bruker disse leverandørene:</p>
+        <ul>
+          <li>
+            <strong>Supabase</strong>: innlogging og database. Dataene ligger på
+            servere i EU.
+          </li>
+          <li>
+            <strong>Resend</strong>: sender e-postene for bekreftelse og nytt
+            passord, og får da e-postadressen din.
+          </li>
+          <li>
+            <strong>GitHub Pages</strong>: leverer nettsiden. GitHub får
+            IP-adressen din og tekniske opplysninger når du åpner siden.
+          </li>
+          <li>
+            <strong>jsDelivr</strong>: leverer biblioteket som snakker med
+            Supabase (en såkalt CDN), og får da IP-adressen din. Biblioteket er
+            låst til én versjon og kontrolleres med en sjekksum.
+          </li>
+        </ul>
+        <p>
+          Skrifttypen ligger på selve siden. Siden henter ikke noe fra Google.
+        </p>
+        <p>
+          Enkelte av leverandørene er amerikanske selskaper. Overføringer til
+          land utenfor EØS skjer på grunnlag av EUs standardkontrakter og/eller
+          EU–USAs Data Privacy Framework, slik leverandørene beskriver i sine
+          databehandlervilkår.
+        </p>
+        <p>
+          Andre brukere får bare tilgang til en klasse hvis du selv deler den
+          med dem. Delingen skjer ved at klassens nøkkel pakkes inn med
+          kollegaens offentlige nøkkel.
+        </p>
+
+        <h2>Nettleserlagring</h2>
+        <p>
+          Siden bruker ingen informasjonskapsler. Den bruker nettleserens egen
+          lagring (localStorage og IndexedDB) til:
+        </p>
+        <ul>
+          <li>innstillinger, som om elevlisten er skjult</li>
+          <li>å huske innloggingen hvis du velger «Forbli innlogget»</li>
+          <li>
+            alle klasser og kart hvis du bruker tjenesten uten konto, i
+            klartekst
+          </li>
+        </ul>
+        <p>
+          Lagringen er nødvendig for at siden skal fungere, og brukes ikke til
+          sporing. Du fjerner den ved å tømme nettleserdata for siden. På delte
+          maskiner bør du ikke velge «Forbli innlogget», og du bør logge ut etter
+          bruk.
+        </p>
+
+        <h2>Hvor lenge vi lagrer opplysningene</h2>
+        <p>
+          Opplysningene lagres så lenge kontoen din finnes. Du kan slette
+          kontoen selv når som helst: åpne kontomenyen øverst til høyre og velg
+          «Slett kontoen min». Kontoen og alt som er lagret på den, fjernes da
+          med en gang og kan ikke gjenopprettes.
+        </p>
+        <ul>
+          <li>Klasser bare du har tilgang til, slettes.</li>
+          <li>
+            Klasser du har delt med kolleger, blir hos dem. Du fjernes som
+            medlem.
+          </li>
+          <li>
+            Rom er delt med kollegene på skolen og blir stående, uten at de
+            lenger er knyttet til deg.
+          </li>
+          <li>
+            Eventuelle sikkerhetskopier hos leverandørene slettes etter deres
+            egne rutiner.
+          </li>
+        </ul>
+        <p>
+          Kommer du ikke inn, kan du i stedet be om sletting på e-post (se
+          under). Vi sletter da kontoen innen 30 dager. Uten konto ligger alt
+          kun i nettleseren din, og du bestemmer selv når det slettes.
+        </p>
+
+        <h2>Rettighetene dine</h2>
+        <p>Du har rett til å:</p>
+        <ul>
+          <li>få innsyn i opplysningene vi har om deg</li>
+          <li>få rettet feil, eller supplert manglende opplysninger</li>
+          <li>
+            få slettet opplysningene dine. Du kan gjøre det selv i appen, eller
+            be om det på e-post.
+          </li>
+          <li>be om at behandlingen begrenses</li>
+          <li>protestere mot behandlingen</li>
+          <li>
+            få med deg dataene dine. I appen kan du laste ned en kryptert kopi
+            av klassene dine.
+          </li>
+        </ul>
+        <p>
+          Send en e-post til
+          <a href="mailto:hvemsitterhvor@gmail.com">hvemsitterhvor@gmail.com</a>
+          for å utøve rettighetene. Vi svarer innen 30 dager. Du kan også klage
+          til
+          <a href="https://www.datatilsynet.no/" rel="noopener">Datatilsynet</a>
+          hvis du mener behandlingen ikke følger personvernreglene.
+        </p>
+
+        <h2>Sikkerhet</h2>
+        <ul>
+          <li>
+            Nøklene dannes av passordet ditt med PBKDF2 (600 000 runder). Hver
+            klasse har sin egen AES-256-nøkkel, og nøkkelen deles med kolleger
+            ved hjelp av RSA.
+          </li>
+          <li>
+            Databasen har tilgangsregler (Row Level Security) som sørger for at
+            du bare ser dine egne klasser og rom fra din egen skole.
+          </li>
+          <li>
+            <strong>Mister du både passordet og gjenopprettingskoden</strong>,
+            kan ingen, heller ikke driften, hente tilbake klassene dine. Ta
+            derfor vare på koden.
+          </li>
+          <li>
+            Fordi krypteringen skjer i nettleseren, må du stole på at
+            koden siden leverer, er den den gir seg ut for å være. Koden kan
+            leses i nettleseren din (Vis kilde).
+          </li>
+        </ul>
+
+        <h2>Endringer</h2>
+        <p>
+          Vi kan oppdatere denne erklæringen. Datoen øverst viser når den sist ble
+          endret. Ved vesentlige endringer varsler vi i tjenesten.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>
