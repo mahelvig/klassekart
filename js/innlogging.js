@@ -367,12 +367,16 @@ async function byttSkole() {
   visOversikt();
 }
 
-async function startSky() {
+/* automatisk = låst opp med en husket nøkkel. Da står «Forbli innlogget»
+   tomt, og valget fra forrige innlogging skal gjelde videre. */
+async function startSky(automatisk) {
   try {
     localStorage.setItem(MODUS, 'sky');
   } catch (err) {}
-  if ($('innHusk').checked) await huskNokkel(sky.id, sky.privat);
-  else await glemNokler();
+  if (!automatisk) {
+    if ($('innHusk').checked) await huskNokkel(sky.id, sky.privat);
+    else await glemNokler();
+  }
   if (!sky.skole) await velgSkole(false);
   innStatus('Henter klassene …');
   (await hentSky())();
@@ -432,7 +436,7 @@ async function laasOppAutomatisk(sesjon) {
       await glemNokler();
       return false;
     }
-    await startSky();
+    await startSky(true);
     return true;
   } catch (err) {
     console.warn('Automatisk opplåsing feilet', err);

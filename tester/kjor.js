@@ -217,6 +217,94 @@ async function sjekkMobil(nettleser, url, feil) {
   // Chromium, så de tas ikke midt i testene over.
 }
 
+/* ---- 4. Konto og «Forbli innlogget» ----
+   Supabase byttes ut med tester/falsk-supabase.js, som lagrer i
+   nettleseren. Da kan hele kontoflyten testes uten nett, med ekte
+   kryptering. */
+async function sideMedFalskSky(nettleser, url, feil) {
+  const ctx = await nettleser.newContext({ viewport: { width: 1200, height: 800 } });
+  await ctx.route('https://cdn.jsdelivr.net/**', (r) =>
+    r.fulfill({
+      path: path.join(__dirname, 'falsk-supabase.js'),
+      contentType: 'text/javascript',
+      headers: { 'Access-Control-Allow-Origin': '*' },
+    }),
+  );
+  // integritetssjekken (SRI) ville stoppet det falske skriptet
+  await ctx.route('**/index.html', async (r) => {
+    const svar = await r.fetch();
+    const html = (await svar.text()).replace(/\s*integrity="[^"]*"/, '');
+    r.fulfill({ response: svar, body: html });
+  });
+  const s = await ctx.newPage();
+  s.on('pageerror', (e) => feil.push(e.message));
+  await s.goto(url);
+  return s;
+}
+/* Venter til appen enten viser klassene eller ber om passord, og ikke er
+   midt i en innlogging (da står innloggingsskjemaet fortsatt synlig). */
+async function hvorErVi(s) {
+  await s.waitForFunction(() => {
+    const synlig = (id) => document.getElementById(id).checkVisibility();
+    const holder = document.getElementById('innKnapp').disabled;
+    return synlig('oversikt') || (synlig('stegInn') && !holder);
+  });
+  await s.waitForTimeout(300); // en automatisk opplåsing kan fortsatt pågå
+  return (await s.isVisible('#oversikt')) ? 'klassene' : 'innlogging';
+}
+async function sjekkInnlogging(nettleser, url, feil) {
+  console.log('Konto og «Forbli innlogget»');
+  const EPOST = 'larer@osloskolen.no',
+    PASSORD = 'et langt testpassord';
+  const s = await sideMedFalskSky(nettleser, url, feil);
+  sjekk((await hvorErVi(s)) === 'innlogging', 'ny besøkende får innloggingssiden');
+
+  // ny konto, med «Forbli innlogget»
+  await s.click('#innBytt');
+  await s.fill('#innEpost', EPOST);
+  await s.fill('#innPassord', PASSORD);
+  await s.fill('#innGjenta', PASSORD);
+  await s.check('#innHusk');
+  await s.click('#innKnapp');
+  await s.waitForSelector('#stegKode:not([hidden])');
+  await s.check('#kodeOk');
+  await s.click('#kodeFortsett');
+  await s.waitForSelector('#stegSkole:not([hidden])');
+  await s.fill('#skoleNavn', 'Testskolen');
+  await s.click('#skoleKnapp');
+  sjekk((await hvorErVi(s)) === 'klassene', 'ny konto er opprettet og logget inn');
+
+  await s.click('.klassekort:not(.ny) >> nth=0');
+  await s.click('#importmodus');
+  await s.fill('#importtekst', ELEVER);
+  await s.click('#importLegg');
+  await s.click('#trekk');
+  await s.evaluate(() => tomSynk());
+
+  for (const gang of ['første', 'andre', 'tredje']) {
+    await s.reload();
+    sjekk((await hvorErVi(s)) === 'klassene', `${gang} gang siden lastes på nytt: rett inn uten passord`);
+  }
+  sjekk(
+    (await s.textContent('#klassegrid')).includes('26 elever'),
+    'klassen med 26 elever er lagret kryptert og hentet igjen',
+  );
+
+  // logg ut: da skal nøkkelen være glemt
+  await s.click('#kontoKnapp');
+  await Promise.all([s.waitForNavigation(), s.click('.popup .menyvalg >> text=Logg ut')]);
+  sjekk((await hvorErVi(s)) === 'innlogging', 'etter utlogging må man logge inn igjen');
+
+  // uten «Forbli innlogget»: passord ved neste besøk, men klassene er der
+  await s.fill('#innEpost', EPOST);
+  await s.fill('#innPassord', PASSORD);
+  sjekk(!(await s.isChecked('#innHusk')), '«Forbli innlogget» er ikke huket av fra før');
+  await s.click('#innKnapp');
+  sjekk((await hvorErVi(s)) === 'klassene', 'innlogging uten «Forbli innlogget» virker');
+  await s.reload();
+  sjekk((await hvorErVi(s)) === 'innlogging', 'uten «Forbli innlogget» spørres det om passord neste gang');
+}
+
 (async () => {
   fs.mkdirSync(BILDER, { recursive: true });
   sjekkLasterekkefolge();
@@ -227,6 +315,7 @@ async function sjekkMobil(nettleser, url, feil) {
   try {
     await sjekkDialoger(nettleser, url, feil);
     await sjekkMobil(nettleser, url, feil);
+    await sjekkInnlogging(nettleser, url, feil);
   } catch (err) {
     sjekk(false, 'testen stoppet: ' + err.message.split('\n')[0]);
   }
