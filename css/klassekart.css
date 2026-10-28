@@ -1285,10 +1285,15 @@ dialog.lagrede::backdrop {
 .skystatus {
   margin-left: 8px;
   white-space: nowrap;
+  transition: opacity 0.6s;
   font-size: 12px;
   font-weight: 400;
   letter-spacing: 0;
   color: var(--ink-svak);
+}
+/* «✓ Lagret» toner ut, men beholder plassen så toppen ikke hopper */
+.skystatus.borte {
+  opacity: 0;
 }
 .skystatus.varsel {
   color: var(--varsel);

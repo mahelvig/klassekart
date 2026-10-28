@@ -64,7 +64,7 @@ function miniKart(romnavn, plasser, ids, farger) {
               ? ' full'
               : '');
         const f = (farger || {})[k];
-        if (f !== undefined && !R.sperret.includes(k))
+        if (Number.isInteger(f) && FARGER[f] && !R.sperret.includes(k))
           p.style.cssText =
             'background:' +
             FARGER[f].hex +
@@ -1023,6 +1023,8 @@ function slaaSammen(ny) {
 }
 
 /* ============ brukere ============ */
+const gyldigId = (id) =>
+  typeof id === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(id);
 function normaliser() {
   if (!D.kart) D.kart = {};
   if (!D.klasser || !Object.keys(D.klasser).length)
@@ -1051,11 +1053,18 @@ function normaliser() {
     Object.assign(std, fast);
   if (!D.rom[D.aktiv.rom]) D.aktiv.rom = Object.keys(D.rom)[0];
   if (!D.aktiv.farger) D.aktiv.farger = {};
+  /* Data kan komme fra en klasse en kollega har delt, eller fra en
+     sikkerhetskopi, og kan være laget for å lure appen. Elever med ugyldig
+     ID tas bort, siden ID-er brukes i HTML. */
   Object.values(D.klasser).forEach((k) => {
     if (!k.historikk) k.historikk = [];
+    if (!Array.isArray(k.elever)) k.elever = [];
+    k.elever = k.elever.filter(
+      (e) => e && gyldigId(e.id) && typeof e.navn === 'string',
+    );
     k.elever.forEach((e) => {
-      if (!e.sammen) e.sammen = [];
-      if (!e.unna) e.unna = [];
+      e.sammen = Array.isArray(e.sammen) ? e.sammen.filter(gyldigId) : [];
+      e.unna = Array.isArray(e.unna) ? e.unna.filter(gyldigId) : [];
       if (!e.sone) e.sone = 'fri';
       if (e.gruppe === undefined) e.gruppe = null;
       delete e.fullt; // fullt navn lagres ikke lenger

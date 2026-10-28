@@ -220,6 +220,14 @@ create trigger klassekart_sjekk_domene
   before insert on auth.users
   for each row execute function public.sjekk_domene();
 
+-- Samme krav når noen bytter e-postadresse, ellers kunne en konto flyttes
+-- til en adresse utenfor skolen etter at den er opprettet.
+drop trigger if exists klassekart_sjekk_domene_endring on auth.users;
+create trigger klassekart_sjekk_domene_endring
+  before update of email on auth.users
+  for each row when (new.email is distinct from old.email)
+  execute function public.sjekk_domene();
+
 
 -- ============================================================
 -- 5b. Grenser per konto

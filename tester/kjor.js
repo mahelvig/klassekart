@@ -189,6 +189,16 @@ async function sjekkLagring(nettleser, url, feil) {
   await klasseMedElever(s, 'click');
   await s.waitForFunction(() => document.getElementById('skystatus').textContent.includes('Lagret kl.'));
   sjekk(true, 'toppen viser «✓ Lagret kl. …» uten konto');
+  const statusSynlig = () => s.evaluate(() => !document.getElementById('skystatus').classList.contains('borte'));
+  sjekk(await statusSynlig(), '«✓ Lagret» vises rett etter lagring');
+  await s.waitForTimeout(4600);
+  sjekk(
+    !(await statusSynlig()) && (await s.evaluate(() => getComputedStyle(document.getElementById('skystatus')).opacity)) === '0',
+    '«✓ Lagret» har tonet ut etter fire sekunder',
+  );
+  await s.click('#trekk');
+  await s.waitForTimeout(500);
+  sjekk(await statusSynlig(), '«✓ Lagret» kommer tilbake ved neste lagring');
   const standard = await plasser();
 
   await s.selectOption('#velgRom', '');
@@ -327,6 +337,58 @@ async function sjekkLagredeKart(nettleser, url, feil) {
   await s.reload();
   await s.click('.klassekort:not(.ny) >> nth=0');
   sjekk((await kart()).some((x) => x.navn === 'Prøvedag'), 'navnene er der etter omlasting');
+}
+
+/* ---- Sikkerhet ----
+   Data kan komme fra en klasse en kollega har delt, eller fra en
+   sikkerhetskopi. Ingenting i dem skal kunne kjøre kode i appen. */
+async function sjekkSikkerhet(nettleser, url, feil) {
+  console.log('Sikkerhet');
+  const s = await nySide(nettleser, url, { viewport: { width: 1200, height: 800 } }, feil);
+  await s.click('#innLokal');
+  await s.click('.klassekort:not(.ny) >> nth=0');
+  const ONDT = 'x"><img src=x onerror="window.angrepet=1">';
+
+  // en ondsinnet ID rett i dataene: escapingen alene må stoppe den
+  await s.evaluate((ond) => {
+    const e = (id, navn) => ({ id, navn, kjonn: null, sammen: [], unna: [], sone: 'fri', gruppe: null });
+    klasse().elever.push(e(ond, 'Ond'), e('vanlig', 'Ada'));
+    D.aktiv.plasser = { '0-0-0': 'vanlig' };
+    D.aktiv.farger = { '0-0-0': 'constructor', '0-0-1': 99 };
+    tegn();
+  }, ONDT);
+  await s.click('#kart .plass >> nth=0');
+  await s.click('.elevrad:has-text("Ada") .knapp.liten');
+  await s.waitForTimeout(200);
+  sjekk(!(await s.evaluate(() => window.angrepet)), 'en ondsinnet elev-ID kjører ikke kode i panelene');
+  await s.evaluate(() => document.body.click());
+
+  // en ondsinnet sikkerhetskopi: eleven med ugyldig ID tas bort
+  const kopi = JSON.stringify({
+    versjon: 3,
+    klasser: { Angrep: { elever: [
+      { id: ONDT, navn: 'Ond', sammen: [], unna: [] },
+      { id: 'e1', navn: 'Ola', sammen: [ONDT], unna: [] },
+    ], historikk: [] } },
+    rom: { Standardrom: { rader: [[2, 3, 2]], sperret: [] } },
+    kart: {},
+    aktiv: { klasse: 'Angrep', rom: 'Standardrom', plasser: { '0-0-0': 'e1' }, laaste: [], farger: { '0-0-0': '__proto__' } },
+  });
+  // lesInn venter på svar i dialogen, så den startes uten å vente på den
+  await s.evaluate((t) => {
+    lesInn(t);
+  }, kopi);
+  await s.click('#sporsmalOk');
+  await s.waitForTimeout(200);
+  const elever = await s.evaluate(() => D.klasser.Angrep.elever.map((e) => e.id + ':' + e.sammen.length));
+  sjekk(
+    elever.length === 1 && elever[0] === 'e1:0',
+    'en sikkerhetskopi med ugyldig elev-ID leses inn uten den eleven',
+  );
+  await s.click('#tilKlasser');
+  await s.click('.klassekort:has-text("Angrep")');
+  await s.click('#kart .plass >> nth=0');
+  sjekk(!(await s.evaluate(() => window.angrepet)), 'klassen fra kopien kan åpnes uten at noe kjøres');
 }
 
 /* ---- 5. Mobil ---- */
@@ -539,6 +601,7 @@ async function sjekkInnlogging(nettleser, url, feil) {
     await sjekkDialoger(nettleser, url, feil);
     await sjekkLagring(nettleser, url, feil);
     await sjekkLagredeKart(nettleser, url, feil);
+    await sjekkSikkerhet(nettleser, url, feil);
     await sjekkMobil(nettleser, url, feil);
     await sjekkInnlogging(nettleser, url, feil);
   } catch (err) {
