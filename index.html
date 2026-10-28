@@ -1573,6 +1573,7 @@
           <span class="grp" style="margin-left: auto">
             <button class="knapp" id="dupliserRom">Lagre som nytt rom</button>
             <button class="knapp" id="slettRom">Slett rommet</button>
+            <button class="knapp" id="romAvbryt">Avbryt</button>
             <button class="knapp hoved" id="romFerdig">Ferdig</button>
           </span>
           <p class="hjelp" id="romhjelp"></p>
@@ -1858,6 +1859,18 @@
           unna: [],
         };
       }
+      /* Standardrommet er fast og kan ikke endres, omdøpes eller slettes */
+      const STANDARDROM = 'Standardrom';
+      const standardromOppsett = () => ({
+        rader: [
+          [2, 3, 2],
+          [2, 3, 2],
+          [2, 3, 2],
+          [2, 3, 2],
+          [2, 3, 2],
+        ],
+        sperret: [],
+      });
       function standarddata(medStartelever) {
         const bruk = medStartelever !== false && OPPSETT.brukStartelever;
         const kn = (bruk && OPPSETT.startklasse) || 'Ny klasse';
@@ -1866,16 +1879,7 @@
           versjon: 3,
           klasser: { [kn]: { elever, historikk: [] } },
           rom: {
-            Standardrom: {
-              rader: [
-                [2, 3, 2],
-                [2, 3, 2],
-                [2, 3, 2],
-                [2, 3, 2],
-                [2, 3, 2],
-              ],
-              sperret: [],
-            },
+            [STANDARDROM]: standardromOppsett(),
           },
           kart: {},
           aktiv: {
@@ -2464,8 +2468,43 @@
       function fjernPult(S, r, g) {
         S[r][g].pop();
       }
+      /* Bilde av rommene når redigeringen starter, så den kan avbrytes */
+      let romBilde = null;
+      function tattRomBilde() {
+        const a = D.aktiv;
+        return {
+          rom: kopi(D.rom),
+          aktiv: {
+            rom: a.rom,
+            plasser: kopi(a.plasser),
+            laaste: kopi(a.laaste),
+            farger: kopi(a.farger),
+          },
+          kart: Object.fromEntries(
+            Object.entries(D.kart).map(([n, k]) => [n, k.rom]),
+          ),
+          sist: Object.fromEntries(
+            Object.entries(D.klasser)
+              .filter(([, k]) => k.sist)
+              .map(([n, k]) => [n, k.sist.rom]),
+          ),
+        };
+      }
+      function gjenopprettRomBilde(b) {
+        D.rom = b.rom;
+        Object.assign(D.aktiv, b.aktiv);
+        Object.entries(b.kart).forEach(([n, r]) => {
+          if (D.kart[n]) D.kart[n].rom = r;
+        });
+        Object.entries(b.sist).forEach(([n, r]) => {
+          if (D.klasser[n] && D.klasser[n].sist) D.klasser[n].sist.rom = r;
+        });
+      }
       function settRomModus(paa) {
+        if (paa && D.aktiv.rom === STANDARDROM) return;
         if (paa && malerModus) settMalerModus(false);
+        if (paa && !romBilde) romBilde = tattRomBilde();
+        if (!paa) romBilde = null;
         romModus = paa;
         lukkPanel();
         $('verktoy').hidden = paa;
@@ -2775,6 +2814,10 @@
         nytt.textContent = '+ Nytt rom …';
         sel.appendChild(nytt);
 
+        $('endreRom').title =
+          D.aktiv.rom === STANDARDROM
+            ? 'Standardrommet kan ikke endres. Du kan lage en kopi og endre den.'
+            : '';
         $('speil').setAttribute('aria-pressed', !!D.aktiv.speil);
         const antKart = kartForKlasse().length;
         $('tidligere').textContent =
@@ -4805,6 +4848,7 @@
         sperret: [],
       });
       function byttRom(n) {
+        if (romModus) settRomModus(false);
         D.aktiv.rom = n;
         D.aktiv.plasser = {};
         D.aktiv.laaste = [];
@@ -4819,12 +4863,44 @@
           grenseRom();
           return tegn();
         }
+        if (romModus) settRomModus(false);
+        romBilde = tattRomBilde();
         D.rom[n] = nyttRomOppsett();
         byttRom(n);
         settRomModus(true);
       });
-      vedKlikk('endreRom', () => settRomModus(true));
+      vedKlikk('endreRom', () => {
+        if (D.aktiv.rom === STANDARDROM) return lagKopiAvStandardrom();
+        settRomModus(true);
+      });
       vedKlikk('romFerdig', () => settRomModus(false));
+      vedKlikk('romAvbryt', () => {
+        const bilde = romBilde;
+        settRomModus(false);
+        if (bilde) gjenopprettRomBilde(bilde);
+        tegn();
+      });
+      function lagKopiAvStandardrom() {
+        if (
+          !confirm(
+            'Standardrommet kan ikke endres. Vil du lage en kopi du kan endre?',
+          )
+        )
+          return;
+        const n = (prompt('Navn på det nye rommet', 'Mitt rom') || '').trim();
+        if (!n) return;
+        if (D.rom[n])
+          return visBeskjed(
+            'Det finnes allerede et rom som heter ' + n + '.',
+            true,
+          );
+        if (Object.keys(D.rom).length >= MAKS_ROM) return grenseRom();
+        romBilde = tattRomBilde();
+        const R = rommet();
+        D.rom[n] = { rader: kopi(R.rader), sperret: R.sperret.slice() };
+        byttRom(n);
+        settRomModus(true);
+      }
       $('romnavn').addEventListener('change', (e) => {
         const nytt = e.target.value.trim();
         const gammelt = D.aktiv.rom;
@@ -4861,9 +4937,12 @@
         const R = rommet();
         D.rom[n] = { rader: kopi(R.rader), sperret: R.sperret.slice() };
         D.aktiv.rom = n;
+        romBilde = tattRomBilde();
         tegn();
       });
       vedKlikk('slettRom', () => {
+        if (D.aktiv.rom === STANDARDROM)
+          return visBeskjed('Standardrommet kan ikke slettes.', true);
         if (Object.keys(D.rom).length < 2)
           return visBeskjed('Du må ha minst ett rom.', true);
         if (
@@ -5044,6 +5123,15 @@
             speil: false,
             farger: {},
           };
+        // et standardrom som er endret fra før (før det ble låst), settes tilbake
+        const std = D.rom[STANDARDROM],
+          fast = standardromOppsett();
+        if (
+          std &&
+          (JSON.stringify(std.rader) !== JSON.stringify(fast.rader) ||
+            (std.sperret || []).length)
+        )
+          Object.assign(std, fast);
         if (!D.rom[D.aktiv.rom]) D.aktiv.rom = Object.keys(D.rom)[0];
         if (!D.aktiv.farger) D.aktiv.farger = {};
         Object.values(D.klasser).forEach((k) => {
