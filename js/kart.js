@@ -396,7 +396,8 @@ function lagPlass(r, g, i) {
     }
   }
   const f = D.aktiv.farger[k];
-  if (f !== undefined && !erSperret(k)) {
+  // bare gyldige fargenumre: data fra en delt klasse kan inneholde hva som helst
+  if (Number.isInteger(f) && FARGER[f] && !erSperret(k)) {
     el.classList.add('farget');
     el.style.setProperty('--gf', FARGER[f].hex);
     el.title = 'Gruppe ' + FARGER[f].navn.toLowerCase();
@@ -512,7 +513,7 @@ function apnePanel(k, el) {
       .map(
         (e) =>
           '<option value="' +
-          e.id +
+          esc(e.id) +
           '"' +
           (e.id === D.aktiv.plasser[k] ? ' selected' : '') +
           '>' +
@@ -995,7 +996,7 @@ function relasjon(e, felt) {
     andre
       .map(
         (x) =>
-          '<option value="' + x.id + '">' + esc(x.navn) + '</option>',
+          '<option value="' + esc(x.id) + '">' + esc(x.navn) + '</option>',
       )
       .join('');
   sel.style.marginTop = '5px';
