@@ -76,6 +76,8 @@ window.addEventListener('resize', () => {
   clearTimeout(breddetimer);
   breddetimer = setTimeout(() => tilpassBredde(), 120);
 });
+// navnene ble kanskje målt med reserveskriften før Atkinson var lastet
+document.fonts.addEventListener('loadingdone', () => tilpassNavn());
 window.addEventListener('beforeprint', () => tilpassBredde(1010));
 window.addEventListener('afterprint', () => tilpassBredde());
 

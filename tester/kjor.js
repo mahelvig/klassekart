@@ -116,12 +116,26 @@ async function klasseMedElever(s, trykk) {
   await s[trykk]('#trekk');
   await s.waitForTimeout(300);
 }
+// navn som går over flere linjer, med mål som forklarer hvorfor
 const delteNavn = (s) =>
   s.$$eval('#kart .plass .navn', (x) =>
     x
       .filter((n) => n.offsetHeight > parseFloat(getComputedStyle(n).lineHeight) * 1.5)
-      .map((n) => n.textContent),
+      .map((n) => {
+        const p = getComputedStyle(n.parentElement);
+        const ledig = n.parentElement.clientWidth - parseFloat(p.paddingLeft) - parseFloat(p.paddingRight);
+        return (
+          `${n.textContent} (bredde ${n.offsetWidth}, plass ${ledig}, høyde ${n.offsetHeight}, ` +
+          `skrift ${getComputedStyle(n).fontSize}, linje ${getComputedStyle(n).lineHeight}, ` +
+          `${n.classList.contains('passer') ? 'passer' : 'passer ikke'}, ` +
+          `Atkinson ${document.fonts.check('700 12px "Atkinson Hyperlegible"') ? 'lastet' : 'ikke lastet'})`
+        );
+      }),
   );
+const ingenDelteNavn = async (s, tekst) => {
+  const delte = await delteNavn(s);
+  sjekk(delte.length === 0, tekst + (delte.length ? ': ' + delte.join('; ') : ''));
+};
 const ingenSideScroll = (s) =>
   s.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
 
@@ -323,7 +337,7 @@ async function sjekkMobil(nettleser, url, feil) {
   await s.screenshot({ path: path.join(BILDER, 'mobil-klasse.png') });
   sjekk(await ingenSideScroll(s), 'klassevisningen: ingen sidelengs scroll');
   sjekk((await s.$eval('#kart', (k) => k.getBoundingClientRect().top)) < 300, 'kartet starter i øvre halvdel av skjermen');
-  sjekk((await delteNavn(s)).length === 0, 'ingen navn delt midt i ordet');
+  await ingenDelteNavn(s, 'ingen navn delt midt i ordet');
   await s.waitForFunction(() => document.getElementById('skystatus').textContent.includes('Lagret'));
   sjekk(
     await s.evaluate(() => {
@@ -391,7 +405,7 @@ async function sjekkMobil(nettleser, url, feil) {
   await s.tap('.popup .menyvalg >> text=Vis for klassen');
   await s.waitForTimeout(300);
   await s.screenshot({ path: path.join(BILDER, 'mobil-visning.png') });
-  sjekk((await delteNavn(s)).length === 0, 'visning for klassen: ingen navn delt');
+  await ingenDelteNavn(s, 'visning for klassen: ingen navn delt');
   sjekk(
     await s.evaluate(() => document.getElementById('lukkVisning').getBoundingClientRect().top > document.querySelector('.romtopp h1').getBoundingClientRect().bottom),
     'Lukk-knappen ligger ikke over tittelen',
