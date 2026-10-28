@@ -222,6 +222,65 @@ create trigger klassekart_sjekk_domene
 
 
 -- ============================================================
+-- 5b. Grenser per konto
+--     Maks 30 klasser per lærer. Elevtallet (60 per klasse) kontrolleres i
+--     nettleseren, siden databasen ikke kan lese kryptert innhold. Her settes
+--     bare en øvre grense på hvor mye en klasse kan fylle.
+--     Må stemme med MAKS_KLASSER i index.html.
+-- ============================================================
+create or replace function public.sjekk_klassegrenser() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' and new.opprettet_av is not null
+     and (select count(*) from klasser where opprettet_av = new.opprettet_av) >= 30 then
+    raise exception 'Grensen på 30 klasser er nådd. Send e-post til hvemsitterhvor@gmail.com hvis du trenger flere klasser.';
+  end if;
+  if length(new.data) > 1000000 then
+    raise exception 'Klassen er for stor. Send e-post til hvemsitterhvor@gmail.com hvis du trenger flere elever i en klasse.';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists klassekart_klassegrenser on public.klasser;
+create trigger klassekart_klassegrenser
+  before insert or update of data on public.klasser
+  for each row execute function public.sjekk_klassegrenser();
+
+
+-- ============================================================
+-- 5c. Grenser for rom
+--     Rommene deles med hele skolen, så grensen gjelder per skole: maks 100 rom
+--     per skole og 100 pulter per rom. Må stemme med MAKS_ROM og MAKS_PULTER
+--     i index.html.
+-- ============================================================
+create or replace function public.sjekk_romgrenser() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare
+  pulter integer;
+begin
+  if tg_op = 'INSERT' and new.skole is not null
+     and (select count(*) from rom where skole = new.skole) >= 100 then
+    raise exception 'Skolen har nådd grensen på 100 rom. Send e-post til hvemsitterhvor@gmail.com hvis dere trenger flere rom.';
+  end if;
+  if jsonb_typeof(new.rader) <> 'array' or jsonb_typeof(new.sperret) <> 'array'
+     or length(new.navn) > 50 then
+    raise exception 'Ugyldig rom';
+  end if;
+  select coalesce(sum(v::integer), 0) into pulter
+  from jsonb_array_elements(new.rader) r, jsonb_array_elements_text(r) v;
+  if pulter > 100 or jsonb_array_length(new.sperret) > 100 then
+    raise exception 'Et rom kan ha opptil 100 pulter. Send e-post til hvemsitterhvor@gmail.com hvis du trenger flere pulter i et rom.';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists klassekart_romgrenser on public.rom;
+create trigger klassekart_romgrenser
+  before insert or update of navn, rader, sperret on public.rom
+  for each row execute function public.sjekk_romgrenser();
+
+
+-- ============================================================
 -- 6. Slett egen konto
 --    Brukeren fjernes fra innloggingen, og profil og medlemskap følger med
 --    (on delete cascade). Klasser ingen andre er med i, slettes. Klasser som er

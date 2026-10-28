@@ -2433,6 +2433,9 @@
         const rent = S.map((rad) => rad.filter((g) => g.length)).filter(
           (rad) => rad.length,
         );
+        const antPulter = rent.flat().reduce((sum, g) => sum + g.length, 0);
+        if (antPulter > MAKS_PULTER && antPulter > seter().length)
+          return grensePulter();
         if (!rent.length) rent.push([[null, null]]);
         const ny = {};
         rent.forEach((rad, r) =>
@@ -4246,6 +4249,54 @@
       }
       $('klassesok').addEventListener('input', tegnOversikt);
 
+      /* Grenser for hvor mye som kan ligge i en konto. Må stemme med
+         klassekart-supabase.sql (klasser). Elevtallet kontrolleres bare her,
+         siden databasen ikke kan lese kryptert innhold. */
+      const MAKS_KLASSER = 30,
+        MAKS_ELEVER = 60,
+        MAKS_ROM = 100, // per skole: rommene deles med alle kolleger
+        MAKS_PULTER = 100,
+        KONTAKT_EPOST = 'hvemsitterhvor@gmail.com';
+      const antallKlasser = () =>
+        Object.keys(D.klasser).filter(
+          (n) => n !== 'Ny klasse' || D.klasser[n].elever.length,
+        ).length;
+      function grenseKlasser() {
+        alert(
+          'Du har nådd grensen på ' +
+            MAKS_KLASSER +
+            ' klasser. Slett en klasse du ikke bruker, eller send e-post til ' +
+            KONTAKT_EPOST +
+            ' hvis du trenger flere klasser.',
+        );
+      }
+      function grenseElever() {
+        alert(
+          'En klasse kan ha opptil ' +
+            MAKS_ELEVER +
+            ' elever. Send e-post til ' +
+            KONTAKT_EPOST +
+            ' hvis du trenger flere elever i en klasse.',
+        );
+      }
+      function grenseRom() {
+        alert(
+          'Skolen har nådd grensen på ' +
+            MAKS_ROM +
+            ' rom. Slett et rom dere ikke bruker, eller send e-post til ' +
+            KONTAKT_EPOST +
+            ' hvis dere trenger flere rom.',
+        );
+      }
+      function grensePulter() {
+        alert(
+          'Et rom kan ha opptil ' +
+            MAKS_PULTER +
+            ' pulter. Send e-post til ' +
+            KONTAKT_EPOST +
+            ' hvis du trenger flere pulter i et rom.',
+        );
+      }
       function lagNyKlasse() {
         const n = (prompt('Navn på klassen, f.eks. 3ME') || '').trim();
         if (!n) return;
@@ -4253,6 +4304,7 @@
           alert('Klassen ' + n + ' finnes fra før.');
           return;
         }
+        if (antallKlasser() >= MAKS_KLASSER) return grenseKlasser();
         // den tomme startklassen trengs ikke når du lager din første egne
         const navn = Object.keys(D.klasser);
         if (
@@ -4307,6 +4359,7 @@
         const felt = $('nyttNavn'),
           v = felt.value.trim();
         if (!v) return;
+        if (elever().length >= MAKS_ELEVER) return grenseElever();
         klasse().elever.push(nyElev(v, null, $('nyKlasse').value.trim()));
         felt.value = '';
         felt.focus();
@@ -4651,6 +4704,9 @@
         }
         if (nyKlasse) {
           const n = ($('importnavn').value || r.forslag || 'Ny klasse').trim();
+          if (r.elever.length > MAKS_ELEVER) return grenseElever();
+          if (!D.klasser[n] && antallKlasser() >= MAKS_KLASSER)
+            return grenseKlasser();
           if (
             D.klasser[n] &&
             !confirm('Klassen ' + n + ' finnes fra før. Erstatte elevlisten?')
@@ -4666,6 +4722,10 @@
         } else {
           // samme kortnavn regnes som samme elev
           const finnes = new Set(elever().map((e) => lav(e.navn)));
+          const nye = new Set(
+            r.elever.map((e) => lav(e.navn)).filter((x) => !finnes.has(x)),
+          );
+          if (elever().length + nye.size > MAKS_ELEVER) return grenseElever();
           const hoppet = [];
           let lagt = 0;
           r.elever.forEach((e) => {
@@ -4723,6 +4783,7 @@
             }
             return nyElev(navn, kjonn);
           });
+        if (nye.length > MAKS_ELEVER) return grenseElever();
         const beholdt = new Set(nye.map((e) => e.id));
         nye.forEach((e) => {
           e.sammen = e.sammen.filter((i) => beholdt.has(i));
@@ -4754,6 +4815,10 @@
         const n = (prompt('Navn på det nye rommet, f.eks. 218') || '').trim();
         if (!n) return tegn();
         if (D.rom[n]) return byttRom(n);
+        if (Object.keys(D.rom).length >= MAKS_ROM) {
+          grenseRom();
+          return tegn();
+        }
         D.rom[n] = nyttRomOppsett();
         byttRom(n);
         settRomModus(true);
@@ -4792,6 +4857,7 @@
             'Det finnes allerede et rom som heter ' + n + '.',
             true,
           );
+        if (Object.keys(D.rom).length >= MAKS_ROM) return grenseRom();
         const R = rommet();
         D.rom[n] = { rader: kopi(R.rader), sperret: R.sperret.slice() };
         D.aktiv.rom = n;
@@ -4897,6 +4963,11 @@
         }
         if (iSky()) {
           // i skyen legges klassene til – vi sletter ikke delte klasser
+          const nyeKlasser = Object.values(ny.klasser).filter(
+            (k) => k.elever && k.elever.length,
+          ).length;
+          if (antallKlasser() + nyeKlasser > MAKS_KLASSER)
+            return grenseKlasser();
           if (!confirm('Legge klassene i kopien til i kontoen din?')) return;
           const ant = slaaSammen(ny);
           visBeskjed(ant + (ant === 1 ? ' klasse' : ' klasser') + ' lagt til.');
@@ -4917,7 +4988,8 @@
 
       /* Legger klassene i en annen datamengde inn i D, uten å overskrive */
       function slaaSammen(ny) {
-        let antall = 0;
+        let antall = 0,
+          romHoppet = false;
         Object.entries(ny.klasser || {}).forEach(([n, k]) => {
           if (!k.elever || !k.elever.length) return;
           let nn = n,
@@ -4938,8 +5010,11 @@
           antall++;
         });
         Object.entries(ny.rom || {}).forEach(([rn, r]) => {
-          if (!D.rom[rn]) D.rom[rn] = r;
+          if (D.rom[rn]) return;
+          if (Object.keys(D.rom).length >= MAKS_ROM) return (romHoppet = true);
+          D.rom[rn] = r;
         });
+        if (romHoppet) grenseRom();
         // en tom «Ny klasse» trengs ikke lenger
         if (antall)
           Object.keys(D.klasser).forEach((n) => {
