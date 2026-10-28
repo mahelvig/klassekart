@@ -4,6 +4,31 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Klassekart</title>
+    <meta
+      name="description"
+      content="Lag klassekart med trekning, regler for hvem som skal sitte sammen eller ikke, flere rom og lagrede kart. Elevnavnene krypteres før de lagres."
+    />
+    <meta name="theme-color" content="#23463b" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="canonical" href="https://hvemsitterhvor.no/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="nb_NO" />
+    <meta property="og:site_name" content="Klassekart" />
+    <meta property="og:title" content="Klassekart" />
+    <meta
+      property="og:description"
+      content="Trekk plasser med regler for hvem som skal sitte sammen, og del kartene med kolleger."
+    />
+    <meta property="og:url" content="https://hvemsitterhvor.no/" />
+    <meta property="og:image" content="https://hvemsitterhvor.no/delingsbilde.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Et klassekart med tavle og seks pulter, og teksten Klassekart"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
     <style>
       /* Atkinson Hyperlegible (SIL OFL), lagret her så ingen tredjepart får IP-adressen */
       @font-face {
@@ -915,6 +940,42 @@
         border-radius: 5px;
         background: #fff;
       }
+
+      /* spørsmål og meldinger: erstatter alert, confirm og prompt */
+      dialog.sporsmal {
+        width: calc(100% - 32px);
+        max-width: 440px;
+        padding: 0;
+        border: 0;
+        color: var(--ink);
+      }
+      dialog.sporsmal::backdrop {
+        background: rgba(24, 36, 32, 0.38);
+      }
+      .sporsmal form {
+        padding: 20px 20px 16px;
+      }
+      .sporsmal p {
+        margin: 0 0 14px;
+        line-height: 1.45;
+        white-space: pre-line;
+      }
+      .sporsmal input {
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 6px;
+        padding: 9px 10px;
+        border: 1px solid var(--strek);
+        border-radius: 5px;
+        font: inherit;
+      }
+      .dialog .knapp.hoved.fare {
+        background: var(--varsel);
+        border-color: var(--varsel);
+      }
+      .dialog .knapp.hoved.fare:hover {
+        background: #8a2f14;
+      }
       .gruppegrid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
@@ -1606,6 +1667,22 @@
         aria-labelledby="gruppetittel"
       ></div>
     </div>
+    <dialog
+      class="dialog sporsmal"
+      id="sporsmal"
+      aria-labelledby="sporsmalTekst"
+    >
+      <form method="dialog">
+        <p id="sporsmalTekst"></p>
+        <input id="sporsmalSvar" autocomplete="off" hidden />
+        <div class="knapprad">
+          <button type="button" class="knapp" id="sporsmalAvbryt">
+            Avbryt
+          </button>
+          <button class="knapp hoved" id="sporsmalOk" value="ok">OK</button>
+        </div>
+      </form>
+    </dialog>
     <button class="knapp lukkvisning" id="lukkVisning" hidden>
       Lukk visningen (Esc)
     </button>
@@ -2632,6 +2709,7 @@
       };
       document.addEventListener('click', lukkPanel);
       document.addEventListener('keydown', (e) => {
+        if ($('sporsmal').open) return; // dialogen håndterer Esc selv
         if (e.key === 'Escape' && !$('gruppedialog').hidden)
           return lukkGrupper();
         if (e.key === 'Escape') {
@@ -2803,6 +2881,60 @@
         );
       }
 
+      /* Egne dialoger i stedet for alert, confirm og prompt. De står i kø,
+         så det aldri er to åpne samtidig. svar === null betyr uten tekstfelt. */
+      let dialogKo = Promise.resolve();
+      function dialog({
+        tekst,
+        svar = null,
+        type = 'text',
+        ok = 'OK',
+        avbryt = 'Avbryt',
+        fare = false,
+      }) {
+        const neste = dialogKo.then(
+          () =>
+            new Promise((ferdig) => {
+              const d = $('sporsmal'),
+                inp = $('sporsmalSvar'),
+                bOk = $('sporsmalOk'),
+                bAvbryt = $('sporsmalAvbryt');
+              $('sporsmalTekst').textContent = tekst;
+              inp.hidden = svar === null;
+              inp.type = type;
+              inp.value = svar || '';
+              bOk.textContent = ok;
+              bOk.classList.toggle('fare', fare);
+              bAvbryt.hidden = !avbryt;
+              bAvbryt.textContent = avbryt || '';
+              d.returnValue = '';
+              d.addEventListener(
+                'close',
+                () => {
+                  const ja = d.returnValue === 'ok';
+                  if (svar === null) ferdig(ja);
+                  else ferdig(ja ? inp.value : null);
+                },
+                { once: true },
+              );
+              d.showModal();
+              if (svar !== null) inp.select();
+              else (fare ? bAvbryt : bOk).focus();
+            }),
+        );
+        dialogKo = neste;
+        return neste;
+      }
+      const melding = (tekst) => dialog({ tekst, avbryt: null });
+      const bekreft = (tekst, ok, fare) => dialog({ tekst, ok, fare });
+      const sporOm = (tekst, svar = '', type) => dialog({ tekst, svar, type });
+      $('sporsmalAvbryt').addEventListener('click', () => $('sporsmal').close());
+      $('sporsmal').addEventListener('click', (e) => {
+        // ikke la klikket lukke sidepanelet bak dialogen
+        e.stopPropagation();
+        if (e.target === e.currentTarget) e.currentTarget.close();
+      });
+
       /* ============ sidepanel ============ */
       let apenElev = null;
 
@@ -2883,8 +3015,8 @@
           navn.className = 'elevnavn';
           navn.textContent = e.navn;
           navn.title = 'Klikk for å endre navn';
-          navn.addEventListener('click', () => {
-            const nytt = prompt('Nytt navn', e.navn);
+          navn.addEventListener('click', async () => {
+            const nytt = await sporOm('Nytt navn', e.navn);
             if (nytt && nytt.trim()) {
               e.navn = nytt.trim();
               tegn();
@@ -2992,8 +3124,9 @@
         const fjern = document.createElement('button');
         fjern.className = 'knapp fjern';
         fjern.textContent = 'Fjern ' + e.navn + ' fra klassen';
-        fjern.addEventListener('click', () => {
-          if (!confirm('Fjerne ' + e.navn + ' fra klassen?')) return;
+        fjern.addEventListener('click', async () => {
+          const sp = 'Fjerne ' + e.navn + ' fra klassen?';
+          if (!(await bekreft(sp, 'Fjern', true))) return;
           const k = klasse();
           k.elever = k.elever.filter((x) => x.id !== e.id);
           k.elever.forEach((x) => {
@@ -3259,8 +3392,9 @@
             slett.className = 'knapp liten';
             slett.textContent = '×';
             slett.title = 'Slett dette kartet';
-            slett.addEventListener('click', () => {
-              if (!confirm('Slette kartet fra ' + kartTittel(x) + '?')) return;
+            slett.addEventListener('click', async () => {
+              const sp = 'Slette kartet fra ' + kartTittel(x) + '?';
+              if (!(await bekreft(sp, 'Slett', true))) return;
               delete D.kart[n];
               lukkPanel();
               tegn();
@@ -4305,7 +4439,7 @@
           (n) => n !== 'Ny klasse' || D.klasser[n].elever.length,
         ).length;
       function grenseKlasser() {
-        alert(
+        melding(
           'Du har nådd grensen på ' +
             MAKS_KLASSER +
             ' klasser. Slett en klasse du ikke bruker, eller send e-post til ' +
@@ -4314,7 +4448,7 @@
         );
       }
       function grenseElever() {
-        alert(
+        melding(
           'En klasse kan ha opptil ' +
             MAKS_ELEVER +
             ' elever. Send e-post til ' +
@@ -4323,7 +4457,7 @@
         );
       }
       function grenseRom() {
-        alert(
+        melding(
           'Skolen har nådd grensen på ' +
             MAKS_ROM +
             ' rom. Slett et rom dere ikke bruker, eller send e-post til ' +
@@ -4332,7 +4466,7 @@
         );
       }
       function grensePulter() {
-        alert(
+        melding(
           'Et rom kan ha opptil ' +
             MAKS_PULTER +
             ' pulter. Send e-post til ' +
@@ -4340,13 +4474,10 @@
             ' hvis du trenger flere pulter i et rom.',
         );
       }
-      function lagNyKlasse() {
-        const n = (prompt('Navn på klassen, f.eks. 3ME') || '').trim();
+      async function lagNyKlasse() {
+        const n = ((await sporOm('Navn på klassen, f.eks. 3ME')) || '').trim();
         if (!n) return;
-        if (D.klasser[n]) {
-          alert('Klassen ' + n + ' finnes fra før.');
-          return;
-        }
+        if (D.klasser[n]) return melding('Klassen ' + n + ' finnes fra før.');
         if (antallKlasser() >= MAKS_KLASSER) return grenseKlasser();
         // den tomme startklassen trengs ikke når du lager din første egne
         const navn = Object.keys(D.klasser);
@@ -4361,13 +4492,10 @@
         visKart();
         $('importmodus').click();
       }
-      function omdoepKlasse(n) {
-        const ny = (prompt('Nytt navn på klassen', n) || '').trim();
+      async function omdoepKlasse(n) {
+        const ny = ((await sporOm('Nytt navn på klassen', n)) || '').trim();
         if (!ny || ny === n) return;
-        if (D.klasser[ny]) {
-          alert('Klassen ' + ny + ' finnes fra før.');
-          return;
-        }
+        if (D.klasser[ny]) return melding('Klassen ' + ny + ' finnes fra før.');
         D.klasser[ny] = D.klasser[n];
         delete D.klasser[n];
         Object.values(D.kart).forEach((x) => {
@@ -4377,7 +4505,7 @@
         tegnOversikt();
         lagre();
       }
-      function slettKlasse(n) {
+      async function slettKlasse(n) {
         const delt = (iSky() && sky.medlemmer[D.klasser[n]._id]) || [];
         const sporsmal = delt.length
           ? 'Forlate ' +
@@ -4386,7 +4514,8 @@
             delt.map((m) => kortEpost(m.epost)).join(', ') +
             ', men du mister tilgangen.'
           : 'Slette klassen ' + n + ' med elever, regler og kart?';
-        if (!confirm(sporsmal)) return;
+        if (!(await bekreft(sporsmal, delt.length ? 'Forlat' : 'Slett', true)))
+          return;
         delete D.klasser[n];
         Object.keys(D.kart).forEach((k) => {
           if (D.kart[k].klasse === n) delete D.kart[k];
@@ -4739,7 +4868,7 @@
           $('importnavn').value = r.forslag;
       }
       $('importtekst').addEventListener('input', visImport);
-      function importer(nyKlasse) {
+      async function importer(nyKlasse) {
         const r = importliste();
         if (!r.elever.length) {
           $('importstatus').textContent = 'Ingenting å importere.';
@@ -4752,7 +4881,10 @@
             return grenseKlasser();
           if (
             D.klasser[n] &&
-            !confirm('Klassen ' + n + ' finnes fra før. Erstatte elevlisten?')
+            !(await bekreft(
+              'Klassen ' + n + ' finnes fra før. Erstatte elevlisten?',
+              'Erstatt',
+            ))
           )
             return;
           D.klasser[n] = {
@@ -4854,9 +4986,10 @@
         D.aktiv.laaste = [];
         tegn();
       }
-      $('velgRom').addEventListener('change', (e) => {
+      $('velgRom').addEventListener('change', async (e) => {
         if (e.target.value) return byttRom(e.target.value);
-        const n = (prompt('Navn på det nye rommet, f.eks. 218') || '').trim();
+        const sp = 'Navn på det nye rommet, f.eks. 218';
+        const n = ((await sporOm(sp)) || '').trim();
         if (!n) return tegn();
         if (D.rom[n]) return byttRom(n);
         if (Object.keys(D.rom).length >= MAKS_ROM) {
@@ -4880,14 +5013,17 @@
         if (bilde) gjenopprettRomBilde(bilde);
         tegn();
       });
-      function lagKopiAvStandardrom() {
+      async function lagKopiAvStandardrom() {
         if (
-          !confirm(
+          !(await bekreft(
             'Standardrommet kan ikke endres. Vil du lage en kopi du kan endre?',
-          )
+            'Lag kopi',
+          ))
         )
           return;
-        const n = (prompt('Navn på det nye rommet', 'Mitt rom') || '').trim();
+        const n = (
+          (await sporOm('Navn på det nye rommet', 'Mitt rom')) || ''
+        ).trim();
         if (!n) return;
         if (D.rom[n])
           return visBeskjed(
@@ -4923,9 +5059,10 @@
         D.aktiv.rom = nytt;
         tegn();
       });
-      vedKlikk('dupliserRom', () => {
+      vedKlikk('dupliserRom', async () => {
         const n = (
-          prompt('Navn på det nye rommet', D.aktiv.rom + ' (kopi)') || ''
+          (await sporOm('Navn på det nye rommet', D.aktiv.rom + ' (kopi)')) ||
+          ''
         ).trim();
         if (!n) return;
         if (D.rom[n])
@@ -4940,18 +5077,20 @@
         romBilde = tattRomBilde();
         tegn();
       });
-      vedKlikk('slettRom', () => {
+      vedKlikk('slettRom', async () => {
         if (D.aktiv.rom === STANDARDROM)
           return visBeskjed('Standardrommet kan ikke slettes.', true);
         if (Object.keys(D.rom).length < 2)
           return visBeskjed('Du må ha minst ett rom.', true);
         if (
-          !confirm(
+          !(await bekreft(
             'Slette rommet ' +
               D.aktiv.rom +
               '?' +
               (iSky() ? ' Det forsvinner også for kollegaene dine.' : ''),
-          )
+            'Slett',
+            true,
+          ))
         )
           return;
         delete D.rom[D.aktiv.rom];
@@ -4970,8 +5109,10 @@
         setTimeout(() => URL.revokeObjectURL(a.href), 2000);
       }
       async function lastNedKopi() {
-        const pw = prompt(
+        const pw = await sporOm(
           'Velg et passord for sikkerhetskopien (minst 8 tegn). Du trenger det for å lese kopien inn igjen.',
+          '',
+          'password',
         );
         if (pw === null) return;
         if (pw.length < 8) {
@@ -5018,7 +5159,11 @@
           fil = JSON.parse(tekst);
         } catch (err) {}
         if (!fil || fil.klassekart !== 'kryptert-kopi') return lesInn(tekst);
-        const pw = prompt('Passordet for sikkerhetskopien');
+        const pw = await sporOm(
+          'Passordet for sikkerhetskopien',
+          '',
+          'password',
+        );
         if (pw === null) return;
         try {
           const bits = await passordBits(pw, ub64(fil.salt));
@@ -5031,7 +5176,7 @@
           visBeskjed('Feil passord for sikkerhetskopien.', true);
         }
       }
-      function lesInn(tekst) {
+      async function lesInn(tekst) {
         let ny;
         try {
           ny = JSON.parse(tekst);
@@ -5047,15 +5192,16 @@
           ).length;
           if (antallKlasser() + nyeKlasser > MAKS_KLASSER)
             return grenseKlasser();
-          if (!confirm('Legge klassene i kopien til i kontoen din?')) return;
+          const sp = 'Legge klassene i kopien til i kontoen din?';
+          if (!(await bekreft(sp, 'Legg til'))) return;
           const ant = slaaSammen(ny);
           visBeskjed(ant + (ant === 1 ? ' klasse' : ' klasser') + ' lagt til.');
           tegn();
           if (!$('oversikt').hidden) tegnOversikt();
           return;
         }
-        if (!confirm('Erstatte alt som ligger her nå med innholdet i kopien?'))
-          return;
+        const sp = 'Erstatte alt som ligger her nå med innholdet i kopien?';
+        if (!(await bekreft(sp, 'Erstatt', true))) return;
         D = ny;
         normaliser();
         angrestabel = [];
@@ -5896,13 +6042,15 @@
       }
       async function fjernKollega(n, m) {
         if (
-          !confirm(
+          !(await bekreft(
             'Fjerne ' +
               m.epost +
               ' fra ' +
               n +
               '? Kollegaen mister tilgangen til klassen.',
-          )
+            'Fjern',
+            true,
+          ))
         )
           return;
         try {
@@ -5923,7 +6071,11 @@
       }
       async function delKlasse(n) {
         const epost = (
-          prompt('E-postadressen til kollegaen du vil dele ' + n + ' med') || ''
+          (await sporOm(
+            'E-postadressen til kollegaen du vil dele ' + n + ' med',
+            '',
+            'email',
+          )) || ''
         )
           .trim()
           .toLowerCase();
@@ -5932,12 +6084,12 @@
           await tomSynk();
           const kl = D.klasser[n];
           if (!kl || !kl._id || ulagret)
-            return alert('Klassen er ikke lagret ennå. Prøv igjen om litt.');
+            return melding('Klassen er ikke lagret ennå. Prøv igjen om litt.');
           const funnet = skyFeil(
             await sky.klient.rpc('finn_kollega', { p_epost: epost }),
           );
           if (!funnet.length)
-            return alert(
+            return melding(
               'Fant ingen konto for ' +
                 epost +
                 '. Kollegaen må opprette konto og logge inn én gang før du kan dele med dem.',
@@ -5957,7 +6109,7 @@
           );
           await hentMedlemmer();
           tegnOversikt();
-          alert(
+          melding(
             n +
               ' er delt med ' +
               epost +
@@ -5965,7 +6117,7 @@
           );
         } catch (err) {
           console.error(err);
-          alert('Klarte ikke å dele klassen: ' + err.message);
+          melding('Klarte ikke å dele klassen: ' + err.message);
         }
       }
 
@@ -5990,18 +6142,19 @@
           );
         } catch (err) {}
       }
-      function flyttLokale() {
+      async function flyttLokale() {
         let ant = 0;
         lokaleData().forEach((d) => (ant += slaaSammen(d)));
         tegn();
         visOversikt();
         if (
           ant &&
-          confirm(
+          (await bekreft(
             ant +
               (ant === 1 ? ' klasse er' : ' klasser er') +
               ' flyttet til kontoen. Slette den lokale kopien fra denne nettleseren?',
-          )
+            'Slett lokal kopi',
+          ))
         )
           slettLokaleData();
       }
@@ -6024,25 +6177,27 @@
       }
       async function loggUt() {
         await tomSynk();
-        if (ulagret && !confirm('Noe er ikke lagret ennå. Logge ut likevel?'))
-          return;
+        const sp = 'Noe er ikke lagret ennå. Logge ut likevel?';
+        if (ulagret && !(await bekreft(sp, 'Logg ut'))) return;
         await glemNokler();
         await sky.klient.auth.signOut();
         location.reload(); // tømmer nøklene fra minnet
       }
       async function slettKonto() {
         if (
-          !confirm(
+          !(await bekreft(
             'Slette kontoen din?\n\n' +
               '• Alt som er lagret på kontoen din, fjernes for godt. Det kan ikke angres.\n' +
               '• Klasser du har delt med kolleger, blir værende hos dem.\n' +
               '• Klasser bare du har tilgang til, slettes.\n' +
               '• Klasser lagret lokalt i denne nettleseren (uten konto) berøres ikke.\n\n' +
               'Tips: Last ned en kryptert kopi først, via kontomenyen.',
-          )
+            'Gå videre',
+            true,
+          ))
         )
           return;
-        const svar = prompt('Skriv SLETT for å bekrefte.');
+        const svar = await sporOm('Skriv SLETT for å bekrefte.');
         if (!svar || svar.trim().toUpperCase() !== 'SLETT')
           return visBeskjed('Kontoen ble ikke slettet.');
         try {
@@ -6050,7 +6205,7 @@
           if (r.error) throw r.error;
         } catch (err) {
           console.error(err);
-          alert('Klarte ikke å slette kontoen: ' + (err.message || err));
+          melding('Klarte ikke å slette kontoen: ' + (err.message || err));
           return;
         }
         await glemNokler();
@@ -6058,7 +6213,7 @@
           await sky.klient.auth.signOut({ scope: 'local' });
           localStorage.removeItem(MODUS);
         } catch (err) {}
-        alert('Kontoen din er slettet.');
+        await melding('Kontoen din er slettet.');
         location.reload();
       }
 
@@ -6406,9 +6561,10 @@
         if (
           !harKlasser &&
           lokaleData().length &&
-          confirm(
+          (await bekreft(
             'Vi fant klasser lagret i denne nettleseren. Vil du flytte dem til kontoen din?',
-          )
+            'Flytt',
+          ))
         )
           flyttLokale();
       }
