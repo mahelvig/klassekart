@@ -2004,8 +2004,15 @@
             if (e.id < id && elevKart.has(id)) sammenPar.push([e.id, id]);
           }),
         );
+        // tomme pulter helst bakerst: forsiden veier litt tyngre enn baksiden,
+        // men aldri så mye at det slår regler eller spredning
+        const aapne = s.filter((x) => !erSperret(x.k) && !erLaast(x.k));
+        const tomVekt = new Map(
+          aapne.map((x, i) => [x.k, 0.002 * (aapne.length - i)]),
+        );
         return {
           seter: s,
+          tomVekt,
           setekart: new Map(s.map((x) => [x.k, x])),
           par: naboPar(),
           elevKart,
@@ -2043,7 +2050,12 @@
         }
         for (const s of c.seter) {
           const id = t[s.k];
-          if (!id) continue;
+          if (!id) {
+            kost += c.tomVekt.get(s.k) || 0;
+            continue;
+          }
+          // ingen skal sitte uten nabo, så sant det lar seg gjøre
+          if (!naboAv.has(id)) kost += 30;
           const e = c.elevKart.get(id);
           if (!e) continue;
           if (e.sone === 'foran' && s.r > c.foranMaks)
@@ -2051,7 +2063,7 @@
           if (e.sone === 'bak' && s.r < c.bakMin)
             kost += 100 + (c.bakMin - s.r) * 10;
         }
-        return kost;
+        return kost - (c.tomBase || 0);
       }
       function trekkPlassering() {
         const c = byggCtx();
@@ -2066,6 +2078,12 @@
         const pool = elever()
           .filter((e) => !laasteElever.has(e.id))
           .map((e) => e.id);
+
+        // billigste mulige tomplassering (de bakerste) regnes som null kost
+        const antTom = Math.max(0, frie.length - pool.length);
+        c.tomBase = frie
+          .slice(frie.length - antTom)
+          .reduce((sum, k) => sum + c.tomVekt.get(k), 0);
 
         const fast = {};
         D.aktiv.laaste.forEach((k) => {
@@ -2083,7 +2101,7 @@
           });
           let kost = evaluer(t, c);
           let uten = 0;
-          for (let it = 0; it < 4000 && kost > 0; it++) {
+          for (let it = 0; it < 4000 && kost > 1e-6; it++) {
             const a = frie[Math.floor(Math.random() * frie.length)];
             const b = frie[Math.floor(Math.random() * frie.length)];
             if (a === b) continue;
@@ -2109,7 +2127,7 @@
             bestekost = kost;
             beste = Object.assign({}, t);
           }
-          if (bestekost === 0) break;
+          if (bestekost < 1e-6) break;
         }
 
         lagreAngre();
@@ -2170,6 +2188,8 @@
         for (const s of c.seter) {
           const id = t[s.k];
           if (!id) continue;
+          if (!naboAv.has(id) && c.elevKart.has(id))
+            ut.push(navnAv(id) + ' fikk ingen å sitte ved siden av.');
           const e = c.elevKart.get(id);
           if (!e) continue;
           if (e.sone === 'foran' && s.r > c.foranMaks)
