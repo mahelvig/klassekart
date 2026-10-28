@@ -82,6 +82,7 @@ window.addEventListener('afterprint', () => tilpassBredde());
 let romModus = false,
   visning = false;
 function tegn(meldinger) {
+  avvelgPult(); // pultene tegnes på nytt, så et påbegynt bytte gjelder ikke
   ryddPlasser();
   const dato = new Date().toLocaleDateString('no-NO', {
     day: 'numeric',
@@ -292,6 +293,60 @@ function settRomModus(paa) {
   tegn();
 }
 
+/* På berøringsskjerm flyttes elever med to trykk: det første velger
+   eleven, det neste bytter med en annen pult (eller flytter til en tom).
+   Et nytt trykk på samme elev åpner pultpanelet. Med mus brukes dra og
+   slipp, og et klikk åpner panelet som før. */
+let valgtPult = null;
+const beroring = () => matchMedia('(pointer: coarse)').matches;
+function byttPlasser(fra, til) {
+  lagreAngre();
+  const a = D.aktiv.plasser[fra] || null,
+    b = D.aktiv.plasser[til] || null;
+  if (b) D.aktiv.plasser[fra] = b;
+  else delete D.aktiv.plasser[fra];
+  if (a) D.aktiv.plasser[til] = a;
+  else delete D.aktiv.plasser[til];
+  tegn();
+}
+function avvelgPult() {
+  if (!valgtPult) return;
+  valgtPult = null;
+  document.querySelectorAll('#kart .plass.valgt').forEach((p) => {
+    p.classList.remove('valgt');
+    p.removeAttribute('aria-pressed');
+  });
+  $('beskjed').hidden = true;
+}
+// svarer true når trykket er tatt hånd om, false når panelet skal åpnes
+function trykkPult(k, el) {
+  const fra = valgtPult;
+  if (fra === k) {
+    avvelgPult();
+    return false;
+  }
+  if (fra) {
+    avvelgPult();
+    if (!erSperret(k)) byttPlasser(fra, k);
+    return true;
+  }
+  const e = elevMed(D.aktiv.plasser[k]);
+  if (!e) return false; // tom eller sperret pult: panelet som før
+  lukkPanel();
+  valgtPult = k;
+  el.classList.add('valgt');
+  el.setAttribute('aria-pressed', 'true');
+  visBeskjed(
+    e.navn +
+      ' er valgt. Trykk på pulten ' +
+      e.navn +
+      ' skal flytte til, eller på ' +
+      e.navn +
+      ' igjen for flere valg.',
+  );
+  return true;
+}
+
 function lagPlass(r, g, i) {
   const k = nokkel(r, g, i);
   const el = document.createElement('button');
@@ -339,9 +394,10 @@ function lagPlass(r, g, i) {
     if (visning) return;
     if (romModus) sperrPult(k);
     else if (malerModus) malPult(k);
-    else apnePanel(k, el);
+    else if (!beroring() || !trykkPult(k, el)) apnePanel(k, el);
   });
   el.addEventListener('dragstart', (ev) => {
+    avvelgPult();
     ev.dataTransfer.setData('text/plain', k);
     ev.dataTransfer.effectAllowed = 'move';
     el.classList.add('dratt');
@@ -357,14 +413,7 @@ function lagPlass(r, g, i) {
     el.classList.remove('maal');
     const fra = ev.dataTransfer.getData('text/plain');
     if (!fra || fra === k || erSperret(k)) return;
-    lagreAngre();
-    const a = D.aktiv.plasser[fra] || null,
-      b = D.aktiv.plasser[k] || null;
-    if (b) D.aktiv.plasser[fra] = b;
-    else delete D.aktiv.plasser[fra];
-    if (a) D.aktiv.plasser[k] = a;
-    else delete D.aktiv.plasser[k];
-    tegn();
+    byttPlasser(fra, k);
   });
   return el;
 }
@@ -404,6 +453,7 @@ const esc = (s) =>
 /* ============ pultpanel ============ */
 let apent = null;
 const lukkPanel = () => {
+  avvelgPult(); // et trykk utenfor avbryter også et påbegynt bytte
   if (apent) {
     apent.remove();
     apent = null;

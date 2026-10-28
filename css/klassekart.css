@@ -346,6 +346,13 @@ code {
 .beskjed.varsel {
   background: var(--varsel);
 }
+/* trykk går gjennom beskjeden til pultene under, unntatt på knappene */
+.beskjed {
+  pointer-events: none;
+}
+.beskjed-knapper {
+  pointer-events: auto;
+}
 input[type='text'],
 input[type='search'],
 input[type='email'],
@@ -742,6 +749,13 @@ label.felt {
 .plass.maal {
   outline: 2px solid var(--fokus);
   outline-offset: 2px;
+}
+/* valgt med første trykk: neste trykk på en annen pult bytter */
+.plass.valgt {
+  outline: 3px solid var(--fokus);
+  outline-offset: 2px;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(24, 36, 32, 0.25);
 }
 .plass .navn {
   overflow-wrap: anywhere;

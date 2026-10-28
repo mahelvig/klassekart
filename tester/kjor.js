@@ -211,6 +211,13 @@ async function sjekkLagring(nettleser, url, feil) {
     'Avbryt fjerner kopien og går tilbake til standardrommet',
   );
 
+  await s.click('#kart .plass:not(.tom) >> nth=0');
+  sjekk(
+    (await s.isVisible('.popup')) && !(await s.$('#kart .plass.valgt')),
+    'med mus åpner et klikk på en elev pultpanelet, som før',
+  );
+  await s.evaluate(() => document.body.click());
+
   // sletter man et rom, forsvinner klassens plassering i det
   await s.selectOption('#velgRom', '218');
   await s.click('#endreRom');
@@ -333,6 +340,34 @@ async function sjekkMobil(nettleser, url, feil) {
   sjekk(sma.length === 0, 'skjemafelt har minst 16 px skrift, så iPhone ikke zoomer' + (sma.length ? ': ' + sma : ''));
   const minst = await s.$$eval('.elevrad button', (x) => Math.min(...x.map((b) => Math.min(b.offsetWidth, b.offsetHeight))));
   sjekk(minst >= 34, 'knappene i elevlisten er store nok å treffe (' + minst + ' px)');
+
+  // bytte elever med to trykk
+  const pult = (k) => `#kart .plass[data-k="${k}"]`;
+  const [k0, k1] = await s.$$eval('#kart .plass:not(.tom)', (x) => x.slice(0, 2).map((p) => p.dataset.k));
+  const tomK = await s.$eval('#kart .plass.tom', (p) => p.dataset.k);
+  const navn = (k) => s.evaluate((k) => (klasse().elever.find((e) => e.id === D.aktiv.plasser[k]) || {}).navn || '', k);
+  const [n0, n1] = [await navn(k0), await navn(k1)];
+  await s.tap(pult(k0));
+  sjekk(
+    (await s.$$('#kart .plass.valgt')).length === 1 && (await s.textContent('#beskjed')).includes(n0 + ' er valgt'),
+    'første trykk på en elev velger eleven',
+  );
+  await s.tap(pult(k1));
+  sjekk((await navn(k0)) === n1 && (await navn(k1)) === n0, 'neste trykk på en annen elev bytter plass');
+  sjekk(!(await s.$('#kart .plass.valgt')), 'etter byttet er ingen pult valgt');
+  await s.tap('#angre');
+  sjekk((await navn(k0)) === n0 && (await navn(k1)) === n1, 'Angre bytter tilbake');
+  await s.tap(pult(k0));
+  await s.tap(pult(tomK));
+  sjekk((await navn(tomK)) === n0 && (await navn(k0)) === '', 'trykk på en tom pult flytter eleven dit');
+  await s.tap('#angre');
+  await s.tap(pult(k0));
+  await s.tap(pult(k0));
+  sjekk(await s.isVisible('.popup'), 'nytt trykk på samme elev åpner pultpanelet');
+  await s.evaluate(() => document.body.click());
+  await s.tap(pult(k0));
+  await s.tap('#tittel');
+  sjekk(!(await s.$('#kart .plass.valgt')) && (await navn(k0)) === n0, 'trykk utenfor kartet avbryter byttet');
 
   await s.tap('#merKnapp');
   sjekk((await s.$$('.popup .menyvalg')).length === 4, 'Mer-menyen har fire valg');
