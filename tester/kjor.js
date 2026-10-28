@@ -189,6 +189,16 @@ async function sjekkLagring(nettleser, url, feil) {
   await klasseMedElever(s, 'click');
   await s.waitForFunction(() => document.getElementById('skystatus').textContent.includes('Lagret kl.'));
   sjekk(true, 'toppen viser «✓ Lagret kl. …» uten konto');
+  const statusSynlig = () => s.evaluate(() => !document.getElementById('skystatus').classList.contains('borte'));
+  sjekk(await statusSynlig(), '«✓ Lagret» vises rett etter lagring');
+  await s.waitForTimeout(4600);
+  sjekk(
+    !(await statusSynlig()) && (await s.evaluate(() => getComputedStyle(document.getElementById('skystatus')).opacity)) === '0',
+    '«✓ Lagret» har tonet ut etter fire sekunder',
+  );
+  await s.click('#trekk');
+  await s.waitForTimeout(500);
+  sjekk(await statusSynlig(), '«✓ Lagret» kommer tilbake ved neste lagring');
   const standard = await plasser();
 
   await s.selectOption('#velgRom', '');

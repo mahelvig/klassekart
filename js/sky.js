@@ -141,6 +141,7 @@ function skyFeil(r) {
 }
 
 function visSkystatus(t, varsel) {
+  clearTimeout(lagretTimer); // denne statusen skal ikke tone ut
   const s = $('skystatus');
   s.textContent = t;
   s.className = 'skystatus' + (varsel ? ' varsel' : '');

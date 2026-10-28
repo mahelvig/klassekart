@@ -178,7 +178,11 @@ function lagre() {
     else visSkystatus('Ikke lagret – nettleseren stoppet det', true);
   }, 350);
 }
-/* Viser i toppen at alt lagres av seg selv, og når det sist skjedde */
+/* Viser i toppen at alt lagres av seg selv, og når det sist skjedde.
+   Beskjeden toner ut etter noen sekunder og kommer igjen ved neste
+   lagring. «Lagrer …» og feil (visSkystatus) blir stående. */
+const LAGRET_SYNLIG = 4000;
+let lagretTimer = null;
 function visLagret(tid) {
   const s = $('skystatus');
   // før første lagring (hvile) er det ikke plass til teksten på mobil
@@ -198,6 +202,8 @@ function visLagret(tid) {
   s.title = iSky()
     ? 'Alt lagres automatisk og kryptert i kontoen din.'
     : 'Alt lagres automatisk i denne nettleseren.';
+  clearTimeout(lagretTimer);
+  lagretTimer = setTimeout(() => s.classList.add('borte'), LAGRET_SYNLIG);
 }
 
 /* ============ seter ============ */
