@@ -1,0 +1,32 @@
+# Kjører npm test (tester/kjor.js) i Chromium på hver pull request og
+# hver push til main. Feiler testene, lastes skjermbildene opp, så man
+# kan se hva som gikk galt.
+name: Tester
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tester:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skjermbilder
+          path: tester/skjermbilder/
+          retention-days: 7

@@ -116,12 +116,26 @@ async function klasseMedElever(s, trykk) {
   await s[trykk]('#trekk');
   await s.waitForTimeout(300);
 }
+// navn som går over flere linjer, med mål som forklarer hvorfor
 const delteNavn = (s) =>
   s.$$eval('#kart .plass .navn', (x) =>
     x
       .filter((n) => n.offsetHeight > parseFloat(getComputedStyle(n).lineHeight) * 1.5)
-      .map((n) => n.textContent),
+      .map((n) => {
+        const p = getComputedStyle(n.parentElement);
+        const ledig = n.parentElement.clientWidth - parseFloat(p.paddingLeft) - parseFloat(p.paddingRight);
+        return (
+          `${n.textContent} (bredde ${n.offsetWidth}, plass ${ledig}, høyde ${n.offsetHeight}, ` +
+          `skrift ${getComputedStyle(n).fontSize}, linje ${getComputedStyle(n).lineHeight}, ` +
+          `${n.classList.contains('passer') ? 'passer' : 'passer ikke'}, ` +
+          `Atkinson ${document.fonts.check('700 12px "Atkinson Hyperlegible"') ? 'lastet' : 'ikke lastet'})`
+        );
+      }),
   );
+const ingenDelteNavn = async (s, tekst) => {
+  const delte = await delteNavn(s);
+  sjekk(delte.length === 0, tekst + (delte.length ? ': ' + delte.join('; ') : ''));
+};
 const ingenSideScroll = (s) =>
   s.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
 
@@ -210,6 +224,13 @@ async function sjekkLagring(nettleser, url, feil) {
       !(await s.evaluate(() => 'Mitt rom' in D.rom)),
     'Avbryt fjerner kopien og går tilbake til standardrommet',
   );
+
+  await s.click('#kart .plass:not(.tom) >> nth=0');
+  sjekk(
+    (await s.isVisible('.popup')) && !(await s.$('#kart .plass.valgt')),
+    'med mus åpner et klikk på en elev pultpanelet, som før',
+  );
+  await s.evaluate(() => document.body.click());
 
   // sletter man et rom, forsvinner klassens plassering i det
   await s.selectOption('#velgRom', '218');
@@ -316,7 +337,7 @@ async function sjekkMobil(nettleser, url, feil) {
   await s.screenshot({ path: path.join(BILDER, 'mobil-klasse.png') });
   sjekk(await ingenSideScroll(s), 'klassevisningen: ingen sidelengs scroll');
   sjekk((await s.$eval('#kart', (k) => k.getBoundingClientRect().top)) < 300, 'kartet starter i øvre halvdel av skjermen');
-  sjekk((await delteNavn(s)).length === 0, 'ingen navn delt midt i ordet');
+  await ingenDelteNavn(s, 'ingen navn delt midt i ordet');
   await s.waitForFunction(() => document.getElementById('skystatus').textContent.includes('Lagret'));
   sjekk(
     await s.evaluate(() => {
@@ -333,6 +354,34 @@ async function sjekkMobil(nettleser, url, feil) {
   sjekk(sma.length === 0, 'skjemafelt har minst 16 px skrift, så iPhone ikke zoomer' + (sma.length ? ': ' + sma : ''));
   const minst = await s.$$eval('.elevrad button', (x) => Math.min(...x.map((b) => Math.min(b.offsetWidth, b.offsetHeight))));
   sjekk(minst >= 34, 'knappene i elevlisten er store nok å treffe (' + minst + ' px)');
+
+  // bytte elever med to trykk
+  const pult = (k) => `#kart .plass[data-k="${k}"]`;
+  const [k0, k1] = await s.$$eval('#kart .plass:not(.tom)', (x) => x.slice(0, 2).map((p) => p.dataset.k));
+  const tomK = await s.$eval('#kart .plass.tom', (p) => p.dataset.k);
+  const navn = (k) => s.evaluate((k) => (klasse().elever.find((e) => e.id === D.aktiv.plasser[k]) || {}).navn || '', k);
+  const [n0, n1] = [await navn(k0), await navn(k1)];
+  await s.tap(pult(k0));
+  sjekk(
+    (await s.$$('#kart .plass.valgt')).length === 1 && (await s.textContent('#beskjed')).includes(n0 + ' er valgt'),
+    'første trykk på en elev velger eleven',
+  );
+  await s.tap(pult(k1));
+  sjekk((await navn(k0)) === n1 && (await navn(k1)) === n0, 'neste trykk på en annen elev bytter plass');
+  sjekk(!(await s.$('#kart .plass.valgt')), 'etter byttet er ingen pult valgt');
+  await s.tap('#angre');
+  sjekk((await navn(k0)) === n0 && (await navn(k1)) === n1, 'Angre bytter tilbake');
+  await s.tap(pult(k0));
+  await s.tap(pult(tomK));
+  sjekk((await navn(tomK)) === n0 && (await navn(k0)) === '', 'trykk på en tom pult flytter eleven dit');
+  await s.tap('#angre');
+  await s.tap(pult(k0));
+  await s.tap(pult(k0));
+  sjekk(await s.isVisible('.popup'), 'nytt trykk på samme elev åpner pultpanelet');
+  await s.evaluate(() => document.body.click());
+  await s.tap(pult(k0));
+  await s.tap('#tittel');
+  sjekk(!(await s.$('#kart .plass.valgt')) && (await navn(k0)) === n0, 'trykk utenfor kartet avbryter byttet');
 
   await s.tap('#merKnapp');
   sjekk((await s.$$('.popup .menyvalg')).length === 4, 'Mer-menyen har fire valg');
@@ -356,7 +405,7 @@ async function sjekkMobil(nettleser, url, feil) {
   await s.tap('.popup .menyvalg >> text=Vis for klassen');
   await s.waitForTimeout(300);
   await s.screenshot({ path: path.join(BILDER, 'mobil-visning.png') });
-  sjekk((await delteNavn(s)).length === 0, 'visning for klassen: ingen navn delt');
+  await ingenDelteNavn(s, 'visning for klassen: ingen navn delt');
   sjekk(
     await s.evaluate(() => document.getElementById('lukkVisning').getBoundingClientRect().top > document.querySelector('.romtopp h1').getBoundingClientRect().bottom),
     'Lukk-knappen ligger ikke over tittelen',
