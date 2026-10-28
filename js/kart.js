@@ -411,7 +411,7 @@ const lukkPanel = () => {
 };
 document.addEventListener('click', lukkPanel);
 document.addEventListener('keydown', (e) => {
-  if ($('sporsmal').open) return; // dialogen håndterer Esc selv
+  if (document.querySelector('dialog[open]')) return; // dialogene håndterer Esc selv
   if (e.key === 'Escape' && !$('gruppedialog').hidden)
     return lukkGrupper();
   if (e.key === 'Escape') {
@@ -571,15 +571,32 @@ function menyinfo(boks, tekst) {
   boks.appendChild(p);
 }
 let beskjedTimer = null;
-function visBeskjed(tekst, varsel) {
+/* knapper: [[tekst, fn], …] vises i beskjeden, som da står lenger */
+function visBeskjed(tekst, varsel, knapper) {
   const b = $('beskjed');
   b.textContent = tekst;
   b.className = 'beskjed' + (varsel ? ' varsel' : '');
+  if (knapper) {
+    const rad = document.createElement('span');
+    rad.className = 'beskjed-knapper';
+    knapper.forEach(([t, fn]) => {
+      const k = document.createElement('button');
+      k.type = 'button';
+      k.textContent = t;
+      k.addEventListener('click', (e) => {
+        e.stopPropagation();
+        b.hidden = true;
+        fn();
+      });
+      rad.appendChild(k);
+    });
+    b.appendChild(rad);
+  }
   b.hidden = false;
   clearTimeout(beskjedTimer);
   beskjedTimer = setTimeout(
     () => (b.hidden = true),
-    varsel ? 7000 : 3500,
+    knapper ? 10000 : varsel ? 7000 : 3500,
   );
 }
 
@@ -593,6 +610,7 @@ function dialog({
   ok = 'OK',
   avbryt = 'Avbryt',
   fare = false,
+  forslag = [],
 }) {
   const neste = dialogKo.then(
     () =>
@@ -609,6 +627,20 @@ function dialog({
         bOk.classList.toggle('fare', fare);
         bAvbryt.hidden = !avbryt;
         bAvbryt.textContent = avbryt || '';
+        // forslag fyller tekstfeltet med ett trykk
+        const fb = $('sporsmalForslag');
+        fb.replaceChildren();
+        fb.hidden = !forslag.length;
+        forslag.forEach((f) => {
+          const k = document.createElement('button');
+          k.type = 'button';
+          k.textContent = f;
+          k.addEventListener('click', () => {
+            inp.value = f;
+            inp.focus();
+          });
+          fb.appendChild(k);
+        });
         d.returnValue = '';
         d.addEventListener(
           'close',
@@ -655,7 +687,7 @@ function tegnPanel() {
   $('speil').setAttribute('aria-pressed', !!D.aktiv.speil);
   const antKart = kartForKlasse().length;
   $('tidligere').textContent =
-    'Tidligere kart' + (antKart ? ' (' + antKart + ')' : '') + ' ▾';
+    'Lagrede kart' + (antKart ? ' (' + antKart + ')' : '');
 
   if (romModus) {
     const antall = seter().length,
@@ -928,6 +960,11 @@ const vedKlikk = (id, fn) =>
 vedKlikk('trekk', trekkPlassering);
 vedKlikk('angre', angre);
 vedKlikk('tomKart', () => {
+  const sikret = sikreKart('tømming');
+  if (sikret)
+    visBeskjed('Kartet er tømt. Det forrige er lagret som «' + sikret + '».', false, [
+      ['Angre', angre],
+    ]);
   lagreAngre();
   D.aktiv.plasser = {};
   D.aktiv.laaste = [];
@@ -999,7 +1036,7 @@ vedKlikk('merKnapp', () =>
   apneMeny(
     $('merKnapp'),
     (boks) => {
-      menyvalg(boks, 'Lagre dette kartet', () => brukKart(false));
+      menyvalg(boks, 'Lagre kartet …', lagreKartSom);
       menyvalg(
         boks,
         (D.aktiv.speil ? '✓ ' : '') + 'Sett fra tavla',
@@ -1016,110 +1053,257 @@ document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement && visning) settVisning(false);
 });
 vedKlikk('skrivut', () => {
-  brukKart(true);
+  lagreKart(ukenavn(), true); // et utskrevet kart er tatt i bruk
   window.print();
 });
 
+
 /* ---- lagrede kart ----
-   «Lagre dette kartet» legger kartet i historikken med dato, og naboene
-   huskes slik at neste trekning kan gi nye naboer. */
-const kartForKlasse = () =>
+   Kartet man jobber med, lagres alltid av seg selv (romkart). I tillegg
+   kan man lagre kart med navn, og appen lagrer selv en kopi (auto) før
+   en trekning, tømming eller et annet kart erstatter et kart man har
+   ordnet for hånd. Bare kart man lagrer selv, huskes til «nye naboer». */
+const MAKS_LAGREDE = 30,
+  MAKS_AUTO = 5;
+// auto: true/false gir bare de automatiske/de man har lagret selv
+const kartForKlasse = (auto) =>
   Object.entries(D.kart)
-    .filter(([, x]) => x.klasse === D.aktiv.klasse)
+    .filter(
+      ([, x]) =>
+        x.klasse === D.aktiv.klasse &&
+        (auto === undefined || !!x.auto === auto),
+    )
     .sort((a, b) => (b[1].endret || '').localeCompare(a[1].endret || ''));
-const sammePlasser = (a, b) =>
-  JSON.stringify(Object.entries(a).sort()) ===
-  JSON.stringify(Object.entries(b).sort());
-function brukKart(stille) {
-  if (!Object.keys(D.aktiv.plasser).length) {
-    if (!stille)
-      visBeskjed(
-        'Kartet er tomt – trekk eller plasser elever først.',
-        true,
-      );
-    return;
-  }
-  const siste = kartForKlasse()[0];
-  if (
-    siste &&
-    sammePlasser(siste[1].plasser, D.aktiv.plasser) &&
-    sammePlasser(siste[1].farger || {}, D.aktiv.farger)
-  ) {
-    if (!stille) visBeskjed('Dette kartet er allerede lagret.');
-    return;
-  }
+const avtrykk = (p) => JSON.stringify(Object.entries(p || {}).sort());
+const sammePlasser = (a, b) => avtrykk(a) === avtrykk(b);
+const erDetteKartet = (x) =>
+  x.rom === D.aktiv.rom &&
+  sammePlasser(x.plasser, D.aktiv.plasser) &&
+  sammePlasser(x.farger || {}, D.aktiv.farger);
+const klokka = (d) =>
+  d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
+function ukenavn(d = new Date()) {
+  // ISO-uke: uken med årets første torsdag er uke 1
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  const nyttaar = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return 'Uke ' + Math.ceil(((t - nyttaar) / 864e5 + 1) / 7);
+}
+function kartTittel(x) {
+  const d = new Date(x.endret || 0);
+  const iAar = d.getFullYear() === new Date().getFullYear();
+  return (
+    d.toLocaleDateString('no-NO', {
+      day: 'numeric',
+      month: 'short',
+      year: iAar ? undefined : 'numeric',
+    }) +
+    ' kl. ' +
+    klokka(d)
+  );
+}
+function leggTilKart(navn, auto) {
   const naa = new Date();
-  D.kart[D.aktiv.klasse + ' · ' + naa.toISOString()] = {
+  let n = D.aktiv.klasse + ' · ' + naa.toISOString();
+  while (D.kart[n]) n += '+';
+  D.kart[n] = {
     klasse: D.aktiv.klasse,
     rom: D.aktiv.rom,
     plasser: kopi(D.aktiv.plasser),
     laaste: D.aktiv.laaste.slice(),
     farger: kopi(D.aktiv.farger),
     endret: naa.toISOString(),
+    navn,
   };
-  // ta vare på de 30 siste per klasse
-  kartForKlasse()
-    .slice(30)
-    .forEach(([n]) => delete D.kart[n]);
-  huskNaboer();
-  tegn();
-  if (!stille)
-    visBeskjed('Kartet er lagret. Neste trekning unngår disse naboene.');
+  if (auto) D.kart[n].auto = true;
+  kartForKlasse(!!auto)
+    .slice(auto ? MAKS_AUTO : MAKS_LAGREDE)
+    .forEach(([k]) => delete D.kart[k]);
+  return n;
 }
-vedKlikk('brukKart', () => brukKart(false));
-function kartTittel(x) {
-  const d = new Date(x.endret || 0);
-  return (
-    d.toLocaleDateString('no-NO', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }) +
-    ' kl. ' +
-    d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+/* Før noe erstatter hele kartet: er det ordnet for hånd og ikke lagret,
+   tas en automatisk kopi. Svarer med kopiens navn, eller null. */
+function sikreKart(hva) {
+  const a = D.aktiv;
+  if (!Object.keys(a.plasser).length) return null;
+  if (avtrykk(a.plasser) === a.trukket) return null; // urørt trekning
+  if (
+    kartForKlasse().some(
+      ([, x]) => x.rom === a.rom && sammePlasser(x.plasser, a.plasser),
+    )
+  )
+    return null;
+  const navn = 'Før ' + hva + ' ' + klokka(new Date());
+  leggTilKart(navn, true);
+  return navn;
+}
+/* Lagrer kartet med navn, og husker naboene til neste trekning */
+function lagreKart(navn, stille) {
+  if (!Object.keys(D.aktiv.plasser).length) {
+    if (!stille)
+      visBeskjed(
+        'Kartet er tomt – trekk eller plasser elever først.',
+        true,
+      );
+    return false;
+  }
+  const siste = kartForKlasse(false)[0];
+  if (siste && erDetteKartet(siste[1])) {
+    if (stille) return false;
+    siste[1].navn = navn;
+    lagre();
+    visBeskjed('Kartet var allerede lagret. Nå heter det «' + navn + '».');
+    return true;
+  }
+  leggTilKart(navn, false);
+  huskNaboer(); // lagrer og tegner
+  if (!stille)
+    visBeskjed(
+      'Kartet er lagret som «' + navn + '». Neste trekning gir nye naboer.',
+    );
+  return true;
+}
+async function lagreKartSom() {
+  if (!Object.keys(D.aktiv.plasser).length)
+    return visBeskjed(
+      'Kartet er tomt – trekk eller plasser elever først.',
+      true,
+    );
+  const uke = ukenavn();
+  const svar = await dialog({
+    tekst:
+      'Gi kartet et navn. Det havner under «Lagrede kart», og neste trekning gir nye naboer.',
+    svar: uke,
+    ok: 'Lagre',
+    forslag: [uke, 'Prøvedag', 'Gruppearbeid'],
+  });
+  if (svar === null) return false;
+  return lagreKart(svar.trim() || uke);
+}
+vedKlikk('brukKart', lagreKartSom);
+
+function apneKart(n) {
+  const x = D.kart[n];
+  if (!x) return;
+  $('lagrede').close();
+  if (erDetteKartet(x)) return;
+  const sikret = sikreKart('åpning');
+  lagreAngre();
+  if (D.rom[x.rom] && x.rom !== D.aktiv.rom) {
+    huskOppsett();
+    D.aktiv.rom = x.rom;
+  }
+  D.aktiv.plasser = kopi(x.plasser);
+  D.aktiv.laaste = (x.laaste || []).slice();
+  D.aktiv.farger = kopi(x.farger || {});
+  D.aktiv.trukket = null;
+  tegn();
+  visBeskjed(
+    'Hentet «' +
+      (x.navn || kartTittel(x)) +
+      '».' +
+      (sikret ? ' Det forrige kartet er lagret som «' + sikret + '».' : ''),
+    false,
+    [['Angre', angre]],
   );
 }
-vedKlikk('tidligere', () =>
-  apneMeny($('tidligere'), (boks) => {
-    const liste = kartForKlasse();
-    if (!liste.length) {
-      menyinfo(
-        boks,
-        'Ingen kart ennå. Trykk «Lagre dette kartet» når du er fornøyd – da havner det her, og naboene huskes til neste trekning.',
-      );
-      return;
-    }
-    liste.forEach(([n, x]) => {
-      const rad = document.createElement('div');
-      rad.className = 'kartrad';
-      const b = menyvalg(rad, '', () => {
-        lagreAngre();
-        if (D.rom[x.rom]) D.aktiv.rom = x.rom;
-        D.aktiv.plasser = kopi(x.plasser);
-        D.aktiv.laaste = (x.laaste || []).slice();
-        D.aktiv.farger = kopi(x.farger || {});
-        tegn();
-        visBeskjed('Hentet kartet fra ' + kartTittel(x) + '.');
-      });
-      b.innerHTML =
-        esc(x.endret ? kartTittel(x) : n) +
-        '<br><small>' +
-        esc((D.rom[x.rom] ? 'Rom ' : 'Rom (slettet) ') + x.rom) +
-        '</small>';
-      const slett = document.createElement('button');
-      slett.type = 'button';
-      slett.className = 'knapp liten';
-      slett.textContent = '×';
-      slett.title = 'Slett dette kartet';
-      slett.addEventListener('click', async () => {
-        const sp = 'Slette kartet fra ' + kartTittel(x) + '?';
+function apneLagrede() {
+  lukkPanel();
+  tegnLagrede();
+  $('lagrede').showModal();
+  $('lagredeLukk').focus();
+}
+function tegnLagrede() {
+  const liste = $('lagredeListe');
+  liste.replaceChildren();
+  const alle = kartForKlasse();
+  $('lagredeInfo').textContent =
+    'Klasse ' +
+    D.aktiv.klasse +
+    (alle.length ? ' · ' + alle.length + ' kart, nyeste først' : '');
+  if (!alle.length) {
+    const p = document.createElement('p');
+    p.className = 'hjelp';
+    p.textContent =
+      'Ingen lagrede kart ennå. Trykk «Lagre kartet slik det er nå» når du er fornøyd med et kart.';
+    liste.appendChild(p);
+    return;
+  }
+  const ids = new Set(elever().map((e) => e.id));
+  const knapp = (tekst, klasse, fn) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = klasse;
+    b.textContent = tekst;
+    b.addEventListener('click', fn);
+    return b;
+  };
+  alle.forEach(([n, x]) => {
+    const navn = x.navn || 'Lagret kart';
+    const rad = document.createElement('div');
+    rad.className = 'lagret';
+    const mini = miniKart(x.rom, x.plasser, ids, x.farger);
+    mini.setAttribute('aria-hidden', 'true');
+    rad.appendChild(mini);
+
+    const tekst = document.createElement('div');
+    tekst.className = 'lagret-tekst';
+    const topp = document.createElement('div');
+    const s = document.createElement('strong');
+    s.textContent = navn;
+    topp.appendChild(s);
+    const merke = (t, k) => {
+      const m = document.createElement('span');
+      m.className = 'merke ' + k;
+      m.textContent = t;
+      topp.appendChild(m);
+    };
+    if (erDetteKartet(x)) merke('I bruk nå', 'gronn');
+    if (x.auto) merke('Automatisk', 'graa');
+    const info = document.createElement('small');
+    info.textContent =
+      kartTittel(x) + ' · ' + (D.rom[x.rom] ? x.rom : x.rom + ' (slettet)');
+    tekst.append(topp, info);
+    rad.appendChild(tekst);
+
+    const handlinger = document.createElement('div');
+    handlinger.className = 'lagret-handlinger';
+    handlinger.hidden = true;
+    handlinger.append(
+      knapp('Gi nytt navn', 'knapp liten', async () => {
+        const ny = await sporOm('Nytt navn på kartet', navn);
+        if (ny === null || !ny.trim()) return;
+        x.navn = ny.trim();
+        delete x.auto; // et kart man gir navn, vil man beholde
+        lagre();
+        tegnLagrede();
+        tegnPanel();
+      }),
+      knapp('Slett', 'knapp liten fare', async () => {
+        const sp = 'Slette «' + navn + '»?';
         if (!(await bekreft(sp, 'Slett', true))) return;
         delete D.kart[n];
-        lukkPanel();
-        tegn();
-      });
-      rad.appendChild(slett);
-      boks.appendChild(rad);
+        lagre();
+        tegnLagrede();
+        tegnPanel();
+      }),
+    );
+    const mer = knapp('⋯', 'knapp liten mer', () => {
+      handlinger.hidden = !handlinger.hidden;
+      mer.setAttribute('aria-expanded', !handlinger.hidden);
     });
-  }),
-);
+    mer.setAttribute('aria-label', 'Flere valg for ' + navn);
+    mer.setAttribute('aria-expanded', 'false');
+    rad.append(knapp('Åpne', 'knapp liten', () => apneKart(n)), mer, handlinger);
+    liste.appendChild(rad);
+  });
+}
+vedKlikk('tidligere', apneLagrede);
+vedKlikk('lagredeLukk', () => $('lagrede').close());
+vedKlikk('lagredeNy', async () => {
+  if (await lagreKartSom()) tegnLagrede();
+});
+$('lagrede').addEventListener('click', (e) => {
+  e.stopPropagation(); // ikke lukk sidepanelet bak
+  if (e.target === e.currentTarget) e.currentTarget.close();
+});

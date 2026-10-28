@@ -182,11 +182,11 @@
             <button
               class="knapp ikke-mobil"
               id="brukKart"
-              title="Legger en kopi under «Tidligere kart», og neste trekning gir nye naboer. Kartet du jobber med, lagres automatisk uansett."
+              title="Lagrer kartet med et navn under «Lagrede kart», og neste trekning gir nye naboer. Kartet du jobber med, lagres automatisk uansett."
             >
-              Lagre dette kartet
+              Lagre kartet …
             </button>
-            <button class="knapp" id="tidligere">Tidligere kart ▾</button>
+            <button class="knapp" id="tidligere">Lagrede kart</button>
           </div>
           <div class="grp ikke-mobil">
             <button class="knapp" id="speil" aria-pressed="false">
@@ -259,6 +259,7 @@
       <form method="dialog">
         <p id="sporsmalTekst"></p>
         <input id="sporsmalSvar" autocomplete="off" hidden />
+        <div class="forslag" id="sporsmalForslag" hidden></div>
         <div class="knapprad">
           <button type="button" class="knapp" id="sporsmalAvbryt">
             Avbryt
@@ -266,6 +267,28 @@
           <button class="knapp hoved" id="sporsmalOk" value="ok">OK</button>
         </div>
       </form>
+    </dialog>
+    <dialog class="dialog lagrede" id="lagrede" aria-labelledby="lagredeTittel">
+      <div class="lagrede-topp">
+        <div>
+          <h2 id="lagredeTittel">Lagrede kart</h2>
+          <p class="hjelp" id="lagredeInfo"></p>
+        </div>
+        <button type="button" class="lukk" id="lagredeLukk" aria-label="Lukk">
+          ×
+        </button>
+      </div>
+      <div class="lagrede-liste" id="lagredeListe"></div>
+      <div class="lagrede-bunn">
+        <button type="button" class="knapp hoved" id="lagredeNy">
+          Lagre kartet slik det er nå …
+        </button>
+        <p class="hjelp">
+          Kart merket «Automatisk» lagres når en trekning, tømming eller et
+          annet kart erstatter et kart du har ordnet selv. De fem siste
+          beholdes.
+        </p>
+      </div>
     </dialog>
     <button class="knapp lukkvisning" id="lukkVisning" hidden>
       Lukk visningen<span class="tastatur"> (Esc)</span>

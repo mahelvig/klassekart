@@ -123,6 +123,7 @@ function huskOppsett() {
     plasser: kopi(a.plasser),
     laaste: a.laaste.slice(),
     farger: kopi(a.farger),
+    trukket: a.trukket || null,
   };
   k.romkart = k.romkart || {};
   if (Object.keys(a.plasser).length || Object.keys(a.farger).length)
@@ -130,6 +131,7 @@ function huskOppsett() {
       plasser: kopi(a.plasser),
       laaste: a.laaste.slice(),
       farger: kopi(a.farger),
+      trukket: a.trukket || null,
     };
   else delete k.romkart[a.rom];
 }
@@ -146,6 +148,8 @@ function hentRomkart() {
   });
   D.aktiv.laaste = (s.laaste || []).slice();
   D.aktiv.farger = kopi(s.farger || {});
+  // avtrykket av siste trekning: er kartet urørt siden, trengs ingen kopi
+  D.aktiv.trukket = s.trukket || null;
 }
 function gjenopprett(n) {
   const s = D.klasser[n].sist || {};
@@ -177,7 +181,8 @@ function lagre() {
 /* Viser i toppen at alt lagres av seg selv, og når det sist skjedde */
 function visLagret(tid) {
   const s = $('skystatus');
-  s.className = 'skystatus';
+  // før første lagring (hvile) er det ikke plass til teksten på mobil
+  s.className = 'skystatus' + (tid === false ? ' hvile' : '');
   s.textContent = '✓ ' + (tid === false ? 'Lagres automatisk' : 'Lagret');
   if (tid !== false) {
     const t = document.createElement('span');

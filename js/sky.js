@@ -288,6 +288,8 @@ function klassePakke(n, k) {
         laaste: x.laaste,
         farger: x.farger,
         endret: x.endret,
+        navn: x.navn || null,
+        auto: !!x.auto,
       };
   });
   return {

@@ -83,6 +83,7 @@ function evaluer(t, c) {
   return kost - (c.tomBase || 0);
 }
 function trekkPlassering() {
+  const sikret = sikreKart('trekning');
   const c = byggCtx();
   const laasteElever = new Set();
   D.aktiv.laaste.forEach((k) => {
@@ -153,7 +154,19 @@ function trekkPlassering() {
     if (v) D.aktiv.plasser[k] = v;
   });
   if (D.aktiv.makker) lagMakkergrupper();
+  D.aktiv.trukket = avtrykk(D.aktiv.plasser);
   tegn(brudd(c));
+  if (sikret)
+    visBeskjed(
+      'Ny plassering trukket. Det forrige kartet er lagret som «' +
+        sikret +
+        '».',
+      false,
+      [
+        ['Angre', angre],
+        ['Se lagrede kart', apneLagrede],
+      ],
+    );
 }
 function brudd(c) {
   const t = D.aktiv.plasser,
@@ -224,6 +237,7 @@ const navnAv = (id) => {
 /* ============ angre ============ */
 function lagreAngre() {
   angrestabel.push({
+    rom: D.aktiv.rom,
     plasser: kopi(D.aktiv.plasser),
     laaste: D.aktiv.laaste.slice(),
     farger: kopi(D.aktiv.farger),
@@ -234,6 +248,11 @@ function lagreAngre() {
 function angre() {
   const f = angrestabel.pop();
   if (!f) return;
+  // et lagret kart kan ha byttet rom: gå tilbake dit
+  if (f.rom && f.rom !== D.aktiv.rom && D.rom[f.rom]) {
+    huskOppsett();
+    D.aktiv.rom = f.rom;
+  }
   D.aktiv.plasser = f.plasser;
   D.aktiv.laaste = f.laaste;
   D.aktiv.farger = f.farger;

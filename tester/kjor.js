@@ -225,7 +225,90 @@ async function sjekkLagring(nettleser, url, feil) {
   );
 }
 
-/* ---- 4. Mobil ---- */
+/* ---- 4. Lagrede kart ---- */
+async function sjekkLagredeKart(nettleser, url, feil) {
+  console.log('Lagrede kart');
+  const s = await nySide(nettleser, url, { viewport: { width: 1200, height: 800 } }, feil);
+  const plasser = () => s.evaluate(() => JSON.stringify(Object.entries(D.aktiv.plasser).sort()));
+  const kart = () => s.evaluate(() => Object.values(D.kart).map((x) => ({ navn: x.navn, auto: !!x.auto })));
+  // dialogen svarer først når den er lukket; gi appen et øyeblikk etterpå
+  const svart = async () => {
+    await s.waitForFunction(() => !document.getElementById('sporsmal').open);
+    await s.waitForTimeout(100);
+  };
+  const flyttForHaand = () => s.dragAndDrop('#kart .plass:not(.tom) >> nth=0', '#kart .plass:not(.tom) >> nth=1');
+  await klasseMedElever(s, 'click');
+
+  await s.click('#trekk');
+  sjekk((await kart()).length === 0, 'ny trekning av et urørt trekk lager ingen kopi');
+
+  await flyttForHaand();
+  const forHaand = await plasser();
+  await s.click('#trekk');
+  const etter = await kart();
+  sjekk(
+    etter.length === 1 && etter[0].auto && /^Før trekning \d\d:\d\d$/.test(etter[0].navn),
+    'trekning etter flytting for hånd lagrer «Før trekning …» automatisk',
+  );
+  sjekk(await s.isVisible('.beskjed-knapper >> text=Angre'), 'beskjeden etter trekningen har Angre');
+  await s.screenshot({ path: path.join(BILDER, 'pc-etter-trekning.png') });
+  await s.click('.beskjed-knapper >> text=Angre');
+  sjekk((await plasser()) === forHaand, 'Angre i beskjeden gir tilbake kartet ordnet for hånd');
+
+  await s.click('#brukKart');
+  await s.waitForSelector('#sporsmal[open]');
+  sjekk(/^Uke \d+$/.test(await s.inputValue('#sporsmalSvar')), 'lagring foreslår «Uke …» som navn');
+  sjekk((await s.$$('#sporsmalForslag button')).length === 3, 'tre forslag å trykke på');
+  await s.click('#sporsmalForslag >> text=Prøvedag');
+  await s.click('#sporsmalOk');
+  await svart();
+  const lagret = (await kart()).find((x) => x.navn === 'Prøvedag');
+  sjekk(lagret && !lagret.auto, 'kartet er lagret som «Prøvedag»');
+  sjekk((await s.evaluate(() => klasse().historikk.length)) === 1, 'lagring husker naboene til neste trekning');
+  sjekk((await s.textContent('#tidligere')).trim() === 'Lagrede kart (2)', 'knappen viser antall lagrede kart');
+
+  await s.click('#tidligere');
+  sjekk(await s.evaluate(() => document.getElementById('lagrede').open), 'Lagrede kart åpner panelet');
+  sjekk((await s.$$('#lagredeListe .lagret')).length === 2, 'panelet viser begge kartene');
+  sjekk(
+    (await s.textContent('.lagret:has-text("Prøvedag")')).includes('I bruk nå') &&
+      (await s.textContent('.lagret:has-text("Før trekning")')).includes('Automatisk'),
+    'merkene «I bruk nå» og «Automatisk» står på riktige kart',
+  );
+  await s.screenshot({ path: path.join(BILDER, 'pc-lagrede-kart.png') });
+
+  await s.click('.lagret:has-text("Før trekning") >> text=Åpne');
+  sjekk(!(await s.evaluate(() => document.getElementById('lagrede').open)), 'Åpne lukker panelet');
+  sjekk((await plasser()) === forHaand, 'det åpnede kartet er det som ble ordnet for hånd');
+  await s.click('#tidligere');
+  await s.click('.lagret:has-text("Før trekning") .mer');
+  await s.click('.lagret:has-text("Før trekning") >> text=Gi nytt navn');
+  await s.fill('#sporsmalSvar', 'Beholdes');
+  await s.click('#sporsmalOk');
+  await svart();
+  const omdopt = (await kart()).find((x) => x.navn === 'Beholdes');
+  sjekk(omdopt && !omdopt.auto, 'et automatisk kart som får navn, blir et vanlig lagret kart');
+  await s.click('.lagret:has-text("Beholdes") .mer');
+  await s.click('.lagret:has-text("Beholdes") >> text=Slett');
+  await s.click('#sporsmalOk');
+  await svart();
+  sjekk(!(await kart()).some((x) => x.navn === 'Beholdes'), 'Slett fjerner kartet');
+  await s.click('#lagredeLukk');
+
+  // bare de fem siste automatiske kartene beholdes
+  for (let i = 0; i < 7; i++) {
+    await flyttForHaand();
+    await s.click('#trekk');
+  }
+  sjekk((await kart()).filter((x) => x.auto).length === 5, 'bare de fem siste automatiske kartene beholdes');
+
+  await s.waitForTimeout(500);
+  await s.reload();
+  await s.click('.klassekort:not(.ny) >> nth=0');
+  sjekk((await kart()).some((x) => x.navn === 'Prøvedag'), 'navnene er der etter omlasting');
+}
+
+/* ---- 5. Mobil ---- */
 async function sjekkMobil(nettleser, url, feil) {
   console.log('Mobil (iPhone 13)');
   const s = await nySide(nettleser, url, devices['iPhone 13'], feil);
@@ -280,6 +363,19 @@ async function sjekkMobil(nettleser, url, feil) {
   );
   sjekk(!(await s.isVisible('.tastatur')), '«(Esc)» vises ikke på berøringsskjerm');
   await s.tap('#lukkVisning');
+  await s.tap('#merKnapp');
+  await s.tap('.popup .menyvalg >> text=Lagre kartet …');
+  await s.tap('#sporsmalOk');
+  await s.tap('#tidligere');
+  sjekk(
+    await s.evaluate(() => {
+      const r = document.getElementById('lagrede').getBoundingClientRect();
+      return Math.abs(r.bottom - innerHeight) < 2 && r.width === innerWidth;
+    }),
+    'Lagrede kart åpnes som et ark nedenfra',
+  );
+  await s.screenshot({ path: path.join(BILDER, 'mobil-lagrede-kart.png') });
+  await s.tap('#lagredeLukk');
   await s.tap('#tilKlasser');
   sjekk(await ingenSideScroll(s), 'klasseoversikten: ingen sidelengs scroll');
   // Merk: helsidebilder (fullPage) nullstiller berøringsemuleringen i
@@ -393,6 +489,7 @@ async function sjekkInnlogging(nettleser, url, feil) {
   try {
     await sjekkDialoger(nettleser, url, feil);
     await sjekkLagring(nettleser, url, feil);
+    await sjekkLagredeKart(nettleser, url, feil);
     await sjekkMobil(nettleser, url, feil);
     await sjekkInnlogging(nettleser, url, feil);
   } catch (err) {
