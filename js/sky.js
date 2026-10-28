@@ -295,6 +295,7 @@ function klassePakke(n, k) {
     elever: k.elever,
     historikk: k.historikk,
     sist: k.sist || null,
+    romkart: k.romkart || null,
     grupper: k.grupper || null,
     kart,
   };
@@ -328,6 +329,7 @@ function klasseFraPakke(ny, p, id, brukt) {
     elever: p.elever || [],
     historikk: p.historikk || [],
     sist: p.sist || null,
+    romkart: p.romkart || null,
     grupper: p.grupper || null,
     _id: id,
     brukt,
@@ -460,7 +462,7 @@ async function oppdaterFraSky() {
     await hentMedlemmer();
     if (!$('oversikt').hidden) tegnOversikt();
     else tegn();
-    visSkystatus('Lagret');
+    visLagret();
   } catch (err) {
     console.error(err);
     visSkystatus('Fikk ikke kontakt med skyen', true);
@@ -487,7 +489,7 @@ function kjorSynk() {
     .then(() => {
       if (synkTimer) return;
       ulagret = false;
-      visSkystatus('Lagret');
+      visLagret();
     })
     .catch((err) => {
       console.error(err);
@@ -851,7 +853,7 @@ function oppdaterKontoUi() {
     k.textContent = n.charAt(0).toUpperCase() + n.slice(1) + ' ▾';
   } else {
     k.textContent = 'Uten konto ▾';
-    visSkystatus('');
+    visLagret(false);
   }
 }
 function tilSky() {

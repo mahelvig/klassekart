@@ -111,29 +111,47 @@ const elevMed = (id) => elever().find((e) => e.id === id) || null;
 const erSperret = (k) => rommet().sperret.includes(k);
 const erLaast = (k) => D.aktiv.laaste.includes(k);
 
-/* Hver klasse husker sitt eget pågående kart og rom */
+/* Hver klasse husker sitt pågående kart i hvert rom (romkart), og hvilket
+   rom den sist var i (sist). Da sletter ikke et rombytte noe. Eldre data
+   har bare sist, som da gjelder for rommet som står der. */
 function huskOppsett() {
   const k = D.klasser[D.aktiv.klasse];
-  if (k)
-    k.sist = {
-      rom: D.aktiv.rom,
-      plasser: kopi(D.aktiv.plasser),
-      laaste: D.aktiv.laaste.slice(),
-      farger: kopi(D.aktiv.farger),
+  if (!k) return;
+  const a = D.aktiv;
+  k.sist = {
+    rom: a.rom,
+    plasser: kopi(a.plasser),
+    laaste: a.laaste.slice(),
+    farger: kopi(a.farger),
+  };
+  k.romkart = k.romkart || {};
+  if (Object.keys(a.plasser).length || Object.keys(a.farger).length)
+    k.romkart[a.rom] = {
+      plasser: kopi(a.plasser),
+      laaste: a.laaste.slice(),
+      farger: kopi(a.farger),
     };
+  else delete k.romkart[a.rom];
 }
-function gjenopprett(n) {
-  const k = D.klasser[n];
-  const s = k.sist || {};
+// legger klassens kart for rommet i D.aktiv (tomt hvis det ikke finnes)
+function hentRomkart() {
+  const k = klasse();
+  const s =
+    (k.romkart || {})[D.aktiv.rom] ||
+    (k.sist && k.sist.rom === D.aktiv.rom ? k.sist : {});
   const ids = new Set(k.elever.map((e) => e.id));
-  D.aktiv.klasse = n;
-  if (D.rom[s.rom]) D.aktiv.rom = s.rom;
   D.aktiv.plasser = {};
   Object.entries(s.plasser || {}).forEach(([p, id]) => {
     if (ids.has(id)) D.aktiv.plasser[p] = id;
   });
   D.aktiv.laaste = (s.laaste || []).slice();
   D.aktiv.farger = kopi(s.farger || {});
+}
+function gjenopprett(n) {
+  const s = D.klasser[n].sist || {};
+  D.aktiv.klasse = n;
+  if (D.rom[s.rom]) D.aktiv.rom = s.rom;
+  hentRomkart();
 }
 function apneKlasse(n, merkBrukt) {
   huskOppsett();
@@ -151,7 +169,30 @@ function lagre() {
   endringsteller++;
   if (iSky()) return planleggSynk();
   clearTimeout(lagretimer);
-  lagretimer = setTimeout(() => lager.skriv(LOKAL, D), 350);
+  lagretimer = setTimeout(async () => {
+    if (await lager.skriv(LOKAL, D)) visLagret();
+    else visSkystatus('Ikke lagret – nettleseren stoppet det', true);
+  }, 350);
+}
+/* Viser i toppen at alt lagres av seg selv, og når det sist skjedde */
+function visLagret(tid) {
+  const s = $('skystatus');
+  s.className = 'skystatus';
+  s.textContent = '✓ ' + (tid === false ? 'Lagres automatisk' : 'Lagret');
+  if (tid !== false) {
+    const t = document.createElement('span');
+    t.className = 'tid';
+    t.textContent =
+      ' kl. ' +
+      new Date().toLocaleTimeString('no-NO', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    s.appendChild(t);
+  }
+  s.title = iSky()
+    ? 'Alt lagres automatisk og kryptert i kontoen din.'
+    : 'Alt lagres automatisk i denne nettleseren.';
 }
 
 /* ============ seter ============ */

@@ -261,6 +261,9 @@ function tattRomBilde() {
         .filter(([, k]) => k.sist)
         .map(([n, k]) => [n, k.sist.rom]),
     ),
+    romkart: Object.fromEntries(
+      Object.entries(D.klasser).map(([n, k]) => [n, kopi(k.romkart || {})]),
+    ),
   };
 }
 function gjenopprettRomBilde(b) {
@@ -271,6 +274,9 @@ function gjenopprettRomBilde(b) {
   });
   Object.entries(b.sist).forEach(([n, r]) => {
     if (D.klasser[n] && D.klasser[n].sist) D.klasser[n].sist.rom = r;
+  });
+  Object.entries(b.romkart).forEach(([n, rk]) => {
+    if (D.klasser[n]) D.klasser[n].romkart = rk;
   });
 }
 function settRomModus(paa) {

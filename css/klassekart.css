@@ -1111,6 +1111,7 @@ dialog.sporsmal::backdrop {
 }
 .skystatus {
   margin-left: 8px;
+  white-space: nowrap;
   font-size: 12px;
   font-weight: 400;
   letter-spacing: 0;
@@ -1119,6 +1120,11 @@ dialog.sporsmal::backdrop {
 .skystatus.varsel {
   color: var(--varsel);
   font-weight: 600;
+}
+@media (max-width: 600px) {
+  .skystatus .tid {
+    display: none;
+  }
 }
 
 /* klasseoversikt */

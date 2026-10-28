@@ -738,11 +738,14 @@ const nyttRomOppsett = () => ({
   ],
   sperret: [],
 });
-function byttRom(n) {
+/* Plasseringen i rommet vi forlater, huskes, og klassens plassering i det
+   nye rommet hentes fram. behold: ta plasseringen med (rommet er en kopi
+   med samme pulter). */
+function byttRom(n, behold) {
   if (romModus) settRomModus(false);
+  huskOppsett();
   D.aktiv.rom = n;
-  D.aktiv.plasser = {};
-  D.aktiv.laaste = [];
+  if (!behold) hentRomkart();
   tegn();
 }
 $('velgRom').addEventListener('change', async (e) => {
@@ -793,7 +796,7 @@ async function lagKopiAvStandardrom() {
   romBilde = tattRomBilde();
   const R = rommet();
   D.rom[n] = { rader: kopi(R.rader), sperret: R.sperret.slice() };
-  byttRom(n);
+  byttRom(n, true); // kopien har samme pulter, så elevene blir sittende
   settRomModus(true);
 }
 $('romnavn').addEventListener('change', (e) => {
@@ -814,6 +817,10 @@ $('romnavn').addEventListener('change', (e) => {
   });
   Object.values(D.klasser).forEach((k) => {
     if (k.sist && k.sist.rom === gammelt) k.sist.rom = nytt;
+    if (k.romkart && k.romkart[gammelt]) {
+      k.romkart[nytt] = k.romkart[gammelt];
+      delete k.romkart[gammelt];
+    }
   });
   D.aktiv.rom = nytt;
   tegn();
@@ -852,9 +859,13 @@ vedKlikk('slettRom', async () => {
     ))
   )
     return;
-  delete D.rom[D.aktiv.rom];
+  const borte = D.aktiv.rom;
+  delete D.rom[borte];
   settRomModus(false);
   byttRom(Object.keys(D.rom).sort(sammenlign)[0]);
+  Object.values(D.klasser).forEach((k) => {
+    if (k.romkart) delete k.romkart[borte];
+  });
 });
 
 /* ============ hendelser: data ============ */
@@ -983,6 +994,7 @@ function slaaSammen(ny) {
       elever: k.elever,
       historikk: k.historikk || [],
       sist: k.sist || null,
+      romkart: k.romkart || null,
       grupper: k.grupper || null,
     };
     Object.entries(ny.kart || {}).forEach(([kn, x]) => {

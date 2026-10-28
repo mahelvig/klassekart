@@ -166,7 +166,66 @@ async function sjekkDialoger(nettleser, url, feil) {
   sjekk(!(await s.isVisible('#merKnapp')) && (await s.isVisible('.klassekort')), 'PC: ingen Mer-knapp');
 }
 
-/* ---- 3. Mobil ---- */
+/* ---- 3. Lagring: rom og status ---- */
+async function sjekkLagring(nettleser, url, feil) {
+  console.log('Lagring per rom, og lagrestatus');
+  const s = await nySide(nettleser, url, { viewport: { width: 1200, height: 800 } }, feil);
+  const plasser = () => s.evaluate(() => JSON.stringify(Object.entries(D.aktiv.plasser).sort()));
+  const rom = () => s.evaluate(() => D.aktiv.rom);
+  await klasseMedElever(s, 'click');
+  await s.waitForFunction(() => document.getElementById('skystatus').textContent.includes('Lagret kl.'));
+  sjekk(true, 'toppen viser «✓ Lagret kl. …» uten konto');
+  const standard = await plasser();
+
+  await s.selectOption('#velgRom', '');
+  await s.fill('#sporsmalSvar', '218');
+  await s.keyboard.press('Enter');
+  await s.waitForTimeout(200);
+  sjekk((await rom()) === '218' && (await plasser()) === '[]', 'nytt rom starter tomt');
+  await s.click('#romFerdig'); // et nytt rom åpnes i redigering
+  await s.click('#trekk');
+  const rom218 = await plasser();
+
+  await s.selectOption('#velgRom', 'Standardrom');
+  sjekk((await plasser()) === standard, 'tilbake i standardrommet: plasseringen er der fortsatt');
+  await s.selectOption('#velgRom', '218');
+  sjekk((await plasser()) === rom218, 'tilbake i 218: plasseringen der er også husket');
+
+  await s.waitForTimeout(500); // lagringen venter litt før den skriver
+  await s.reload();
+  await s.click('.klassekort:not(.ny) >> nth=0');
+  sjekk((await rom()) === '218' && (await plasser()) === rom218, 'etter omlasting åpner klassen i 218 med samme plassering');
+  await s.selectOption('#velgRom', 'Standardrom');
+  sjekk((await plasser()) === standard, 'etter omlasting er standardrommet også husket');
+
+  // «Endre rommet» på standardrommet lager en kopi: elevene skal bli sittende
+  await s.click('#endreRom');
+  await s.click('#sporsmalOk');
+  await s.click('#sporsmalOk');
+  await s.waitForTimeout(200);
+  sjekk((await rom()) === 'Mitt rom' && (await plasser()) === standard, 'kopi av standardrommet: elevene blir sittende');
+  await s.click('#romAvbryt');
+  sjekk(
+    (await rom()) === 'Standardrom' && (await plasser()) === standard &&
+      !(await s.evaluate(() => 'Mitt rom' in D.rom)),
+    'Avbryt fjerner kopien og går tilbake til standardrommet',
+  );
+
+  // sletter man et rom, forsvinner klassens plassering i det
+  await s.selectOption('#velgRom', '218');
+  await s.click('#endreRom');
+  await s.click('#slettRom');
+  await s.click('#sporsmalOk');
+  await s.waitForTimeout(200);
+  sjekk(
+    (await rom()) === 'Standardrom' &&
+      (await plasser()) === standard &&
+      !(await s.evaluate(() => '218' in (klasse().romkart || {}))),
+    'slettet rom: klassen går til standardrommet og glemmer 218',
+  );
+}
+
+/* ---- 4. Mobil ---- */
 async function sjekkMobil(nettleser, url, feil) {
   console.log('Mobil (iPhone 13)');
   const s = await nySide(nettleser, url, devices['iPhone 13'], feil);
@@ -175,6 +234,16 @@ async function sjekkMobil(nettleser, url, feil) {
   sjekk(await ingenSideScroll(s), 'klassevisningen: ingen sidelengs scroll');
   sjekk((await s.$eval('#kart', (k) => k.getBoundingClientRect().top)) < 300, 'kartet starter i øvre halvdel av skjermen');
   sjekk((await delteNavn(s)).length === 0, 'ingen navn delt midt i ordet');
+  await s.waitForFunction(() => document.getElementById('skystatus').textContent.includes('Lagret'));
+  sjekk(
+    await s.evaluate(() => {
+      const st = document.getElementById('skystatus').getBoundingClientRect();
+      const konto = document.getElementById('kontoKnapp').getBoundingClientRect();
+      const tilbake = document.getElementById('tilKlasser').getBoundingClientRect();
+      return st.width > 0 && st.right <= konto.left && st.left >= tilbake.right;
+    }),
+    'lagrestatusen får plass i toppen uten å overlappe',
+  );
 
   const sma = await s.$$eval('input:not([type=checkbox]):not([type=file]), select, textarea', (x) =>
     x.filter((e) => parseFloat(getComputedStyle(e).fontSize) < 16).map((e) => e.id));
@@ -289,6 +358,15 @@ async function sjekkInnlogging(nettleser, url, feil) {
     (await s.textContent('#klassegrid')).includes('26 elever'),
     'klassen med 26 elever er lagret kryptert og hentet igjen',
   );
+  sjekk(
+    await s.evaluate(() => Object.values(D.klasser).some((k) => k.romkart && k.romkart.Standardrom)),
+    'plasseringen per rom (romkart) er også med i skyen',
+  );
+  await s.click('.klassekort:not(.ny) >> nth=0');
+  await s.click('#trekk');
+  await s.waitForFunction(() => document.getElementById('skystatus').textContent.includes('Lagret kl.'));
+  sjekk(true, 'med konto viser toppen «✓ Lagret kl. …» etter lagring');
+  await s.click('#tilKlasser');
 
   // logg ut: da skal nøkkelen være glemt
   await s.click('#kontoKnapp');
@@ -314,6 +392,7 @@ async function sjekkInnlogging(nettleser, url, feil) {
   const feil = [];
   try {
     await sjekkDialoger(nettleser, url, feil);
+    await sjekkLagring(nettleser, url, feil);
     await sjekkMobil(nettleser, url, feil);
     await sjekkInnlogging(nettleser, url, feil);
   } catch (err) {
