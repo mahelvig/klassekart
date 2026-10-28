@@ -746,6 +746,11 @@ label.felt {
 .plass .navn {
   overflow-wrap: anywhere;
 }
+/* tilpassNavn() har krympet skriften så hele navnet får plass */
+.plass .navn.passer {
+  overflow-wrap: normal;
+  flex-shrink: 0;
+}
 .plass .navn.lang {
   font-size: 0.9em;
 }
@@ -1421,5 +1426,67 @@ dialog.sporsmal::backdrop {
   }
   .plass {
     padding: 3px 2px;
+  }
+}
+
+/* Knapper som bare vises på bred skjerm eller bare på mobil */
+@media (min-width: 601px) {
+  .bare-mobil {
+    display: none !important;
+  }
+}
+@media (max-width: 600px) {
+  .ikke-mobil {
+    display: none !important;
+  }
+  /* romredigering: knappene brytes i stedet for å gå ut av skjermen */
+  .romverktoy .grp {
+    margin-left: 0 !important;
+    flex-wrap: wrap;
+  }
+  .romverktoy label.rad {
+    flex: 1 1 100%;
+  }
+  .romverktoy input[type='text'] {
+    flex: 1;
+    width: auto;
+  }
+  .klassekort.ny {
+    min-height: 72px;
+  }
+  .visning .rom {
+    padding: 14px 10px 70px;
+  }
+  .visning .romtopp h1 {
+    font-size: 22px;
+  }
+  .lukkvisning {
+    top: auto;
+    bottom: 14px;
+  }
+}
+/* Berøringsskjerm: større trykkflater, og 16 px i skjemafelt så
+   iPhone ikke zoomer inn når man trykker i dem */
+@media (pointer: coarse) {
+  input:not([type='checkbox']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  .knapp.liten,
+  .kjonn {
+    min-width: 38px;
+    min-height: 38px;
+  }
+  .ktrl button {
+    min-width: 34px;
+    min-height: 34px;
+    font-size: 15px;
+  }
+  .lukkvisning {
+    opacity: 0.85;
+  }
+  .tastatur {
+    display: none;
   }
 }

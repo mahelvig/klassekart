@@ -50,6 +50,26 @@ function tilpassBredde(fastBredde) {
   );
   kart.style.setProperty('--midtgang', midtgang + 'px');
   kart.style.setProperty('--pultgap', pultgap + 'px');
+  tilpassNavn();
+}
+/* Et navn som er bredere enn pulten, får mindre skrift i stedet for å
+   deles midt i ordet. Først under 8 px får det dele seg. */
+function tilpassNavn() {
+  document.querySelectorAll('#kart .plass .navn').forEach((n) => {
+    n.style.fontSize = '';
+    n.classList.add('passer');
+    const p = getComputedStyle(n.parentElement);
+    const ledig =
+      n.parentElement.clientWidth -
+      parseFloat(p.paddingLeft) -
+      parseFloat(p.paddingRight);
+    let s = parseFloat(getComputedStyle(n).fontSize);
+    while (n.offsetWidth > ledig && s > 8) {
+      s -= 0.5;
+      n.style.fontSize = s + 'px';
+    }
+    if (n.offsetWidth > ledig) n.classList.remove('passer');
+  });
 }
 let breddetimer = null;
 window.addEventListener('resize', () => {
@@ -968,6 +988,23 @@ try {
   if (localStorage.getItem(SKJUL_ELEVER)) settElevliste(false);
 } catch (err) {}
 vedKlikk('visKlassen', () => settVisning(true));
+// mobil: knappene som ikke får plass i verktøylinjen
+vedKlikk('merKnapp', () =>
+  apneMeny(
+    $('merKnapp'),
+    (boks) => {
+      menyvalg(boks, 'Lagre dette kartet', () => brukKart(false));
+      menyvalg(
+        boks,
+        (D.aktiv.speil ? '✓ ' : '') + 'Sett fra tavla',
+        () => $('speil').click(),
+      );
+      menyvalg(boks, 'Vis for klassen', () => settVisning(true));
+      menyvalg(boks, 'Skriv ut', () => $('skrivut').click());
+    },
+    'hoyre',
+  ),
+);
 vedKlikk('lukkVisning', () => settVisning(false));
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement && visning) settVisning(false);

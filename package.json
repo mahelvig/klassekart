@@ -1,0 +1,12 @@
+{
+  "name": "klassekart",
+  "private": true,
+  "description": "Klassekart med trekning og kryptert deling. Selve siden trenger ingen bygging; dette er bare for testene.",
+  "scripts": {
+    "test": "node tester/kjor.js"
+  },
+  "devDependencies": {
+    "acorn": "^8.12.0",
+    "playwright": "1.63.0"
+  }
+}

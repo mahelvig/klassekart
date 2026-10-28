@@ -179,15 +179,21 @@
             <button class="knapp" id="grupperKnapp">Grupper ▾</button>
           </div>
           <div class="grp">
-            <button class="knapp" id="brukKart">Lagre dette kartet</button>
+            <button class="knapp ikke-mobil" id="brukKart">
+              Lagre dette kartet
+            </button>
             <button class="knapp" id="tidligere">Tidligere kart ▾</button>
           </div>
-          <div class="grp">
+          <div class="grp ikke-mobil">
             <button class="knapp" id="speil" aria-pressed="false">
               Sett fra tavla
             </button>
             <button class="knapp" id="visKlassen">Vis for klassen</button>
             <button class="knapp" id="skrivut">Skriv ut</button>
+          </div>
+          <!-- på mobil samles de fire knappene over i denne menyen -->
+          <div class="grp bare-mobil">
+            <button class="knapp" id="merKnapp">Mer ▾</button>
           </div>
         </div>
         <div class="verktoy malerverktoy" id="malerverktoy" hidden>
@@ -258,7 +264,7 @@
       </form>
     </dialog>
     <button class="knapp lukkvisning" id="lukkVisning" hidden>
-      Lukk visningen (Esc)
+      Lukk visningen<span class="tastatur"> (Esc)</span>
     </button>
     <input type="file" id="filvelger" accept="application/json,.json" hidden />
 
