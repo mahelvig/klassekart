@@ -52,8 +52,9 @@ function tilpassBredde(fastBredde) {
   kart.style.setProperty('--pultgap', pultgap + 'px');
   tilpassNavn();
 }
-/* Et navn som er bredere enn pulten, får mindre skrift i stedet for å
-   deles midt i ordet. Først under 8 px får det dele seg. */
+/* Et navn som er bredere enn pulten, får mindre skrift, ned til 8 px. Det
+   deles aldri midt i ordet: får det likevel ikke plass, stikker det heller
+   litt utenfor pulten. Navn med mellomrom kan brytes ved mellomrommet. */
 function tilpassNavn() {
   document.querySelectorAll('#kart .plass .navn').forEach((n) => {
     n.style.fontSize = '';
@@ -68,9 +69,18 @@ function tilpassNavn() {
       s -= 0.5;
       n.style.fontSize = s + 'px';
     }
-    if (n.offsetWidth > ledig) n.classList.remove('passer');
   });
 }
+/* Kartet kan få ny bredde uten at vinduet gjør det (f.eks. når det vises
+   etter klasseoversikten), og da må navnene måles på nytt. Bare endret
+   bredde teller, så ikke målingen selv setter i gang en ny. */
+let kartbredde = 0;
+new ResizeObserver(([e]) => {
+  const b = Math.round(e.contentRect.width);
+  if (b === kartbredde) return;
+  kartbredde = b;
+  tilpassNavn();
+}).observe($('kart'));
 let breddetimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(breddetimer);
