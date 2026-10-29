@@ -1317,7 +1317,7 @@ function tegnLagrede() {
     topp.appendChild(s);
     const merke = (t, k) => {
       const m = document.createElement('span');
-      m.className = 'merke ' + k;
+      m.className = 'kartmerke ' + k;
       m.textContent = t;
       topp.appendChild(m);
     };
