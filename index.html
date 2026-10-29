@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Klassekart</title>
+    <title>Klassekart – hvem sitter hvor?</title>
     <meta
       name="description"
-      content="Lag klassekart med trekning, regler for hvem som skal sitte sammen eller ikke, flere rom og lagrede kart. Elevnavnene krypteres før de lagres."
+      content="Hvem sitter hvor? Lag klassekart med trekning, regler for hvem som skal sitte sammen eller ikke, flere rom og lagrede kart. Elevnavnene krypteres før de lagres."
     />
     <meta name="theme-color" content="#23463b" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -15,7 +15,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="nb_NO" />
     <meta property="og:site_name" content="Klassekart" />
-    <meta property="og:title" content="Klassekart" />
+    <meta property="og:title" content="Klassekart – hvem sitter hvor?" />
     <meta
       property="og:description"
       content="Trekk plasser med regler for hvem som skal sitte sammen, og del kartene med kolleger."
@@ -26,7 +26,7 @@
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="Et klassekart med tavle og seks pulter, og teksten Klassekart"
+      content="Logoen til Klassekart, en tavle og seks pulter, med teksten Klassekart – hvem sitter hvor?"
     />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="css/klassekart.css" />
@@ -34,7 +34,12 @@
   <body>
     <header class="topp" id="topp" hidden>
       <div class="topp-venstre">
-        <p class="merke">Klassekart</p>
+        <p class="merke">
+          <img src="favicon.svg" alt="" width="26" height="26" /><span
+            class="merkenavn"
+            >Klassekart</span
+          >
+        </p>
         <button type="button" class="lenkeknapp tilbake" id="tilKlasser">
           ← Alle klasser
         </button>
@@ -313,7 +318,13 @@
 
     <section class="inngang" id="inngang" hidden>
       <div class="inngangkort">
-        <h1>Klassekart</h1>
+        <div class="logo">
+          <img src="favicon.svg" alt="" width="44" height="44" />
+          <div>
+            <h1>Klassekart</h1>
+            <p class="slagord">Hvem sitter hvor?</p>
+          </div>
+        </div>
 
         <form id="stegInn" novalidate>
           <p class="hjelp">

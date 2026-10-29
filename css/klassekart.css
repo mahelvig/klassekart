@@ -124,6 +124,9 @@ code {
   min-width: 0;
 }
 .merke {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -1063,17 +1066,17 @@ dialog.lagrede::backdrop {
   color: var(--ink-svak);
   font-size: 12.5px;
 }
-.merke {
+.kartmerke {
   padding: 1px 7px;
   border-radius: 10px;
   font-size: 11.5px;
   font-weight: 700;
 }
-.merke.gronn {
+.kartmerke.gronn {
   background: #e8f0ec;
   color: var(--tavle);
 }
-.merke.graa {
+.kartmerke.graa {
   background: #eef1f3;
   color: #4a5862;
 }
@@ -1244,9 +1247,20 @@ dialog.lagrede::backdrop {
   border-radius: 10px;
   padding: 28px 28px 24px;
 }
+.inngangkort .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
 .inngangkort h1 {
   font-size: 22px;
-  margin: 0 0 4px;
+  margin: 0;
+}
+.slagord {
+  margin: 0;
+  color: var(--ink-svak);
+  font-size: 15px;
 }
 .inngangkort h2 {
   font-size: 16px;
@@ -1623,6 +1637,15 @@ dialog.lagrede::backdrop {
 @media (max-width: 600px) {
   .ikke-mobil {
     display: none !important;
+  }
+  /* toppen er trang: bare logoen vises, navnet leses fortsatt opp */
+  .merkenavn {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   dialog.lagrede {
     width: 100%;
