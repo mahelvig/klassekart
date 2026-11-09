@@ -47,4 +47,12 @@ npm install
 npm test
 ```
 
-Testene åpner siden i Chromium, både som PC og som iPhone, og sjekker dialogene, mobilvisningen og at ingen skript avhenger av et som lastes senere. Skjermbilder lagres i `tester/skjermbilder/`. Innlogging med konto testes ikke, siden det krever kontakt med Supabase.
+Testene åpner siden i Chromium, både som PC og som iPhone. De sjekker blant annet:
+
+- trekningen (reglene for sammen, ikke sammen, foran og bak, låste og sperrede pulter, nye naboer), importen av klasselister og gruppeinndelingen
+- dialogene, lagring per rom, lagrede kart og mobilvisningen
+- konto, «Forbli innlogget» og deling av rom, mot en etterligning av Supabase (`tester/falsk-supabase.js`)
+- sikkerhet og tilgjengelighet: Content-Security-Policy, ondsinnede data, navn for skjermlesere og tastaturbruk
+- at ingen skript avhenger av et som lastes senere
+
+Trekningen er tilfeldig, så reglene sjekkes over mange trekninger. Skjermbilder lagres i `tester/skjermbilder/`. Tilgangsreglene i databasen og det ekte Supabase-prosjektet testes ikke her.
