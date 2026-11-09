@@ -191,11 +191,21 @@ async function sjekkLagring(nettleser, url, feil) {
   sjekk(true, 'toppen viser «✓ Lagret kl. …» uten konto');
   const statusSynlig = () => s.evaluate(() => !document.getElementById('skystatus').classList.contains('borte'));
   sjekk(await statusSynlig(), '«✓ Lagret» vises rett etter lagring');
-  await s.waitForTimeout(4600);
-  sjekk(
-    !(await statusSynlig()) && (await s.evaluate(() => getComputedStyle(document.getElementById('skystatus')).opacity)) === '0',
-    '«✓ Lagret» har tonet ut etter fire sekunder',
-  );
+  // fire sekunder pluss selve uttoningen: vent på resultatet, ikke på klokka
+  const tonetUt = await s
+    .waitForFunction(
+      () => {
+        const e = document.getElementById('skystatus');
+        return e.classList.contains('borte') && getComputedStyle(e).opacity === '0';
+      },
+      null,
+      { timeout: 10000 },
+    )
+    .then(
+      () => true,
+      () => false,
+    );
+  sjekk(tonetUt, '«✓ Lagret» har tonet ut etter fire sekunder');
   await s.click('#trekk');
   await s.waitForTimeout(500);
   sjekk(await statusSynlig(), '«✓ Lagret» kommer tilbake ved neste lagring');
@@ -644,6 +654,63 @@ async function sjekkInnlogging(nettleser, url, feil) {
   await s.click('#trekk');
   await s.waitForFunction(() => document.getElementById('skystatus').textContent.includes('Lagret kl.'));
   sjekk(true, 'med konto viser toppen «✓ Lagret kl. …» etter lagring');
+
+  /* Rommene deles med skolen. Gir en kollega et rom nytt navn, skal
+     klassens plassering og lagrede kart følge med rommet. */
+  const ulagretEtter = await s.evaluate(async () => {
+    D.rom['218'] = { rader: Array.from({ length: 5 }, () => [2, 3, 2]), sperret: [] };
+    byttRom('218');
+    trekkPlassering();
+    lagreKart('Uke 1', true);
+    await tomSynk();
+    return ulagret;
+  });
+  sjekk(ulagretEtter === false, 'et nytt rom og klassen som bruker det, lagres i samme omgang');
+  await s.evaluate(() => {
+    const d = JSON.parse(localStorage.getItem('falsk-supabase:db'));
+    d.tabeller.rom.find((r) => r.navn === '218').navn = 'Rom 218';
+    localStorage.setItem('falsk-supabase:db', JSON.stringify(d));
+  });
+  await s.reload();
+  await hvorErVi(s);
+  await s.click('.klassekort:not(.ny) >> nth=0');
+  const etterNavn = await s.evaluate(() => ({
+    rom: D.aktiv.rom,
+    plassert: Object.keys(D.aktiv.plasser).length,
+    romkart: Object.keys(klasse().romkart || {}).sort().join(','),
+    kart: Object.values(D.kart).map((x) => x.navn + ' i ' + x.rom).join(','),
+  }));
+  sjekk(
+    etterNavn.rom === 'Rom 218' && etterNavn.plassert === 26,
+    'klassen åpner i rommet med det nye navnet, med alle 26 på plass' +
+      (etterNavn.rom === 'Rom 218' && etterNavn.plassert === 26 ? '' : ': ' + JSON.stringify(etterNavn)),
+  );
+  sjekk(
+    etterNavn.romkart === 'Rom 218,Standardrom' && etterNavn.kart === 'Uke 1 i Rom 218',
+    'plasseringen per rom og det lagrede kartet har fulgt rommet' +
+      (etterNavn.romkart === 'Rom 218,Standardrom' && etterNavn.kart === 'Uke 1 i Rom 218'
+        ? ''
+        : ': ' + JSON.stringify(etterNavn)),
+  );
+  await s.click('#tidligere');
+  sjekk(
+    !(await s.textContent('#lagredeListe')).includes('(slettet)'),
+    'det lagrede kartet står ikke som «(slettet)»',
+  );
+  await s.click('#lagredeLukk');
+  // klassen skrives én gang med de nye navnene, ikke ved hver innlasting
+  const versjoner = () =>
+    s.evaluate(async () => {
+      await tomSynk();
+      const d = JSON.parse(localStorage.getItem('falsk-supabase:db'));
+      return d.tabeller.klasser.map((k) => k.versjon).join(',');
+    });
+  const v1 = await versjoner();
+  await s.reload();
+  await hvorErVi(s);
+  const v2 = await versjoner();
+  sjekk(v1 === v2, 'klassene skrives ikke på nytt når ingenting er endret' + (v1 === v2 ? '' : `: ${v1} → ${v2}`));
+  await s.click('.klassekort:not(.ny) >> nth=0');
   await s.click('#tilKlasser');
 
   // logg ut: da skal nøkkelen være glemt

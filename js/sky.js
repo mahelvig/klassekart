@@ -279,6 +279,55 @@ async function registrer(epost, passord) {
 }
 
 /* ---- fra databasen til D og tilbake ---- */
+/* Klassene viser til rom med navn (i sist, romkart og lagrede kart). Rommene
+   deles med skolen, og en kollega kan gi et rom nytt navn. Derfor lagres
+   også rommets id for hvert navn klassen bruker (romId). Når klassen
+   hentes igjen, følger navnene i klassen etter rommet. */
+function romIdTabell(n, k) {
+  const navn = new Set(Object.keys(k.romkart || {}));
+  if (k.sist && k.sist.rom) navn.add(k.sist.rom);
+  Object.values(D.kart).forEach((x) => {
+    if (x.klasse === n) navn.add(x.rom);
+  });
+  const tabell = {};
+  [...navn].sort().forEach((r) => {
+    const R = Object.hasOwn(D.rom, r) ? D.rom[r] : null;
+    if (R && R._id) tabell[r] = R._id;
+  });
+  return tabell;
+}
+/* Bytter romnavnene i en hentet klasse (p) til det rommene heter nå. Et rom
+   som er slettet, eller som hører til en annen skole, beholder navnet det
+   hadde. */
+function folgRomnavn(p, rom) {
+  const heterNaa = new Map();
+  Object.entries(rom).forEach(([navn, R]) => {
+    if (R && R._id) heterNaa.set(R._id, navn);
+  });
+  const nytt = new Map();
+  Object.entries(p.romId || {}).forEach(([gammelt, id]) => {
+    const naa = heterNaa.get(id);
+    if (naa !== undefined && naa !== gammelt) nytt.set(gammelt, naa);
+  });
+  if (!nytt.size) return;
+  const bytt = (r) => (nytt.has(r) ? nytt.get(r) : r);
+  if (p.sist && p.sist.rom) p.sist.rom = bytt(p.sist.rom);
+  if (p.romkart) {
+    // rom som finnes, går foran et slettet rom som het det samme
+    const rk = {};
+    const alle = Object.entries(p.romkart);
+    alle.forEach(([r, v]) => {
+      if (!nytt.has(r)) rk[r] = v;
+    });
+    alle.forEach(([r, v]) => {
+      if (nytt.has(r)) rk[nytt.get(r)] = v;
+    });
+    p.romkart = rk;
+  }
+  Object.values(p.kart || {}).forEach((x) => {
+    if (x) x.rom = bytt(x.rom);
+  });
+}
 function klassePakke(n, k) {
   const kart = {};
   Object.entries(D.kart).forEach(([kn, x]) => {
@@ -301,6 +350,7 @@ function klassePakke(n, k) {
     romkart: k.romkart || null,
     grupper: k.grupper || null,
     kart,
+    romId: romIdTabell(n, k),
   };
 }
 function egenPakke() {
@@ -325,6 +375,7 @@ function egenPakke() {
 const romPakke = (n, R) =>
   JSON.stringify({ navn: n, rader: R.rader, sperret: R.sperret });
 function klasseFraPakke(ny, p, id, brukt) {
+  folgRomnavn(p, ny.rom);
   let n = p.navn,
     i = 1;
   while (ny.klasser[n]) n = p.navn + ' (' + ++i + ')';
@@ -392,13 +443,15 @@ async function hentSky() {
       ny.rom[n] = { rader: R.rader, sperret: R.sperret || [] };
   });
   const nokler = {},
-    versjon = {};
+    versjon = {},
+    romId = {}; // klasse-id → tabellen slik den ligger i databasen
   for (const m of medl) {
     const rad = rader.find((r) => r.id === m.klasse_id);
     if (!rad) continue;
     try {
       const nokkel = await pakkUt(m.nokkel, sky.privat);
       const p = await dekrypterJson(nokkel, rad.data);
+      romId[rad.id] = JSON.stringify(p.romId || null);
       klasseFraPakke(ny, p, rad.id, (egen.brukt || {})[rad.id]);
       nokler[rad.id] = nokkel;
       versjon[rad.id] = rad.versjon;
@@ -425,7 +478,15 @@ async function hentSky() {
     gjenopprett(D.aktiv.klasse);
     sky.lagret = {};
     Object.entries(D.klasser).forEach(([n, kl]) => {
-      if (kl._id) sky.lagret[kl._id] = JSON.stringify(klassePakke(n, kl));
+      if (!kl._id) return;
+      const pakke = klassePakke(n, kl);
+      /* Stemmer ikke tabellen over rom-id-er med databasen (klassen er fra
+         før tabellen kom, eller et rom har fått nytt navn), regnes klassen
+         som ulagret, så den skrives med riktig tabell ved neste lagring. */
+      sky.lagret[kl._id] =
+        JSON.stringify(pakke.romId) === romId[kl._id]
+          ? JSON.stringify(pakke)
+          : '';
     });
     sky.egenLagret = JSON.stringify(egenPakke());
     sky.romLagret = {};
@@ -508,35 +569,39 @@ async function synk() {
   const k = sky.klient;
   const meldinger = [];
   const finnes = new Set();
-  for (const [n, kl] of Object.entries(D.klasser)) {
-    const s = JSON.stringify(klassePakke(n, kl));
-    if (!kl._id) await opprettSkyklasse(kl, s);
-    const id = kl._id;
-    finnes.add(id);
-    if (s === sky.lagret[id]) continue;
-    const v = sky.versjon[id];
-    const r = skyFeil(
-      await k
-        .from('klasser')
-        .update({
-          data: await krypterJson(sky.nokler[id], s),
-          versjon: v + 1,
-          endret: new Date().toISOString(),
-          endret_av: sky.id,
-        })
-        .eq('id', id)
-        .eq('versjon', v)
-        .select('id'),
-    );
-    if (r.length) {
-      sky.versjon[id] = v + 1;
-      sky.lagret[id] = s;
-    } else meldinger.push(await hentKlasseIgjen(id));
-  }
+  const skrivKlasser = async () => {
+    for (const [n, kl] of Object.entries(D.klasser)) {
+      const s = JSON.stringify(klassePakke(n, kl));
+      if (!kl._id) await opprettSkyklasse(kl, s);
+      const id = kl._id;
+      finnes.add(id);
+      if (s === sky.lagret[id]) continue;
+      const v = sky.versjon[id];
+      const r = skyFeil(
+        await k
+          .from('klasser')
+          .update({
+            data: await krypterJson(sky.nokler[id], s),
+            versjon: v + 1,
+            endret: new Date().toISOString(),
+            endret_av: sky.id,
+          })
+          .eq('id', id)
+          .eq('versjon', v)
+          .select('id'),
+      );
+      if (r.length) {
+        sky.versjon[id] = v + 1;
+        sky.lagret[id] = s;
+      } else meldinger.push(await hentKlasseIgjen(id));
+    }
+  };
+  await skrivKlasser();
   for (const id of Object.keys(sky.lagret))
     if (!finnes.has(id)) await fjernSkyklasse(id);
 
-  await synkRom();
+  // et rom som nettopp fikk id, skal inn i romId hos klassene som bruker det
+  if (await synkRom()) await skrivKlasser();
   const e = JSON.stringify(egenPakke());
   if (e !== sky.egenLagret) {
     skyFeil(
@@ -552,9 +617,11 @@ async function synk() {
     else tegn(meldinger);
   }
 }
+/* Svarer true hvis et rom fikk id (nytt, eller overtatt fra en kollega) */
 async function synkRom() {
   const k = sky.klient;
   const finnes = new Set();
+  let nyId = false;
   for (const [n, R] of Object.entries(D.rom)) {
     const s = romPakke(n, R);
     if (R._id && s === sky.romLagret[R._id]) {
@@ -593,11 +660,13 @@ async function synkRom() {
         });
         sky.romLagret[R._id] = romPakke(n, R);
         finnes.add(R._id);
+        nyId = true;
         continue;
       }
       skyFeil(r);
       R._id = id;
       R._eier = sky.id;
+      nyId = true;
     }
     sky.romLagret[R._id] = s;
     finnes.add(R._id);
@@ -607,6 +676,7 @@ async function synkRom() {
       skyFeil(await k.from('rom').delete().eq('id', id));
       delete sky.romLagret[id];
     }
+  return nyId;
 }
 async function opprettSkyklasse(kl, s) {
   const k = sky.klient;
