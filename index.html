@@ -3,6 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Nettleseren kjører bare skript fra siden selv og Supabase-biblioteket
+         nederst, og snakker bare med Supabase-prosjektet. Skulle noe likevel
+         få smuglet inn skript, blir det ikke kjørt. Adressene må stemme med
+         SKY.url i js/oppsett.js og med skriptlenken nederst på siden. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src https://aqeixcqqniluotibfhes.supabase.co wss://aqeixcqqniluotibfhes.supabase.co; base-uri 'none'; form-action 'self'"
+    />
     <title>Klassekart – hvem sitter hvor?</title>
     <meta
       name="description"
@@ -478,7 +486,8 @@
     </section>
 
     <!-- Fast versjon + integritetssjekk. Ved oppgradering: bytt versjon og hash
-         (openssl dgst -sha384 -binary supabase.js | openssl base64 -A) -->
+         (openssl dgst -sha384 -binary supabase.js | openssl base64 -A), og
+         bytt adressen i Content-Security-Policy øverst på siden. -->
     <script
       src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"
       integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK"

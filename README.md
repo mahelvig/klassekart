@@ -14,7 +14,7 @@ Publisert på [hvemsitterhvor.no](https://hvemsitterhvor.no).
 ## Oppsett
 
 1. Kjør `klassekart-supabase.sql` i Supabase → SQL Editor (endre e-postdomenet øverst ved behov).
-2. Sett Supabase-adressen og den publiserbare nøkkelen i `SKY` i `js/oppsett.js`.
+2. Sett Supabase-adressen og den publiserbare nøkkelen i `SKY` i `js/oppsett.js`. Sett samme adresse i `Content-Security-Policy` øverst i `index.html`, ellers stopper nettleseren kontakten med Supabase.
 3. Publiser repoet, for eksempel med GitHub Pages, og legg adressen inn i Supabase under Authentication → URL Configuration.
 
 Den publiserbare nøkkelen er ment å ligge i nettsiden. Tilgangen styres av tilgangsreglene (RLS) i databasen.
@@ -47,4 +47,12 @@ npm install
 npm test
 ```
 
-Testene åpner siden i Chromium, både som PC og som iPhone, og sjekker dialogene, mobilvisningen og at ingen skript avhenger av et som lastes senere. Skjermbilder lagres i `tester/skjermbilder/`. Innlogging med konto testes ikke, siden det krever kontakt med Supabase.
+Testene åpner siden i Chromium, både som PC og som iPhone. De sjekker blant annet:
+
+- trekningen (reglene for sammen, ikke sammen, foran og bak, låste og sperrede pulter, nye naboer), importen av klasselister og gruppeinndelingen
+- dialogene, lagring per rom, lagrede kart og mobilvisningen
+- konto, «Forbli innlogget» og deling av rom, mot en etterligning av Supabase (`tester/falsk-supabase.js`)
+- sikkerhet og tilgjengelighet: Content-Security-Policy, ondsinnede data, navn for skjermlesere og tastaturbruk
+- at ingen skript avhenger av et som lastes senere
+
+Trekningen er tilfeldig, så reglene sjekkes over mange trekninger. Skjermbilder lagres i `tester/skjermbilder/`. Tilgangsreglene i databasen og det ekte Supabase-prosjektet testes ikke her.

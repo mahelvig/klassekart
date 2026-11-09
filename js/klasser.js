@@ -499,11 +499,17 @@ function lesKlasseliste(tekst) {
     }
   }
   if (!forslag) {
+    /* Første linje kan være en overskrift med klassenavnet. Men ikke når
+       den er en kolonneoverskrift («Nr Navn Klasse») eller en av elevene:
+       da ville et fullt elevnavn blitt foreslått som navn på klassen. */
     const forste = alle.find((l) => l && !/^\d/.test(l));
     if (
       forste &&
       forste.length < 40 &&
-      !elever.some((e) => e.navn === forste)
+      !forste.includes('\t') &&
+      !erSoppel(forste) &&
+      !forste.split(/\s+/).every(erSoppel) &&
+      !elever.some((e) => forste.includes(e.navn) || e.navn.includes(forste))
     )
       forslag = forste;
   }
