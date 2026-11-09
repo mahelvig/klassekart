@@ -389,6 +389,77 @@ async function sjekkSikkerhet(nettleser, url, feil) {
   await s.click('.klassekort:has-text("Angrep")');
   await s.click('#kart .plass >> nth=0');
   sjekk(!(await s.evaluate(() => window.angrepet)), 'klassen fra kopien kan åpnes uten at noe kjøres');
+
+  // rom deles ukryptert med hele skolen: et rom som ikke er rader med små
+  // heltall, tas bort i stedet for å tegnes
+  const rom = await s.evaluate(() => {
+    D.rom.MangeRader = { rader: Array.from({ length: 5000 }, () => [0]), sperret: [] };
+    D.rom.Kjempestort = { rader: [[1e9]], sperret: [] };
+    D.rom.Tekst = { rader: [[2, 'x']], sperret: [] };
+    D.rom.IkkeLister = { rader: [2, 3], sperret: [] };
+    D.rom.Greit = { rader: [[2, 2]], sperret: [7, '0-0-1'] };
+    normaliser();
+    tegn();
+    return Object.keys(D.rom).sort().join(',') + ' ' + JSON.stringify(D.rom.Greit.sperret);
+  });
+  sjekk(
+    rom === 'Greit,Standardrom ["0-0-1"]',
+    'ugyldige rom tas bort, og gyldige beholdes' + (rom === 'Greit,Standardrom ["0-0-1"]' ? '' : ': ' + rom),
+  );
+}
+
+/* ---- 4b. Tilgjengelighet ---- */
+async function sjekkTilgjengelighet(nettleser, url, feil) {
+  console.log('Tilgjengelighet');
+  const s = await nySide(nettleser, url, { viewport: { width: 1200, height: 800 } }, feil);
+  await klasseMedElever(s, 'click');
+  // navnet skjermlesere får: synlig tekst, aria-label eller en label
+  const utenNavn = (velger) =>
+    s.$$eval(velger, (x) =>
+      x.filter((e) => !(e.getAttribute('aria-label') || (e.labels && e.labels.length) || e.textContent.trim()))
+        .length,
+    );
+  const tomme = await s.$$eval('#kart .plass.tom', (x) => x.length);
+  sjekk(
+    tomme > 0 && (await utenNavn('#kart .plass')) === 0,
+    `alle pulter har et navn for skjermlesere, også de ${tomme} ledige`,
+  );
+  sjekk(
+    (await s.getAttribute('#kart .plass.tom >> nth=0', 'aria-label')).startsWith('Ledig pult, '),
+    'en ledig pult leses opp som «Ledig pult» med radnummer',
+  );
+  await s.click('#elevliste .elevrad .knapp.liten >> nth=0');
+  await s.click('#kart .plass >> nth=0');
+  const lister = await s.$$eval('.regelboks select, .popup select', (x) =>
+    x.map((e) => e.getAttribute('aria-label') || ''),
+  );
+  sjekk(
+    lister.length === 3 && lister.every(Boolean),
+    'nedtrekkslistene i reglene og på pulten har navn' +
+      (lister.length === 3 && lister.every(Boolean) ? '' : ': ' + JSON.stringify(lister)),
+  );
+  await s.keyboard.press('Escape');
+
+  // med tastatur: «Hopp til kartet» kommer før elevlisten og går til Trekk
+  await s.evaluate(() => {
+    document.activeElement.blur();
+    window.scrollTo(0, 0);
+  });
+  let trykk = 0;
+  while (trykk < 6 && !(await s.evaluate(() => document.activeElement.id === 'hoppTilKart'))) {
+    await s.keyboard.press('Tab');
+    trykk++;
+  }
+  const synlig = await s.evaluate(() => {
+    const r = document.getElementById('hoppTilKart').getBoundingClientRect();
+    return r.left >= 0 && r.top >= 0 && r.width > 0;
+  });
+  sjekk(trykk <= 3 && synlig, `«Hopp til kartet» nås med ${trykk} trykk på Tab og vises da`);
+  await s.keyboard.press('Enter');
+  sjekk(
+    await s.evaluate(() => document.activeElement.id === 'trekk'),
+    '«Hopp til kartet» flytter fokus til «Trekk plassering»',
+  );
 }
 
 /* ---- 5. Mobil ---- */
@@ -588,6 +659,36 @@ async function sjekkInnlogging(nettleser, url, feil) {
   sjekk((await hvorErVi(s)) === 'klassene', 'innlogging uten «Forbli innlogget» virker');
   await s.reload();
   sjekk((await hvorErVi(s)) === 'innlogging', 'uten «Forbli innlogget» spørres det om passord neste gang');
+
+  /* Glemt passord uten gjenopprettingskode («start på nytt»): klassene bare
+     læreren var med i, slettes, og delte klasser forlates. Før ble de
+     liggende i databasen uten at noen kunne åpne eller slette dem. */
+  const DB = 'falsk-supabase:db';
+  await s.evaluate((navn) => {
+    const d = JSON.parse(localStorage.getItem(navn));
+    const meg = d.brukere['larer@osloskolen.no'].id;
+    d.tabeller.klasser.push({ id: 'delt', data: 'x', versjon: 1, opprettet_av: meg });
+    d.tabeller.klassemedlemmer.push(
+      { klasse_id: 'delt', bruker_id: meg, nokkel: 'n' },
+      { klasse_id: 'delt', bruker_id: 'kollega', nokkel: 'n' },
+    );
+    localStorage.setItem(navn, JSON.stringify(d));
+  }, DB);
+  const foer = await s.evaluate((navn) => JSON.parse(localStorage.getItem(navn)).tabeller.klasser.length, DB);
+  const kode = await s.evaluate(() => passordEtterGlemt('', true, 'et helt nytt passord'));
+  const etter = await s.evaluate((navn) => {
+    const t = JSON.parse(localStorage.getItem(navn)).tabeller;
+    return {
+      klasser: t.klasser.map((k) => k.id).join(','),
+      medlemmer: t.klassemedlemmer.map((m) => m.klasse_id + ':' + m.bruker_id).join(','),
+    };
+  }, DB);
+  sjekk(/^[A-Z0-9]{4}(-[A-Z0-9]{4})+$/.test(kode || ''), '«start på nytt» uten kode gir en ny gjenopprettingskode');
+  sjekk(
+    foer >= 2 && etter.klasser === 'delt' && etter.medlemmer === 'delt:kollega',
+    '«start på nytt» sletter egne klasser og forlater delte' +
+      (etter.klasser === 'delt' && etter.medlemmer === 'delt:kollega' ? '' : ': ' + JSON.stringify({ foer, ...etter })),
+  );
 }
 
 (async () => {
@@ -602,6 +703,7 @@ async function sjekkInnlogging(nettleser, url, feil) {
     await sjekkLagring(nettleser, url, feil);
     await sjekkLagredeKart(nettleser, url, feil);
     await sjekkSikkerhet(nettleser, url, feil);
+    await sjekkTilgjengelighet(nettleser, url, feil);
     await sjekkMobil(nettleser, url, feil);
     await sjekkInnlogging(nettleser, url, feil);
   } catch (err) {

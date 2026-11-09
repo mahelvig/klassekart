@@ -131,6 +131,23 @@ end $$;
 
 alter table public.rom alter column skole set default public.min_skole();
 
+-- Skolen på profilen må stå i skolelisten. sett_skole() sørger for det, men
+-- profilen kan også endres direkte gjennom API-et, så regelen må ligge her.
+create or replace function public.sjekk_skole() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.skole is not null
+     and not exists (select 1 from skoleliste s where s.navn = new.skole) then
+    raise exception 'Skolen finnes ikke i listen ennå. Send e-post til hvemsitterhvor@gmail.com, så blir den lagt til.';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists klassekart_sjekk_skole on public.profiler;
+create trigger klassekart_sjekk_skole
+  before insert or update of skole on public.profiler
+  for each row execute function public.sjekk_skole();
+
 -- Hvem er med i klassene jeg selv er med i?
 create or replace function public.medlemmer_i(p_klasser uuid[])
 returns table (klasse_id uuid, bruker_id uuid, epost text)
@@ -259,7 +276,11 @@ create trigger klassekart_klassegrenser
 -- 5c. Grenser for rom
 --     Rommene deles med hele skolen, så grensen gjelder per skole: maks 100 rom
 --     per skole og 100 pulter per rom. Må stemme med MAKS_ROM og MAKS_PULTER
---     i index.html.
+--     i js/klasser.js.
+--     Rom lagres ukryptert og åpnes av alle på skolen. Derfor kontrolleres også
+--     formen: rader er lister med hele tall, og sperrede pulter er pultnøkler
+--     som «2-0-1». Uten det kunne ett rom med svært mange tomme rader gjøre
+--     siden treg for alle.
 -- ============================================================
 create or replace function public.sjekk_romgrenser() returns trigger
 language plpgsql security definer set search_path = public as $$
@@ -270,13 +291,38 @@ begin
      and (select count(*) from rom where skole = new.skole) >= 100 then
     raise exception 'Skolen har nådd grensen på 100 rom. Send e-post til hvemsitterhvor@gmail.com hvis dere trenger flere rom.';
   end if;
-  if jsonb_typeof(new.rader) <> 'array' or jsonb_typeof(new.sperret) <> 'array'
-     or length(new.navn) > 50 then
+  if tg_op = 'UPDATE' then
+    -- Bare den som laget rommet, kan slette det, så ingen andre kan gjøre seg
+    -- til eier. (Slettes kontoen til eieren, settes feltet til null.)
+    if new.opprettet_av is not null and new.opprettet_av is distinct from old.opprettet_av then
+      new.opprettet_av := old.opprettet_av;
+    end if;
+    -- Uendret innhold kontrolleres ikke på nytt
+    if new.navn = old.navn and new.rader = old.rader and new.sperret = old.sperret then
+      return new;
+    end if;
+  end if;
+  if length(new.navn) > 50
+     or jsonb_typeof(new.rader) <> 'array' or jsonb_array_length(new.rader) > 100
+     or jsonb_typeof(new.sperret) <> 'array' or jsonb_array_length(new.sperret) > 100 then
     raise exception 'Ugyldig rom';
   end if;
-  select coalesce(sum(v::integer), 0) into pulter
-  from jsonb_array_elements(new.rader) r, jsonb_array_elements_text(r) v;
-  if pulter > 100 or jsonb_array_length(new.sperret) > 100 then
+  if exists (select 1 from jsonb_array_elements(new.rader) r
+             where jsonb_typeof(r) <> 'array' or jsonb_array_length(r) > 100) then
+    raise exception 'Ugyldig rom';
+  end if;
+  if exists (select 1 from jsonb_array_elements(new.rader) r, jsonb_array_elements(r) v
+             where jsonb_typeof(v) <> 'number' or v::text !~ '^[0-9]{1,3}$') then
+    raise exception 'Ugyldig rom';
+  end if;
+  if exists (select 1 from jsonb_array_elements(new.sperret) v
+             where jsonb_typeof(v) <> 'string'
+                or (v #>> '{}') !~ '^[0-9]{1,3}-[0-9]{1,3}-[0-9]{1,3}$') then
+    raise exception 'Ugyldig rom';
+  end if;
+  select coalesce(sum(v::text::integer), 0) into pulter
+  from jsonb_array_elements(new.rader) r, jsonb_array_elements(r) v;
+  if pulter > 100 then
     raise exception 'Et rom kan ha opptil 100 pulter. Send e-post til hvemsitterhvor@gmail.com hvis du trenger flere pulter i et rom.';
   end if;
   return new;
@@ -284,8 +330,36 @@ end $$;
 
 drop trigger if exists klassekart_romgrenser on public.rom;
 create trigger klassekart_romgrenser
-  before insert or update of navn, rader, sperret on public.rom
+  before insert or update of navn, rader, sperret, opprettet_av on public.rom
   for each row execute function public.sjekk_romgrenser();
+
+
+-- ============================================================
+-- 5d. Klasser uten medlemmer
+--     Klassens nøkkel ligger bare i medlemskapene. Når det siste medlemmet
+--     forsvinner, kan ingen lenger lese eller slette klassen, så den fjernes.
+--     Det skjer blant annet når noen har glemt både passordet og
+--     gjenopprettingskoden og starter på nytt.
+-- ============================================================
+create or replace function public.rydd_tom_klasse() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  delete from klasser k
+  where k.id = old.klasse_id
+    and not exists (select 1 from klassemedlemmer m where m.klasse_id = k.id);
+  return null;
+end $$;
+
+drop trigger if exists klassekart_rydd_tom_klasse on public.klassemedlemmer;
+create trigger klassekart_rydd_tom_klasse
+  after delete on public.klassemedlemmer
+  for each row execute function public.rydd_tom_klasse();
+
+-- Klasser som ble liggende igjen før regelen over kom. En helt ny klasse er
+-- uten medlem i et øyeblikk mens den opprettes, så de ferskeste får stå.
+delete from public.klasser k
+where not exists (select 1 from public.klassemedlemmer m where m.klasse_id = k.id)
+  and k.endret < now() - interval '1 hour';
 
 
 -- ============================================================
