@@ -291,6 +291,21 @@ async function passordEtterGlemt(kode, utenKode, nytt) {
   const e = await sky.klient.auth.updateUser({ password: n.auth });
   if (e.error) throw e.error;
   skyFeil(await sky.klient.from('profiler').upsert(ny.rad));
+  /* Klasser bare vi var med i, kan ingen åpne igjen. De slettes, ellers
+     blir de liggende og teller mot grensen for antall klasser. Delte
+     klasser forlater vi. Databasen rydder også selv (rydd_tom_klasse), så
+     en feil her skal ikke stoppe resten. */
+  try {
+    const mine = skyFeil(
+      await sky.klient
+        .from('klassemedlemmer')
+        .select('klasse_id')
+        .eq('bruker_id', sky.id),
+    );
+    for (const m of mine) await fjernSkyklasse(m.klasse_id);
+  } catch (err) {
+    console.warn('Klarte ikke å rydde i gamle klasser', err);
+  }
   skyFeil(
     await sky.klient
       .from('klassemedlemmer')

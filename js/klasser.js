@@ -1025,10 +1025,33 @@ function slaaSammen(ny) {
 /* ============ brukere ============ */
 const gyldigId = (id) =>
   typeof id === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(id);
+/* Rom deles ukryptert med alle på skolen, og kan også komme fra en
+   sikkerhetskopi. Et rom skal være rader med grupper med et lite antall
+   pulter. Alt annet tas bort, så ikke ett rom kan gjøre siden treg eller
+   stoppe den. Databasen avviser slike rom (sjekk_romgrenser), men rom som
+   lå der fra før, og rom i kopier, må kontrolleres her. */
+const gyldigRom = (R) =>
+  !!R &&
+  Array.isArray(R.rader) &&
+  R.rader.length <= 100 &&
+  R.rader.every(
+    (rad) =>
+      Array.isArray(rad) &&
+      rad.length <= 100 &&
+      rad.every((n) => Number.isInteger(n) && n >= 0 && n <= 100),
+  ) &&
+  R.rader.flat().reduce((sum, n) => sum + n, 0) <= 1000;
 function normaliser() {
   if (!D.kart) D.kart = {};
   if (!D.klasser || !Object.keys(D.klasser).length)
     D.klasser = standarddata().klasser;
+  Object.keys(D.rom || {}).forEach((n) => {
+    const R = D.rom[n];
+    if (!gyldigRom(R)) return delete D.rom[n];
+    R.sperret = Array.isArray(R.sperret)
+      ? R.sperret.filter((k) => typeof k === 'string')
+      : [];
+  });
   if (!D.rom || !Object.keys(D.rom).length) D.rom = standarddata().rom;
   if (!D.aktiv || !D.klasser[D.aktiv.klasse])
     D.aktiv = {

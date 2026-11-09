@@ -386,6 +386,8 @@ function lagPlass(r, g, i) {
     } else {
       el.classList.add('tom');
       el.textContent = '';
+      // uten navn på pulten trenger skjermlesere en tekst
+      el.setAttribute('aria-label', 'Ledig pult, ' + (r + 1) + '. rad');
     }
     if (erLaast(k)) {
       el.classList.add('laast');
@@ -507,6 +509,7 @@ function apnePanel(k, el) {
       .map(([, v]) => v),
   );
   const velg = document.createElement('select');
+  velg.setAttribute('aria-label', 'Hvem sitter her');
   velg.innerHTML =
     '<option value="">— ledig —</option>' +
     elever()
@@ -988,6 +991,12 @@ function relasjon(e, felt) {
   if (e[felt].length) d.appendChild(brikker);
 
   const sel = document.createElement('select');
+  sel.setAttribute(
+    'aria-label',
+    (felt === 'sammen'
+      ? 'Legg til en elev som skal sitte ved siden av '
+      : 'Legg til en elev som ikke skal sitte ved siden av ') + e.navn,
+  );
   const andre = elever().filter(
     (x) => x.id !== e.id && !e[felt].includes(x.id),
   );
@@ -1088,6 +1097,14 @@ function settElevliste(vis) {
   } catch (err) {}
   tilpassBredde();
 }
+// tastatur: forbi elevlisten, til verktøylinjen som vises akkurat nå
+$('hoppTilKart').addEventListener('click', (e) => {
+  e.preventDefault();
+  const k = document.querySelector(
+    '.rom .verktoy:not([hidden]) button:not([disabled])',
+  );
+  if (k) k.focus();
+});
 vedKlikk('skjulElever', () => settElevliste(false));
 vedKlikk('visElever', () => settElevliste(true));
 try {
