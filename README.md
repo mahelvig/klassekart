@@ -14,7 +14,7 @@ Publisert på [hvemsitterhvor.no](https://hvemsitterhvor.no).
 ## Oppsett
 
 1. Kjør `klassekart-supabase.sql` i Supabase → SQL Editor (endre e-postdomenet øverst ved behov).
-2. Sett Supabase-adressen og den publiserbare nøkkelen i `SKY` i `js/oppsett.js`.
+2. Sett Supabase-adressen og den publiserbare nøkkelen i `SKY` i `js/oppsett.js`. Sett samme adresse i `Content-Security-Policy` øverst i `index.html`, ellers stopper nettleseren kontakten med Supabase.
 3. Publiser repoet, for eksempel med GitHub Pages, og legg adressen inn i Supabase under Authentication → URL Configuration.
 
 Den publiserbare nøkkelen er ment å ligge i nettsiden. Tilgangen styres av tilgangsreglene (RLS) i databasen.

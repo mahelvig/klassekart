@@ -77,6 +77,37 @@ function sjekkLasterekkefolge() {
 }
 
 /* ---- enkel filtjener for repoet ---- */
+/* ---- 1b. Content-Security-Policy ----
+   Adressene i CSP-en står også i skriptlenken nederst i index.html og i
+   js/oppsett.js. Stemmer de ikke, stopper nettleseren Supabase-biblioteket
+   eller all kontakt med Supabase, og da virker ikke innloggingen. */
+function sjekkCsp() {
+  console.log('Content-Security-Policy');
+  const les = (f) => fs.readFileSync(path.join(ROT, f), 'utf8');
+  const direktiver = (html) => {
+    const m = html.match(/http-equiv="Content-Security-Policy"\s+content="([^"]+)"/);
+    return Object.fromEntries(
+      (m ? m[1] : '').split(';').map((d) => d.trim().split(/\s+/)).map(([navn, ...verdier]) => [navn, verdier]),
+    );
+  };
+  const html = les('index.html');
+  const d = direktiver(html);
+  const skript = (html.match(/<script\s+src="(https:[^"]+)"/) || [])[1];
+  const prosjekt = (les('js/oppsett.js').match(/url:\s*'([^']+)'/) || [])[1];
+  const lik = (a, b) => JSON.stringify(a || []) === JSON.stringify(b);
+  sjekk(lik(d['default-src'], ["'none'"]), 'alt som ikke er nevnt, er stengt (default-src none)');
+  sjekk(
+    lik(d['script-src'], ["'self'", skript]),
+    'skript: bare siden selv og Supabase-biblioteket i versjonen siden laster',
+  );
+  sjekk(
+    (d['connect-src'] || []).includes(prosjekt) && d['connect-src'].every((a) => a.endsWith(new URL(prosjekt).host)),
+    'kontakt: bare Supabase-prosjektet fra js/oppsett.js',
+  );
+  const p = direktiver(les('personvern.html'));
+  sjekk(lik(p['default-src'], ["'none'"]) && !p['script-src'], 'personvernsiden tillater ingen skript');
+}
+
 const TYPER = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2',
@@ -94,12 +125,18 @@ function startTjener() {
   return new Promise((ok) => tjener.listen(0, () => ok(tjener)));
 }
 
+// nettleseren melder brudd på Content-Security-Policy som feil i konsollen
+function cspBrudd(m, feil) {
+  if (m.type() === 'error' && /Content Security Policy/.test(m.text()))
+    feil.push('CSP: ' + m.text().split('\n')[0].slice(0, 200));
+}
 async function nySide(nettleser, url, oppsett, feil) {
   const ctx = await nettleser.newContext(oppsett);
   // Supabase-skriptet fra CDN trengs ikke for å teste uten konto
   await ctx.route('https://cdn.jsdelivr.net/**', (r) => r.abort());
   const side = await ctx.newPage();
   side.on('pageerror', (e) => feil.push(e.message));
+  side.on('console', (m) => cspBrudd(m, feil));
   side.on('dialog', (d) => {
     feil.push('innebygd nettleserdialog: ' + d.message());
     d.dismiss();
@@ -416,6 +453,38 @@ async function sjekkSikkerhet(nettleser, url, feil) {
     rom === 'Greit,Standardrom ["0-0-1"]',
     'ugyldige rom tas bort, og gyldige beholdes' + (rom === 'Greit,Standardrom ["0-0-1"]' ? '' : ': ' + rom),
   );
+
+  // skulle noe likevel slippe forbi escapingen, stopper Content-Security-Policy det
+  const foer = feil.length;
+  const innsmuglet = await s.evaluate(async () => {
+    const d = document.createElement('div');
+    d.innerHTML = '<img src="favicon.svg" onload="window.innsmuglet = 1">';
+    document.body.appendChild(d);
+    const skript = document.createElement('script');
+    skript.textContent = 'window.innsmuglet = 2';
+    document.body.appendChild(skript);
+    const fremmed = document.createElement('script');
+    fremmed.src = 'https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js';
+    document.body.appendChild(fremmed);
+    let sendt = false;
+    try {
+      await fetch('https://example.com/', { mode: 'no-cors' });
+      sendt = true;
+    } catch (err) {}
+    await new Promise((ok) => setTimeout(ok, 300));
+    [d, skript, fremmed].forEach((e) => e.remove());
+    return { kjort: window.innsmuglet || 0, sendt };
+  });
+  await s.waitForTimeout(100);
+  // bruddene over er ventet: ta dem ut av feillisten, og tell dem
+  const nye = feil.splice(foer);
+  const meldt = nye.filter((t) => t.startsWith('CSP: ')).length;
+  feil.push(...nye.filter((t) => !t.startsWith('CSP: ')));
+  sjekk(
+    innsmuglet.kjort === 0 && !innsmuglet.sendt && meldt >= 4,
+    'innsmuglet skript kjøres ikke, og får ikke sendt noe ut' +
+      (innsmuglet.kjort === 0 && !innsmuglet.sendt && meldt >= 4 ? '' : ': ' + JSON.stringify({ ...innsmuglet, meldt })),
+  );
 }
 
 /* ---- 4b. Tilgjengelighet ---- */
@@ -595,6 +664,7 @@ async function sideMedFalskSky(nettleser, url, feil) {
   });
   const s = await ctx.newPage();
   s.on('pageerror', (e) => feil.push(e.message));
+  s.on('console', (m) => cspBrudd(m, feil));
   await s.goto(url);
   return s;
 }
@@ -761,6 +831,7 @@ async function sjekkInnlogging(nettleser, url, feil) {
 (async () => {
   fs.mkdirSync(BILDER, { recursive: true });
   sjekkLasterekkefolge();
+  sjekkCsp();
   const tjener = await startTjener();
   const url = `http://localhost:${tjener.address().port}/index.html`;
   const nettleser = await chromium.launch();
