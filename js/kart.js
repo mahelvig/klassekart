@@ -296,7 +296,10 @@ function settRomModus(paa) {
   if (paa && D.aktiv.rom === STANDARDROM) return;
   if (paa && malerModus) settMalerModus(false);
   if (paa && !romBilde) romBilde = tattRomBilde();
-  if (!paa) romBilde = null;
+  if (!paa) {
+    romBilde = null;
+    kopiertFra = null;
+  }
   romModus = paa;
   lukkPanel();
   $('verktoy').hidden = paa;
@@ -740,7 +743,14 @@ let apenElev = null;
 
 function tegnPanel() {
   const sel = $('velgRom');
-  fyll(sel, Object.keys(D.rom).sort(sammenlign), D.aktiv.rom);
+  // en kopi som er helt lik originalen, vises ikke (se «kopier av rom»)
+  fyll(
+    sel,
+    Object.keys(D.rom)
+      .filter((n) => n === D.aktiv.rom || !likKopiAv(n))
+      .sort(sammenlign),
+    D.aktiv.rom,
+  );
   const nytt = document.createElement('option');
   nytt.value = '';
   nytt.textContent = '+ Nytt rom …';

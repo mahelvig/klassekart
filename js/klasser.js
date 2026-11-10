@@ -774,13 +774,117 @@ vedKlikk('endreRom', () => {
   if (D.aktiv.rom === STANDARDROM) return lagKopiAvStandardrom();
   settRomModus(true);
 });
-vedKlikk('romFerdig', () => settRomModus(false));
+vedKlikk('romFerdig', () => {
+  const kopi = kopiertFra;
+  settRomModus(false);
+  forkastLikKopi(kopi);
+});
 vedKlikk('romAvbryt', () => {
-  const bilde = romBilde;
+  const bilde = romBilde,
+    kopi = kopiertFra;
   settRomModus(false);
   if (bilde) gjenopprettRomBilde(bilde);
   tegn();
+  forkastLikKopi(kopi);
 });
+
+/* ---- kopier av rom ----
+   Rommene deles med hele skolen. En kopi som er helt lik rommet den er
+   laget av, er bare støy i alles romliste, og oppstår lett ved at noen tror
+   kopiknappen er slik man lagrer. Derfor:
+   - en ny kopi som fortsatt er lik originalen når redigeringen avsluttes,
+     blir ikke tatt vare på
+   - eldre kopier («B312 (kopi)») som er like originalen, skjules i
+     romlisten, klassene flyttes til originalen, og kopien slettes til slutt
+     av den som laget den */
+let kopiertFra = null; // rommet kopien i redigering er laget av
+const harRom = (n) => Object.hasOwn(D.rom, n);
+const sammeOppsett = (a, b) =>
+  JSON.stringify(a.rader) === JSON.stringify(b.rader) &&
+  JSON.stringify((a.sperret || []).slice().sort()) ===
+    JSON.stringify((b.sperret || []).slice().sort());
+// rommet n er en lik kopi av: «B312 (kopi)» → «B312», ellers null
+function likKopiAv(n) {
+  const m = /^(.*\S)\s*\(kopi\)$/.exec(n);
+  if (!m || !harRom(n) || !harRom(m[1])) return null;
+  return sammeOppsett(D.rom[n], D.rom[m[1]]) ? m[1] : null;
+}
+/* Flytter alt som viser til rommet fra, over til rommet til. Pultene er de
+   samme, så plasseringene gjelder som de står. */
+function flyttRomvisninger(fra, til) {
+  Object.entries(D.klasser).forEach(([klassenavn, k]) => {
+    const sistDer = k.sist && k.sist.rom === fra;
+    if (sistDer) k.sist.rom = til;
+    if (!k.romkart || !k.romkart[fra]) return;
+    const fraKopi = k.romkart[fra],
+      fraOriginal = k.romkart[til];
+    delete k.romkart[fra];
+    if (!fraOriginal) return (k.romkart[til] = fraKopi);
+    /* Klassen har en plassering i begge rommene. Den som sist var i bruk,
+       blir stående, og den andre tas vare på som et lagret kart. */
+    const [vinner, taper, taperRom] = sistDer
+      ? [fraKopi, fraOriginal, til]
+      : [fraOriginal, fraKopi, fra];
+    k.romkart[til] = vinner;
+    if (avtrykk(taper.plasser) === avtrykk(vinner.plasser)) return;
+    const naa = new Date().toISOString();
+    let n = klassenavn + ' · ' + naa;
+    while (D.kart[n]) n += '+';
+    D.kart[n] = {
+      klasse: klassenavn,
+      rom: til,
+      plasser: taper.plasser || {},
+      laaste: taper.laaste || [],
+      farger: taper.farger || {},
+      endret: naa,
+      navn: 'Fra ' + taperRom,
+    };
+  });
+  Object.values(D.kart).forEach((x) => {
+    if (x.rom === fra) x.rom = til;
+  });
+  if (D.aktiv.rom === fra) D.aktiv.rom = til;
+}
+function forkastLikKopi(original) {
+  const kopi = D.aktiv.rom;
+  if (!original || kopi === original || !harRom(original) || !harRom(kopi))
+    return;
+  if (!sammeOppsett(D.rom[kopi], D.rom[original])) return;
+  huskOppsett();
+  flyttRomvisninger(kopi, original);
+  delete D.rom[kopi];
+  hentRomkart();
+  tegn();
+  visBeskjed(
+    'Kopien var helt lik ' +
+      original +
+      ', så den ble ikke tatt vare på. Du står i ' +
+      original +
+      '.',
+  );
+}
+// kalles når dataene er hentet: klassene skal ikke stå i en lik kopi
+function flyttFraLikeKopier() {
+  Object.keys(D.rom).forEach((n) => {
+    let til = likKopiAv(n);
+    // en kopi av en kopi går helt til originalen
+    while (til && likKopiAv(til)) til = likKopiAv(til);
+    if (til) flyttRomvisninger(n, til);
+  });
+}
+/* Kopiene slettes ikke med en gang: en kollega kan ha en klasse i rommet,
+   og den flyttes først når kollegaen åpner siden. Uten konto er det ingen
+   andre å vente på. */
+const SLETT_LIKE_KOPIER_FRA = Date.parse('2026-12-10');
+function slettEgneLikeKopier(naa = Date.now()) {
+  if (iSky() && naa < SLETT_LIKE_KOPIER_FRA) return;
+  // finn alle først: en kopi av en kopi regnes ut fra rommet den er kopi av
+  Object.keys(D.rom)
+    .filter((n) => likKopiAv(n) && n !== D.aktiv.rom)
+    // bare den som laget rommet, kan slette det
+    .filter((n) => !iSky() || D.rom[n]._eier === sky.id)
+    .forEach((n) => delete D.rom[n]);
+}
 async function lagKopiAvStandardrom() {
   if (
     !(await bekreft(
@@ -804,6 +908,7 @@ async function lagKopiAvStandardrom() {
   D.rom[n] = { rader: kopi(R.rader), sperret: R.sperret.slice() };
   byttRom(n, true); // kopien har samme pulter, så elevene blir sittende
   settRomModus(true);
+  kopiertFra = STANDARDROM;
 }
 $('romnavn').addEventListener('change', (e) => {
   const nytt = e.target.value.trim();
@@ -832,11 +937,18 @@ $('romnavn').addEventListener('change', (e) => {
   tegn();
 });
 vedKlikk('dupliserRom', async () => {
+  const fra = D.aktiv.rom;
   const n = (
-    (await sporOm('Navn på det nye rommet', D.aktiv.rom + ' (kopi)')) ||
-    ''
-  ).trim();
-  if (!n) return;
+    (await sporOm(
+      'Kopien blir et eget rom som hele skolen ser. Gi den et navn som sier hva som er annerledes, for eksempel «' +
+        fra +
+        ' – hestesko».',
+      fra + ' – ',
+    )) || ''
+  )
+    .trim()
+    .replace(/\s*–$/, '');
+  if (!n || n === fra) return;
   if (D.rom[n])
     return visBeskjed(
       'Det finnes allerede et rom som heter ' + n + '.',
@@ -847,6 +959,7 @@ vedKlikk('dupliserRom', async () => {
   D.rom[n] = { rader: kopi(R.rader), sperret: R.sperret.slice() };
   D.aktiv.rom = n;
   romBilde = tattRomBilde();
+  kopiertFra = fra;
   tegn();
 });
 vedKlikk('slettRom', async () => {
