@@ -427,6 +427,8 @@ async function startLokal() {
     gamle.slice(1).forEach((d) => slaaSammen(d));
   }
   normaliser();
+  flyttFraLikeKopier();
+  slettEgneLikeKopier();
   angrestabel = [];
   $('angre').disabled = true;
   apenElev = null;

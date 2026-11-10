@@ -475,6 +475,7 @@ async function hentSky() {
     sky.nokler = nokler;
     sky.versjon = versjon;
     normaliser();
+    flyttFraLikeKopier();
     gjenopprett(D.aktiv.klasse);
     sky.lagret = {};
     Object.entries(D.klasser).forEach(([n, kl]) => {
@@ -493,6 +494,8 @@ async function hentSky() {
     Object.entries(D.rom).forEach(([n, R]) => {
       if (R._id) sky.romLagret[R._id] = romPakke(n, R);
     });
+    // etter at romLagret er satt, så slettingen også skjer i databasen
+    slettEgneLikeKopier();
     angrestabel = [];
     $('angre').disabled = true;
     apenElev = null;

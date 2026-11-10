@@ -928,6 +928,147 @@ async function sjekkLogikk(nettleser, url, feil) {
   resultat.forEach(([ok, tekst, detalj]) => sjekk(ok, tekst + (ok || !detalj ? '' : ': ' + detalj)));
 }
 
+/* ---- 4d. Kopier av rom ----
+   Rommene deles med skolen, og en kopi som er helt lik originalen, er bare
+   støy i alles romliste. */
+async function sjekkRomkopier(nettleser, url, feil) {
+  console.log('Kopier av rom');
+  const s = await nySide(nettleser, url, { viewport: { width: 1200, height: 800 } }, feil);
+  await klasseMedElever(s, 'click');
+  const tilstand = () =>
+    s.evaluate(() => ({
+      rom: D.aktiv.rom,
+      alle: Object.keys(D.rom).sort().join(','),
+      plassert: Object.keys(D.aktiv.plasser).length,
+      redigerer: romModus,
+    }));
+  const lagRom = () =>
+    s.evaluate(() => {
+      D.rom.B312 = { rader: Array.from({ length: 5 }, () => [2, 3, 2]), sperret: ['4-0-0'] };
+      byttRom('B312');
+      trekkPlassering();
+      settRomModus(true);
+    });
+  await lagRom();
+  sjekk(
+    (await s.textContent('#dupliserRom')).includes('Lag en kopi') &&
+      (await s.evaluate(() => !document.getElementById('romFerdig').parentElement.contains(document.getElementById('dupliserRom')))),
+    'kopiknappen heter ikke «Lagre», og står ikke sammen med Ferdig',
+  );
+
+  // en kopi uten endringer tas ikke vare på
+  await s.click('#dupliserRom');
+  await s.fill('#sporsmalSvar', 'B312 – prøve');
+  await s.click('#sporsmalOk');
+  const iRom = (navn) => s.waitForFunction((n) => D.aktiv.rom === n, navn, { timeout: 5000 }).then(() => true, () => false);
+  sjekk(await iRom('B312 – prøve'), 'kopien åpnes for redigering');
+  await s.click('#romFerdig');
+  let t = await tilstand();
+  sjekk(
+    t.rom === 'B312' && t.alle === 'B312,Standardrom' && t.plassert === 26 && !t.redigerer,
+    'Ferdig uten endringer: kopien forkastes, og klassen står i originalen med alle på plass' +
+      (t.rom === 'B312' && t.alle === 'B312,Standardrom' && t.plassert === 26 ? '' : ': ' + JSON.stringify(t)),
+  );
+  sjekk((await s.textContent('#beskjed')).includes('helt lik B312'), 'læreren får beskjed om at kopien var lik');
+
+  // det samme når redigeringen avbrytes
+  await s.evaluate(() => settRomModus(true));
+  await s.click('#dupliserRom');
+  await s.fill('#sporsmalSvar', 'B312 – prøve');
+  await s.click('#sporsmalOk');
+  await iRom('B312 – prøve');
+  await s.click('#romAvbryt');
+  t = await tilstand();
+  sjekk(t.rom === 'B312' && t.alle === 'B312,Standardrom', 'Avbryt: kopien forkastes også' + (t.alle === 'B312,Standardrom' ? '' : ': ' + JSON.stringify(t)));
+
+  // foreslått navn uten at noe er skrevet til: ingen kopi
+  await s.evaluate(() => settRomModus(true));
+  await s.click('#dupliserRom');
+  await s.click('#sporsmalOk');
+  await s.waitForTimeout(200);
+  t = await tilstand();
+  sjekk(t.rom === 'B312' && t.alle === 'B312,Standardrom', 'uten et eget navn lages det ingen kopi');
+
+  // en kopi som blir endret, beholdes
+  await s.click('#dupliserRom');
+  await s.fill('#sporsmalSvar', 'B312 – hestesko');
+  await s.click('#sporsmalOk');
+  await iRom('B312 – hestesko');
+  await s.evaluate(() => endreRom((S) => S[0][0].push(null)));
+  await s.click('#romFerdig');
+  t = await tilstand();
+  sjekk(
+    t.rom === 'B312 – hestesko' && t.alle === 'B312,B312 – hestesko,Standardrom',
+    'en kopi med et annet oppsett beholdes' + (t.rom === 'B312 – hestesko' ? '' : ': ' + JSON.stringify(t)),
+  );
+
+  // eldre kopier som er like originalen: skjules, og klassen flyttes
+  const etter = await s.evaluate(() => {
+    byttRom('B312');
+    D.rom['B312 (kopi)'] = { rader: kopi(D.rom.B312.rader), sperret: ['4-0-0'] };
+    D.rom['B312 (kopi) (kopi)'] = { rader: kopi(D.rom.B312.rader), sperret: ['4-0-0'] };
+    D.rom['Annet (kopi)'] = { rader: [[2, 2]], sperret: [] }; // ingen original
+    const iOriginalen = avtrykk(D.aktiv.plasser);
+    byttRom('B312 (kopi) (kopi)');
+    byttRom('B312 (kopi)');
+    trekkPlassering();
+    lagreKart('Uke 1', true);
+    const plasser = avtrykk(D.aktiv.plasser);
+    // slik det skjer når dataene hentes: flytt, og åpne så klassen
+    huskOppsett();
+    flyttFraLikeKopier();
+    gjenopprett(D.aktiv.klasse);
+    tegn();
+    return {
+      rom: D.aktiv.rom,
+      liste: [...document.getElementById('velgRom').options].map((o) => o.textContent).join(','),
+      sammePlasser: avtrykk(D.aktiv.plasser) === plasser,
+      kart: Object.values(D.kart).filter((x) => x.navn === 'Uke 1').map((x) => x.rom).join(','),
+      romkart: Object.keys(klasse().romkart).sort().join(','),
+      tattVarePaa: Object.values(D.kart).some((x) => x.navn === 'Fra B312' && x.rom === 'B312' && avtrykk(x.plasser) === iOriginalen),
+    };
+  });
+  sjekk(
+    etter.liste === 'Annet (kopi),B312,B312 – hestesko,Standardrom,+ Nytt rom …',
+    'like kopier står ikke i romlisten' + (etter.liste.startsWith('Annet (kopi),B312,B312 – hestesko,Standardrom') ? '' : ': ' + etter.liste),
+  );
+  sjekk(
+    etter.rom === 'B312' && etter.sammePlasser && etter.kart === 'B312' && !etter.romkart.includes('(kopi)'),
+    'klassens plassering og lagrede kart er flyttet fra kopien til originalen' +
+      (etter.rom === 'B312' && etter.sammePlasser && etter.kart === 'B312' ? '' : ': ' + JSON.stringify(etter)),
+  );
+  sjekk(etter.tattVarePaa, 'plasseringen klassen hadde i originalen fra før, er tatt vare på som et lagret kart');
+
+  // uten konto slettes like kopier når siden åpnes; med konto venter den som
+  // laget rommet til kollegene har rukket å åpne siden
+  await s.evaluate(() => lager.skriv(LOKAL, D));
+  await s.reload();
+  await s.waitForSelector('#oversikt:not([hidden])');
+  const lokalt = await s.evaluate(() => Object.keys(D.rom).sort().join(','));
+  sjekk(
+    lokalt === 'Annet (kopi),B312,B312 – hestesko,Standardrom',
+    'uten konto er de like kopiene slettet neste gang siden åpnes' + (lokalt.includes('B312 (kopi)') ? ': ' + lokalt : ''),
+  );
+  const medKonto = await s.evaluate(() => {
+    const prov = (naa, eier) => {
+      D.rom['B312 (kopi)'] = { rader: kopi(D.rom.B312.rader), sperret: ['4-0-0'], _id: 'x', _eier: eier };
+      sky.klar = true;
+      sky.id = 'meg';
+      slettEgneLikeKopier(Date.parse(naa));
+      sky.klar = false;
+      const finnes = Object.hasOwn(D.rom, 'B312 (kopi)');
+      delete D.rom['B312 (kopi)'];
+      return finnes;
+    };
+    return [prov('2026-12-09', 'meg'), prov('2026-12-11', 'meg'), prov('2026-12-11', 'kollega')];
+  });
+  sjekk(
+    medKonto.join() === 'true,false,true',
+    'med konto slettes kopien først etter 10. desember, og bare av den som laget den' +
+      (medKonto.join() === 'true,false,true' ? '' : ': ' + medKonto.join()),
+  );
+}
+
 /* ---- 5. Mobil ---- */
 async function sjekkMobil(nettleser, url, feil) {
   console.log('Mobil (iPhone 13)');
@@ -1230,6 +1371,7 @@ async function sjekkInnlogging(nettleser, url, feil) {
     await sjekkSikkerhet(nettleser, url, feil);
     await sjekkTilgjengelighet(nettleser, url, feil);
     await sjekkLogikk(nettleser, url, feil);
+    await sjekkRomkopier(nettleser, url, feil);
     await sjekkMobil(nettleser, url, feil);
     await sjekkInnlogging(nettleser, url, feil);
   } catch (err) {

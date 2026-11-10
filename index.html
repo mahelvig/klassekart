@@ -230,9 +230,13 @@
             >Navn <input type="text" id="romnavn"
           /></label>
           <span class="status" id="plasstatus" style="margin: 0"></span>
-          <span class="grp" style="margin-left: auto">
-            <button class="knapp" id="dupliserRom">Lagre som nytt rom</button>
+          <!-- holdt unna Ferdig: endringene lagres av seg selv, og en kopi
+               skal ikke lages i den tro at det er slik man lagrer -->
+          <span class="grp">
+            <button class="knapp" id="dupliserRom">Lag en kopi av rommet …</button>
             <button class="knapp" id="slettRom">Slett rommet</button>
+          </span>
+          <span class="grp" style="margin-left: auto">
             <button class="knapp" id="romAvbryt">Avbryt</button>
             <button class="knapp hoved" id="romFerdig">Ferdig</button>
           </span>
