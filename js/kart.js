@@ -238,6 +238,7 @@ function endreRom(endring) {
   const flytt = (k) => ny[k];
   R.rader = rent.map((rad) => rad.map((g) => g.length));
   R.sperret = R.sperret.map(flytt).filter(Boolean);
+  D.aktiv.sperret = D.aktiv.sperret.map(flytt).filter(Boolean);
   const plasser = {};
   Object.entries(D.aktiv.plasser).forEach(([k, id]) => {
     if (ny[k]) plasser[ny[k]] = id;
@@ -265,6 +266,7 @@ function tattRomBilde() {
       plasser: kopi(a.plasser),
       laaste: kopi(a.laaste),
       farger: kopi(a.farger),
+      sperret: kopi(a.sperret),
     },
     kart: Object.fromEntries(
       Object.entries(D.kart).map(([n, k]) => [n, k.rom]),
@@ -410,7 +412,10 @@ function lagPlass(r, g, i) {
   el.addEventListener('click', (ev) => {
     ev.stopPropagation();
     if (visning) return;
-    if (romModus) sperrPult(k);
+    if (romModus)
+      visBeskjed(
+        'Sperring gjelder bare klassen, ikke rommet. Trykk «Ferdig», og trykk så på pulten for å sperre den.',
+      );
     else if (malerModus) malPult(k);
     else if (!beroring() || !trykkPult(k, el)) apnePanel(k, el);
   });
@@ -443,7 +448,7 @@ function visMelding(ekstra) {
   const ute = elever().filter((e) => !plassert.has(e.id));
   if (ute.length && plassert.size)
     linjer.unshift('Uten plass: ' + ute.map((e) => e.navn).join(', '));
-  const ledige = seter().length - rommet().sperret.length;
+  const ledige = seter().length - D.aktiv.sperret.length;
   if (ledige < elever().length)
     linjer.unshift(
       'Rommet har ' +
@@ -569,6 +574,7 @@ function apnePanel(k, el) {
   const bSperr = document.createElement('button');
   bSperr.className = 'knapp' + (sperret ? ' aktiv' : '');
   bSperr.textContent = sperret ? 'Åpne pulten' : 'Sperr pulten';
+  bSperr.title = 'Gjelder bare denne klassen i dette rommet';
   bSperr.addEventListener('click', () => {
     sperrPult(k);
     lukkPanel();
@@ -581,11 +587,12 @@ function apnePanel(k, el) {
   visPopup(boks, el, 'midt');
   velg.focus();
 }
+// sperringen gjelder klassen i dette rommet (se sperretI)
 function sperrPult(k) {
-  const R = rommet();
-  if (erSperret(k)) R.sperret = R.sperret.filter((x) => x !== k);
+  lagreAngre();
+  if (erSperret(k)) D.aktiv.sperret = D.aktiv.sperret.filter((x) => x !== k);
   else {
-    R.sperret = R.sperret.concat(k);
+    D.aktiv.sperret = D.aktiv.sperret.concat(k);
     delete D.aktiv.plasser[k];
     D.aktiv.laaste = D.aktiv.laaste.filter((x) => x !== k);
   }
@@ -766,23 +773,18 @@ function tegnPanel() {
     'Lagrede kart' + (antKart ? ' (' + antKart + ')' : '');
 
   if (romModus) {
-    const antall = seter().length,
-      sperret = rommet().sperret.length;
     $('plasstatus').textContent =
-      rommet().rader.length +
-      ' rader · ' +
-      (antall - sperret) +
-      ' pulter' +
-      (sperret ? ' (+' + sperret + ' sperret)' : '');
+      rommet().rader.length + ' rader · ' + seter().length + ' pulter';
     if (document.activeElement !== $('romnavn'))
       $('romnavn').value = D.aktiv.rom;
     const eier = rommet()._eier;
     $('slettRom').hidden = iSky() && eier && eier !== sky.id;
     $('romhjelp').textContent =
-      'Bruk − og + for pulter, og klikk på en pult for å sperre den.' +
+      'Bruk − og + for pulter.' +
       (iSky()
         ? ' Rommet deles med kollegene dine, så endringer gjelder for alle.'
-        : '');
+        : '') +
+      ' Pulter klassen ikke skal bruke, sperrer du etter at du har trykket «Ferdig». Det gjelder bare klassen.';
   }
 
   $('elevtelling').textContent = 'Elever (' + elever().length + ')';
@@ -1166,10 +1168,13 @@ const kartForKlasse = (auto) =>
     .sort((a, b) => (b[1].endret || '').localeCompare(a[1].endret || ''));
 const avtrykk = (p) => JSON.stringify(Object.entries(p || {}).sort());
 const sammePlasser = (a, b) => avtrykk(a) === avtrykk(b);
+const sammeSperring = (a, b) =>
+  JSON.stringify(a.slice().sort()) === JSON.stringify(b.slice().sort());
 const erDetteKartet = (x) =>
   x.rom === D.aktiv.rom &&
   sammePlasser(x.plasser, D.aktiv.plasser) &&
-  sammePlasser(x.farger || {}, D.aktiv.farger);
+  sammePlasser(x.farger || {}, D.aktiv.farger) &&
+  sammeSperring(sperretIKart(x), D.aktiv.sperret);
 const klokka = (d) =>
   d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
 function ukenavn(d = new Date()) {
@@ -1202,6 +1207,7 @@ function leggTilKart(navn, auto) {
     plasser: kopi(D.aktiv.plasser),
     laaste: D.aktiv.laaste.slice(),
     farger: kopi(D.aktiv.farger),
+    sperret: D.aktiv.sperret.slice(),
     endret: naa.toISOString(),
     navn,
   };
@@ -1286,6 +1292,7 @@ function apneKart(n) {
   D.aktiv.plasser = kopi(x.plasser);
   D.aktiv.laaste = (x.laaste || []).slice();
   D.aktiv.farger = kopi(x.farger || {});
+  D.aktiv.sperret = sperretIKart(x);
   D.aktiv.trukket = null;
   tegn();
   visBeskjed(
@@ -1332,7 +1339,7 @@ function tegnLagrede() {
     const navn = x.navn || 'Lagret kart';
     const rad = document.createElement('div');
     rad.className = 'lagret';
-    const mini = miniKart(x.rom, x.plasser, ids, x.farger);
+    const mini = miniKart(x.rom, x.plasser, ids, x.farger, sperretIKart(x));
     mini.setAttribute('aria-hidden', 'true');
     rad.appendChild(mini);
 

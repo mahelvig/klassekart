@@ -337,6 +337,7 @@ function klassePakke(n, k) {
         plasser: x.plasser,
         laaste: x.laaste,
         farger: x.farger,
+        sperret: x.sperret,
         endret: x.endret,
         navn: x.navn || null,
         auto: !!x.auto,

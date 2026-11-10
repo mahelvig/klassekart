@@ -560,7 +560,7 @@ async function sjekkLogikk(nettleser, url, feil) {
     const lagKlasse = (navn, rom = 'Standardrom') => {
       klasse().elever = navn.map((n, i) => nyElev(n, i % 2 ? 'g' : 'j'));
       klasse().historikk = [];
-      Object.assign(D.aktiv, { rom, plasser: {}, laaste: [], farger: {}, spre: false, nyeNaboer: true, makker: false });
+      Object.assign(D.aktiv, { rom, plasser: {}, laaste: [], farger: {}, sperret: [], spre: false, nyeNaboer: true, makker: false });
       return elever();
     };
     const nummerert = (n) => Array.from({ length: n }, (_, i) => 'E' + i);
@@ -706,13 +706,14 @@ async function sjekkLogikk(nettleser, url, feil) {
     t(flyttet === 0 && feilAntall2 === 0, 'låste elever blir sittende, og alle andre får plass rundt dem', { flyttet, feilAntall2 });
 
     // sperrede pulter, også helt foran der elevene ellers plasseres først
-    D.rom.Proverom = { rader: STD(), sperret: ['0-0-0', '0-0-1', '1-1-1'] };
+    D.rom.Proverom = { rader: STD(), sperret: [] };
     lagKlasse(nummerert(26), 'Proverom');
+    D.aktiv.sperret = ['0-0-0', '0-0-1', '1-1-1'];
     let paaSperret = 0,
       feilAntall3 = 0;
     for (let i = 0; i < 10; i++) {
       trekkPlassering();
-      if (rommet().sperret.some((k) => D.aktiv.plasser[k])) paaSperret++;
+      if (D.aktiv.sperret.some((k) => D.aktiv.plasser[k])) paaSperret++;
       if (!allePlassertEnGang(26)) feilAntall3++;
     }
     t(paaSperret === 0 && feilAntall3 === 0, 'ingen plasseres på en sperret pult, og alle får plass på de andre', { paaSperret, feilAntall3 });
@@ -1069,6 +1070,120 @@ async function sjekkRomkopier(nettleser, url, feil) {
   );
 }
 
+/* ---- 4e. Sperrede pulter ----
+   Lærerne sperrer pulter for å styre hvor klassen sitter. Sperringen hører
+   derfor til klassen i hvert rom, og ikke til rommet, som deles med skolen. */
+async function sjekkSperring(nettleser, url, feil) {
+  console.log('Sperrede pulter');
+  const s = await nySide(nettleser, url, { viewport: { width: 1200, height: 800 } }, feil);
+  await klasseMedElever(s, 'click');
+  const sperret = () => s.evaluate(() => D.aktiv.sperret.slice().sort().join(','));
+
+  // sperr to pulter fra pultpanelet, i et eget rom
+  await s.evaluate(() => {
+    D.rom.B312 = { rader: Array.from({ length: 5 }, () => [2, 3, 2]), sperret: [] };
+    byttRom('B312');
+    trekkPlassering();
+  });
+  for (const k of ['0-0-0', '0-0-1']) {
+    await s.click(`#kart .plass[data-k="${k}"]`);
+    await s.click('.popup .knapp:has-text("Sperr pulten")');
+  }
+  const etter = await s.evaluate(() => ({
+    rom: JSON.stringify(D.rom.B312.sperret),
+    plassert: Object.keys(D.aktiv.plasser).length,
+    paaSperret: ['0-0-0', '0-0-1'].filter((k) => D.aktiv.plasser[k]).length,
+  }));
+  sjekk(
+    (await sperret()) === '0-0-0,0-0-1' && etter.rom === '[]',
+    'sperring fra pulten lagres i klassen, ikke i rommet' + (etter.rom === '[]' ? '' : ': rommet har ' + etter.rom),
+  );
+  sjekk(
+    etter.paaSperret === 0 && etter.plassert === 24 && (await s.textContent('#melding')).includes('Uten plass'),
+    'elevene på pultene som sperres, mister plassen og står under «Uten plass»',
+    );
+  await s.evaluate(() => trekkPlassering());
+  sjekk(
+    await s.evaluate(() => !D.aktiv.plasser['0-0-0'] && !D.aktiv.plasser['0-0-1']),
+    'trekningen bruker ikke de sperrede pultene',
+  );
+
+  // Angre opphever en sperring
+  await s.click('#kart .plass[data-k="1-0-0"]');
+  await s.click('.popup .knapp:has-text("Sperr pulten")');
+  await s.click('#angre');
+  sjekk((await sperret()) === '0-0-0,0-0-1', 'Angre opphever en sperring');
+
+  // en annen klasse i samme rom har ingen sperrede pulter
+  await s.evaluate(() => {
+    huskOppsett();
+    D.klasser['3ME'] = { elever: ['Ola', 'Kari', 'Per'].map((n) => nyElev(n)), historikk: [] };
+    apneKlasse('3ME');
+    byttRom('B312');
+  });
+  sjekk((await sperret()) === '', 'en annen klasse i samme rom ser ingen sperrede pulter');
+  await s.evaluate(() => {
+    apneKlasse(Object.keys(D.klasser).find((n) => n !== '3ME'));
+    tegn();
+  });
+  sjekk((await sperret()) === '0-0-0,0-0-1', 'klassen får sperringene tilbake når den åpnes igjen');
+
+  // sperringen gjelder bare rommet den ble gjort i
+  await s.evaluate(() => byttRom('Standardrom'));
+  const iStandard = await sperret();
+  await s.evaluate(() => byttRom('B312'));
+  sjekk(iStandard === '' && (await sperret()) === '0-0-0,0-0-1', 'sperringen gjelder bare i rommet, og huskes der');
+
+  // et lagret kart tar med sperringene
+  await s.evaluate(() => {
+    lagreKart('Med sperring', true);
+    D.aktiv.sperret = [];
+    tegn();
+    apneKart(Object.keys(D.kart).find((n) => D.kart[n].navn === 'Med sperring'));
+  });
+  sjekk((await sperret()) === '0-0-0,0-0-1', 'et lagret kart gir sperringene det ble lagret med');
+
+  // klikk i romredigeringen sperrer ikke lenger, men forklarer hvor det gjøres
+  await s.evaluate(() => settRomModus(true));
+  await s.click('#kart .plass[data-k="2-0-0"]');
+  const forklart = (await s.textContent('#beskjed')).includes('bare klassen');
+  await s.click('#romFerdig');
+  sjekk(
+    forklart && (await sperret()) === '0-0-0,0-0-1' && (await s.evaluate(() => JSON.stringify(D.rom.B312.sperret))) === '[]',
+    'et klikk på en pult i romredigeringen sperrer ingenting, og forklarer hvor sperring gjøres',
+  );
+
+  // klasser fra før endringen: rommets sperringer gjelder for klasser som har
+  // brukt rommet, så kartene ser ut som før
+  const eldre = await s.evaluate(() => {
+    D.rom.C214 = { rader: Array.from({ length: 5 }, () => [2, 3, 2]), sperret: ['4-0-0', '4-0-1'] };
+    const k = klasse();
+    k.romkart.C214 = { plasser: { '0-0-0': k.elever[0].id }, laaste: [], farger: {} }; // uten sperret
+    D.klasser['3ME'].romkart = {};
+    const brukt = sperretI(k, 'C214').join(','),
+      ny = sperretI(D.klasser['3ME'], 'C214').join(',');
+    byttRom('C214');
+    return { brukt, ny, aktiv: D.aktiv.sperret.join(','), mini: miniKart('C214', {}, new Set(), {}, sperretI(k, 'C214')).querySelectorAll('.sperret').length };
+  });
+  sjekk(
+    eldre.brukt === '4-0-0,4-0-1' && eldre.aktiv === '4-0-0,4-0-1' && eldre.mini === 2,
+    'en klasse som har brukt rommet fra før, beholder rommets sperringer' + (eldre.aktiv === '4-0-0,4-0-1' ? '' : ': ' + JSON.stringify(eldre)),
+  );
+  sjekk(eldre.ny === '', 'en klasse som ikke har vært i rommet, starter uten sperringer');
+
+  // lokalt lagret data fra før: den åpne klassen beholder sperringene
+  const lokal = await s.evaluate(() => {
+    const gml = kopi(D);
+    delete gml.aktiv.sperret;
+    gml.rom.C214.sperret = ['4-0-0', '4-0-1'];
+    gml.aktiv.rom = 'C214';
+    D = gml;
+    normaliser();
+    return D.aktiv.sperret.join(',');
+  });
+  sjekk(lokal === '4-0-0,4-0-1', 'eldre lagret data uten sperring i klassen beholder rommets sperringer');
+}
+
 /* ---- 5. Mobil ---- */
 async function sjekkMobil(nettleser, url, feil) {
   console.log('Mobil (iPhone 13)');
@@ -1309,6 +1424,21 @@ async function sjekkInnlogging(nettleser, url, feil) {
   const v2 = await versjoner();
   sjekk(v1 === v2, 'klassene skrives ikke på nytt når ingenting er endret' + (v1 === v2 ? '' : `: ${v1} → ${v2}`));
   await s.click('.klassekort:not(.ny) >> nth=0');
+
+  // sperring med konto: lagres kryptert i klassen, og rommet hos skolen er urørt
+  const romISkyen = await s.evaluate(async () => {
+    sperrPult('0-0-0');
+    await tomSynk();
+    const d = JSON.parse(localStorage.getItem('falsk-supabase:db'));
+    return JSON.stringify(d.tabeller.rom.find((r) => r.navn === 'Rom 218').sperret);
+  });
+  await s.reload();
+  await hvorErVi(s);
+  await s.click('.klassekort:not(.ny) >> nth=0');
+  sjekk(
+    romISkyen === '[]' && (await s.evaluate(() => D.aktiv.rom === 'Rom 218' && D.aktiv.sperret.join() === '0-0-0')),
+    'med konto: sperringen følger klassen, og rommet kollegene ser, er uendret' + (romISkyen === '[]' ? '' : ': ' + romISkyen),
+  );
   await s.click('#tilKlasser');
 
   // logg ut: da skal nøkkelen være glemt
@@ -1372,6 +1502,7 @@ async function sjekkInnlogging(nettleser, url, feil) {
     await sjekkTilgjengelighet(nettleser, url, feil);
     await sjekkLogikk(nettleser, url, feil);
     await sjekkRomkopier(nettleser, url, feil);
+    await sjekkSperring(nettleser, url, feil);
     await sjekkMobil(nettleser, url, feil);
     await sjekkInnlogging(nettleser, url, feil);
   } catch (err) {
