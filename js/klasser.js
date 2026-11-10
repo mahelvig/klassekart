@@ -39,11 +39,12 @@ function naar(iso) {
     year: dager > 300 ? 'numeric' : undefined,
   });
 }
-function miniKart(romnavn, plasser, ids, farger) {
+function miniKart(romnavn, plasser, ids, farger, sperret) {
   const m = document.createElement('div');
   m.className = 'mini';
   const R = D.rom[romnavn];
   if (!R) return m;
+  const sp = sperret || [];
   const t = document.createElement('div');
   t.className = 'mini-tavle';
   m.appendChild(t);
@@ -58,13 +59,13 @@ function miniKart(romnavn, plasser, ids, farger) {
         const p = document.createElement('span');
         p.className =
           'mini-plass' +
-          (R.sperret.includes(k)
+          (sp.includes(k)
             ? ' sperret'
             : ids.has(plasser[k])
               ? ' full'
               : '');
         const f = (farger || {})[k];
-        if (Number.isInteger(f) && FARGER[f] && !R.sperret.includes(k))
+        if (Number.isInteger(f) && FARGER[f] && !sp.includes(k))
           p.style.cssText =
             'background:' +
             FARGER[f].hex +
@@ -138,7 +139,9 @@ function tegnOversikt() {
           )
         : '');
     apne.appendChild(tittel);
-    apne.appendChild(miniKart(romnavn, s.plasser || {}, ids, s.farger));
+    apne.appendChild(
+      miniKart(romnavn, s.plasser || {}, ids, s.farger, sperretI(k, romnavn)),
+    );
     apne.appendChild(info);
     apne.addEventListener('click', () => {
       apneKlasse(n);
@@ -1183,6 +1186,7 @@ function normaliser() {
       nyeNaboer: true,
       speil: false,
       farger: {},
+      sperret: [],
     };
   // et standardrom som er endret fra før (før det ble låst), settes tilbake
   const std = D.rom[STANDARDROM],
@@ -1195,6 +1199,9 @@ function normaliser() {
     Object.assign(std, fast);
   if (!D.rom[D.aktiv.rom]) D.aktiv.rom = Object.keys(D.rom)[0];
   if (!D.aktiv.farger) D.aktiv.farger = {};
+  // data fra før sperring hørte til klassen: rommets sperringer gjelder
+  if (!Array.isArray(D.aktiv.sperret))
+    D.aktiv.sperret = ((D.rom[D.aktiv.rom] || {}).sperret || []).slice();
   /* Data kan komme fra en klasse en kollega har delt, eller fra en
      sikkerhetskopi, og kan være laget for å lure appen. Elever med ugyldig
      ID tas bort, siden ID-er brukes i HTML. */

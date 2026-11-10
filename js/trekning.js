@@ -241,6 +241,7 @@ function lagreAngre() {
     plasser: kopi(D.aktiv.plasser),
     laaste: D.aktiv.laaste.slice(),
     farger: kopi(D.aktiv.farger),
+    sperret: D.aktiv.sperret.slice(),
   });
   if (angrestabel.length > 25) angrestabel.shift();
   $('angre').disabled = false;
@@ -256,6 +257,7 @@ function angre() {
   D.aktiv.plasser = f.plasser;
   D.aktiv.laaste = f.laaste;
   D.aktiv.farger = f.farger;
+  if (f.sperret) D.aktiv.sperret = f.sperret;
   $('angre').disabled = angrestabel.length === 0;
   tegn();
 }

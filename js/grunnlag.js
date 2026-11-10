@@ -96,6 +96,7 @@ function standarddata(medStartelever) {
       nyeNaboer: true,
       speil: false,
       farger: {},
+      sperret: [],
     },
   };
 }
@@ -108,8 +109,26 @@ const rommet = () =>
   D.rom[D.aktiv.rom] || { rader: [[2, 3, 2]], sperret: [] };
 const elever = () => klasse().elever;
 const elevMed = (id) => elever().find((e) => e.id === id) || null;
-const erSperret = (k) => rommet().sperret.includes(k);
+const erSperret = (k) => D.aktiv.sperret.includes(k);
 const erLaast = (k) => D.aktiv.laaste.includes(k);
+
+/* Sperrede pulter hører til klassen i hvert rom, ikke til rommet. Lærerne
+   sperrer pulter for å styre hvor klassen skal sitte, og før gjaldt det for
+   alle på skolen som brukte rommet. En klasse som har brukt rommet fra før,
+   får de sperringene rommet hadde, så kartet ser ut som før. En klasse som
+   ikke har vært i rommet, starter uten. */
+function sperretI(k, rom) {
+  const s =
+    (k.romkart || {})[rom] || (k.sist && k.sist.rom === rom ? k.sist : null);
+  if (s && Array.isArray(s.sperret)) return s.sperret.slice();
+  const R = Object.hasOwn(D.rom, rom) ? D.rom[rom] : null;
+  return s && R ? (R.sperret || []).slice() : [];
+}
+// sperringene et lagret kart ble laget med (eldre kart: rommets)
+const sperretIKart = (x) =>
+  Array.isArray(x.sperret)
+    ? x.sperret.slice()
+    : ((Object.hasOwn(D.rom, x.rom) && D.rom[x.rom].sperret) || []).slice();
 
 /* Hver klasse husker sitt pågående kart i hvert rom (romkart), og hvilket
    rom den sist var i (sist). Da sletter ikke et rombytte noe. Eldre data
@@ -123,14 +142,20 @@ function huskOppsett() {
     plasser: kopi(a.plasser),
     laaste: a.laaste.slice(),
     farger: kopi(a.farger),
+    sperret: a.sperret.slice(),
     trukket: a.trukket || null,
   };
   k.romkart = k.romkart || {};
-  if (Object.keys(a.plasser).length || Object.keys(a.farger).length)
+  if (
+    Object.keys(a.plasser).length ||
+    Object.keys(a.farger).length ||
+    a.sperret.length
+  )
     k.romkart[a.rom] = {
       plasser: kopi(a.plasser),
       laaste: a.laaste.slice(),
       farger: kopi(a.farger),
+      sperret: a.sperret.slice(),
       trukket: a.trukket || null,
     };
   else delete k.romkart[a.rom];
@@ -148,6 +173,7 @@ function hentRomkart() {
   });
   D.aktiv.laaste = (s.laaste || []).slice();
   D.aktiv.farger = kopi(s.farger || {});
+  D.aktiv.sperret = sperretI(k, D.aktiv.rom);
   // avtrykket av siste trekning: er kartet urørt siden, trengs ingen kopi
   D.aktiv.trukket = s.trukket || null;
 }
@@ -231,10 +257,11 @@ function ryddPlasser() {
   Object.keys(D.aktiv.plasser).forEach((k) => {
     if (!gyldige.has(k)) delete D.aktiv.plasser[k];
   });
+  D.aktiv.sperret = D.aktiv.sperret.filter((k) => gyldige.has(k));
   D.aktiv.laaste = D.aktiv.laaste.filter(
     (k) => gyldige.has(k) && !erSperret(k),
   );
-  rommet().sperret.forEach((k) => delete D.aktiv.plasser[k]);
+  D.aktiv.sperret.forEach((k) => delete D.aktiv.plasser[k]);
   Object.keys(D.aktiv.farger).forEach((k) => {
     if (!gyldige.has(k) || erSperret(k)) delete D.aktiv.farger[k];
   });
