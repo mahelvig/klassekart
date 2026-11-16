@@ -194,6 +194,16 @@ async function sjekkDialoger(nettleser, url, feil) {
   await s.waitForTimeout(200);
   sjekk((await s.textContent('#tittel')).includes('9B'), 'Enter lager klassen 9B');
 
+  // logoen og navnet øverst tar deg til klasseoversikten, uten å laste siden på nytt
+  await s.evaluate(() => (window.__sammeSide = true));
+  await s.click('#tilStart');
+  sjekk(
+    (await s.isVisible('#oversikt')) && !(await s.isVisible('.app')) && (await s.evaluate(() => window.__sammeSide)),
+    'klikk på logoen viser klasseoversikten',
+  );
+  await s.click('.klassekort:has-text("9B")');
+  sjekk(await s.isVisible('.app'), 'klassen åpnes igjen fra oversikten');
+
   await s.click('#tilKlasser');
   await s.click('.klassekort.ny');
   await s.fill('#sporsmalSvar', '9B');
@@ -520,7 +530,8 @@ async function sjekkTilgjengelighet(nettleser, url, feil) {
   );
   await s.keyboard.press('Escape');
 
-  // med tastatur: «Hopp til kartet» kommer før elevlisten og går til Trekk
+  // med tastatur: «Hopp til kartet» kommer før elevlisten og går til Trekk.
+  // Før den ligger bare toppen: logoen, «← Alle klasser» og kontoknappen.
   await s.evaluate(() => {
     document.activeElement.blur();
     window.scrollTo(0, 0);
@@ -534,7 +545,7 @@ async function sjekkTilgjengelighet(nettleser, url, feil) {
     const r = document.getElementById('hoppTilKart').getBoundingClientRect();
     return r.left >= 0 && r.top >= 0 && r.width > 0;
   });
-  sjekk(trykk <= 3 && synlig, `«Hopp til kartet» nås med ${trykk} trykk på Tab og vises da`);
+  sjekk(trykk <= 4 && synlig, `«Hopp til kartet» nås med ${trykk} trykk på Tab og vises da`);
   await s.keyboard.press('Enter');
   sjekk(
     await s.evaluate(() => document.activeElement.id === 'trekk'),

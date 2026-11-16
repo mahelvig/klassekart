@@ -151,6 +151,12 @@ code {
   letter-spacing: -0.01em;
   margin: 0;
   white-space: nowrap;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 6px;
+}
+.merke:hover .merkenavn {
+  text-decoration: underline;
 }
 .tilbake {
   font-size: 14px;
