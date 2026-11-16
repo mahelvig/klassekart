@@ -530,7 +530,8 @@ async function sjekkTilgjengelighet(nettleser, url, feil) {
   );
   await s.keyboard.press('Escape');
 
-  // med tastatur: «Hopp til kartet» kommer før elevlisten og går til Trekk
+  // med tastatur: «Hopp til kartet» kommer før elevlisten og går til Trekk.
+  // Før den ligger bare toppen: logoen, «← Alle klasser» og kontoknappen.
   await s.evaluate(() => {
     document.activeElement.blur();
     window.scrollTo(0, 0);
@@ -544,7 +545,7 @@ async function sjekkTilgjengelighet(nettleser, url, feil) {
     const r = document.getElementById('hoppTilKart').getBoundingClientRect();
     return r.left >= 0 && r.top >= 0 && r.width > 0;
   });
-  sjekk(trykk <= 3 && synlig, `«Hopp til kartet» nås med ${trykk} trykk på Tab og vises da`);
+  sjekk(trykk <= 4 && synlig, `«Hopp til kartet» nås med ${trykk} trykk på Tab og vises da`);
   await s.keyboard.press('Enter');
   sjekk(
     await s.evaluate(() => document.activeElement.id === 'trekk'),
