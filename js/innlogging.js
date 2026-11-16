@@ -3,6 +3,13 @@
 
 /* ============ kontomeny ============ */
 vedKlikk('tilKlasser', visOversikt);
+// logoen og navnet øverst tar deg også til klasseoversikten
+$('tilStart').addEventListener('click', (e) => {
+  // Ctrl/Cmd/Shift-klikk og midtklikk åpner som vanlig lenke
+  if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault();
+  visOversikt();
+});
 vedKlikk('kontoKnapp', () =>
   apneMeny(
     $('kontoKnapp'),

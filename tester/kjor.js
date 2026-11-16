@@ -194,6 +194,16 @@ async function sjekkDialoger(nettleser, url, feil) {
   await s.waitForTimeout(200);
   sjekk((await s.textContent('#tittel')).includes('9B'), 'Enter lager klassen 9B');
 
+  // logoen og navnet øverst tar deg til klasseoversikten, uten å laste siden på nytt
+  await s.evaluate(() => (window.__sammeSide = true));
+  await s.click('#tilStart');
+  sjekk(
+    (await s.isVisible('#oversikt')) && !(await s.isVisible('.app')) && (await s.evaluate(() => window.__sammeSide)),
+    'klikk på logoen viser klasseoversikten',
+  );
+  await s.click('.klassekort:has-text("9B")');
+  sjekk(await s.isVisible('.app'), 'klassen åpnes igjen fra oversikten');
+
   await s.click('#tilKlasser');
   await s.click('.klassekort.ny');
   await s.fill('#sporsmalSvar', '9B');
