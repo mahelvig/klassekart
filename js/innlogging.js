@@ -137,11 +137,13 @@ $('stegInn').addEventListener('submit', async (ev) => {
       }
     }
     innStatus('Logger inn og låser opp klassene …');
+    const forrigeId = sky.id;
     const kode = await loggInn(epost, pw);
     $('innPassord').value = '';
     $('innGjenta').value = '';
     innStatus('');
-    if (kode) visKode(kode);
+    if (sky.utlogget) await oktTilbake(forrigeId);
+    else if (kode) visKode(kode);
     else await startSky();
   } catch (err) {
     console.error(err);
@@ -480,6 +482,8 @@ async function laasOppAutomatisk(sesjon) {
   sky.klient = window.supabase.createClient(SKY.url, SKY.nokkel);
   sky.klient.auth.onAuthStateChange((hendelse) => {
     if (hendelse === 'PASSWORD_RECOVERY') visPassordsteg('glemt');
+    // logget ut på en annen enhet, eller fornyelsen feilet
+    if (hendelse === 'SIGNED_OUT') oktMistet();
   });
   const { data } = await sky.klient.auth.getSession();
   if (

@@ -1368,6 +1368,58 @@ async function sjekkInnlogging(nettleser, url, feil) {
   await s.waitForFunction(() => document.getElementById('skystatus').textContent.includes('Lagret kl.'));
   sjekk(true, 'med konto viser toppen «✓ Lagret kl. …» etter lagring');
 
+  /* Økten forsvinner mens klassen er åpen (logget ut på en annen enhet,
+     eller fornyelsen feilet). Før prøvde appen å lagre som «anon» hvert
+     10. sekund for alltid, og endringene gikk tapt. */
+  const klasseversjon = () =>
+    s.evaluate(() => JSON.parse(localStorage.getItem('falsk-supabase:db')).tabeller.klasser.map((k) => k.versjon).join(','));
+  const forUtlogging = await klasseversjon();
+  const utlogget = await s.evaluate(async () => {
+    falskSupabase.mistOkt(false); // uten varsel: oppdages først når lagringen nektes
+    trekkPlassering();
+    await tomSynk();
+    await new Promise((ok) => setTimeout(ok, 50));
+    return {
+      plasser: JSON.stringify(D.aktiv.plasser),
+      ulagret,
+      prover: synkTimer !== null,
+      status: document.getElementById('skystatus').textContent,
+      epost: document.getElementById('innEpost').value,
+      laast: document.getElementById('innEpost').readOnly,
+      lokal: document.getElementById('innLokal').checkVisibility(),
+    };
+  });
+  sjekk((await hvorErVi(s)) === 'innlogging', 'når lagringen nektes fordi økten er borte, bes det om passord');
+  sjekk(
+    utlogget.ulagret && !utlogget.prover && /Logget ut/.test(utlogget.status),
+    'appen slutter å prøve å lagre, og endringen står som ulagret' + (utlogget.prover ? ': prøver fortsatt' : ''),
+  );
+  sjekk(
+    utlogget.epost === EPOST && utlogget.laast && !utlogget.lokal,
+    'samme konto er fylt inn, og «bruk uten konto» er skjult',
+  );
+  sjekk((await klasseversjon()) === forUtlogging, 'ingenting ble skrevet mens økten var borte');
+  await s.fill('#innPassord', PASSORD);
+  await s.click('#innKnapp');
+  await s.waitForSelector('.app:not([hidden])');
+  const inneIgjen = await s.evaluate(async () => {
+    await tomSynk();
+    return { plasser: JSON.stringify(D.aktiv.plasser), ulagret };
+  });
+  sjekk(
+    inneIgjen.plasser === utlogget.plasser && !inneIgjen.ulagret && (await klasseversjon()) !== forUtlogging,
+    'etter ny innlogging er læreren tilbake i klassen, og endringen er lagret',
+  );
+  sjekk(!(await s.evaluate(() => document.getElementById('innEpost').readOnly)), 'e-postfeltet kan endres igjen');
+
+  // med varsel fra Supabase (SIGNED_OUT): passordet bes om med en gang
+  await s.evaluate(() => falskSupabase.mistOkt());
+  sjekk((await hvorErVi(s)) === 'innlogging', 'utlogging fra en annen enhet oppdages med en gang');
+  await s.fill('#innPassord', PASSORD);
+  await s.click('#innKnapp');
+  await s.waitForSelector('.app:not([hidden])');
+  sjekk(true, 'og etter passordet er læreren tilbake der den var');
+
   /* Rommene deles med skolen. Gir en kollega et rom nytt navn, skal
      klassens plassering og lagrede kart følge med rommet. */
   const ulagretEtter = await s.evaluate(async () => {

@@ -2,7 +2,8 @@
    supabase-js fra CDN, og gir window.supabase.createClient() med de
    delene av API-et appen bruker. Alt lagres i localStorage, så både
    data og innlogging overlever at siden lastes på nytt, som med ekte
-   Supabase. Tilgangsregler (RLS) etterlignes ikke. */
+   Supabase. Tilgangsregler (RLS) etterlignes ikke, men uten innlogging
+   nektes tabellene (42501), slik databasen gjør for rollen «anon». */
 (function () {
   'use strict';
   const DB = 'falsk-supabase:db';
@@ -19,6 +20,8 @@
   const meg = () => (sesjon() ? sesjon().user : null);
   const svar = (data, error = null) => ({ data, error });
   const feil = (message, code) => ({ data: null, error: { message, code } });
+  const lyttere = [];
+  const varsle = (hendelse) => lyttere.forEach((f) => f(hendelse, sesjon()));
 
   class Sporring {
     constructor(tabell) {
@@ -72,6 +75,7 @@
       return Promise.resolve(this.utfor()).then(ok, nei);
     }
     utfor() {
+      if (!meg()) return feil('permission denied for table ' + this.tabell, '42501');
       const d = db();
       const rader = d.tabeller[this.tabell];
       const treff = (r) => this.filtre.every((f) => f(r));
@@ -186,13 +190,23 @@
     },
     async signOut() {
       localStorage.removeItem(SESJON);
+      varsle('SIGNED_OUT');
       return svar(null);
     },
     async resetPasswordForEmail() {
       return svar({});
     },
-    onAuthStateChange() {
+    onAuthStateChange(f) {
+      lyttere.push(f);
       return { data: { subscription: { unsubscribe() {} } } };
+    },
+  };
+
+  // for testene: økten forsvinner, som når læreren logger ut et annet sted
+  window.falskSupabase = {
+    mistOkt(varsel = true) {
+      localStorage.removeItem(SESJON);
+      if (varsel) varsle('SIGNED_OUT');
     },
   };
 

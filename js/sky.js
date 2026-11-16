@@ -117,6 +117,7 @@ const MODUS = 'klassekart:modus';
 const sky = {
   klient: null,
   klar: false,
+  utlogget: false, // økten forsvant; { iKart } husker hvor læreren var
   id: null,
   epost: '',
   privat: null,
@@ -518,7 +519,7 @@ async function hentMedlemmer() {
 }
 let henter = false;
 async function oppdaterFraSky() {
-  if (henter) return;
+  if (henter || sky.utlogget) return;
   henter = true;
   try {
     await tomSynk();
@@ -555,12 +556,14 @@ function kjorSynk() {
   synkKjede = synkKjede
     .then(synk)
     .then(() => {
-      if (synkTimer) return;
+      if (synkTimer || sky.utlogget) return; // utlogget: fortsatt ulagret
       ulagret = false;
       visLagret();
     })
-    .catch((err) => {
+    .catch(async (err) => {
       console.error(err);
+      if (sky.utlogget) return;
+      if (erTilgangsfeil(err) && !(await harOkt())) return oktMistet();
       visSkystatus('Ikke lagret – prøver igjen', true);
       synkTimer = setTimeout(kjorSynk, 10000);
     });
@@ -568,8 +571,64 @@ function kjorSynk() {
 }
 const tomSynk = () => (ulagret ? kjorSynk() : synkKjede);
 
+/* ---- økten forsvant mens klassene var åpne ----
+   Logger læreren ut på en annen enhet, eller fornyelsen av innloggingen
+   feiler, går forespørslene videre som «anon», og databasen nekter dem
+   (42501). Da stopper vi lagringen og ber om passordet igjen. Endringene
+   og nøklene blir liggende i minnet og lagres når læreren er inne igjen. */
+let loggerUt = false;
+const erTilgangsfeil = (err) =>
+  !!err &&
+  (err.code === '42501' ||
+    err.code === 'PGRST301' ||
+    err.status === 401 ||
+    /JWT/i.test(err.message || ''));
+async function harOkt() {
+  try {
+    const r = await sky.klient.auth.getUser();
+    return !r.error && !!r.data.user && r.data.user.id === sky.id;
+  } catch (err) {
+    return true; // nettet er nede: prøv igjen som vanlig
+  }
+}
+function oktMistet() {
+  if (loggerUt || !sky.klar || sky.utlogget) return;
+  sky.utlogget = { iKart: !document.querySelector('.app').hidden };
+  clearTimeout(synkTimer);
+  synkTimer = null;
+  visSkystatus('Logget ut – ikke lagret', true);
+  visInngang('stegInn');
+  settNyKonto(false);
+  $('innBytt').hidden = true;
+  $('innLokal').hidden = true; // ville byttet ut klassene i minnet
+  $('innEpost').value = sky.epost;
+  $('innEpost').readOnly = true; // endringene hører til denne kontoen
+  $('innPassord').value = '';
+  innStatus(
+    'Du ble logget ut. Skriv passordet for å fortsette – endringene dine er tatt vare på og lagres når du er inne igjen.',
+    true,
+  );
+  $('innPassord').focus();
+}
+/* Etter ny innlogging: samme konto fortsetter der den var. En annen konto
+   får ikke de åpne klassene, så da lastes siden på nytt. */
+async function oktTilbake(forrigeId) {
+  if (sky.id !== forrigeId) return location.reload();
+  if ($('innHusk').checked) await huskNokkel(sky.id, sky.privat);
+  const { iKart } = sky.utlogget;
+  sky.utlogget = false;
+  $('innBytt').hidden = false;
+  $('innLokal').hidden = false;
+  $('innEpost').readOnly = false;
+  lukkInngang();
+  if (iKart) visKart();
+  else visOversikt();
+  if (ulagret) await kjorSynk();
+  else visLagret();
+}
+
 async function synk() {
-  if (!iSky()) return;
+  if (!iSky() || sky.utlogget) return;
   const k = sky.klient;
   const meldinger = [];
   const finnes = new Set();
@@ -944,7 +1003,9 @@ async function loggUt() {
   const sp = 'Noe er ikke lagret ennå. Logge ut likevel?';
   if (ulagret && !(await bekreft(sp, 'Logg ut'))) return;
   await glemNokler();
-  await sky.klient.auth.signOut();
+  loggerUt = true;
+  // bare denne nettleseren: åpne faner på andre maskiner får lagre ferdig
+  await sky.klient.auth.signOut({ scope: 'local' });
   location.reload(); // tømmer nøklene fra minnet
 }
 async function slettKonto() {
@@ -973,6 +1034,7 @@ async function slettKonto() {
     return;
   }
   await glemNokler();
+  loggerUt = true;
   try {
     await sky.klient.auth.signOut({ scope: 'local' });
     localStorage.removeItem(MODUS);
