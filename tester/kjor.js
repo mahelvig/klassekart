@@ -1549,6 +1549,60 @@ async function sjekkInnlogging(nettleser, url, feil) {
   );
 }
 
+/* ---- Del kartet som bilde ---- */
+async function sjekkDelSomBilde(nettleser, url, feil) {
+  console.log('Del som bilde');
+  const s = await nySide(nettleser, url, { acceptDownloads: true }, feil);
+  await klasseMedElever(s, 'click');
+  const navnIKart = await s.$$eval('#kart .plass .navn', (x) => x.map((n) => n.textContent));
+  await s.click('#tilKlasser');
+  const del = '.klassekort:not(.ny) >> nth=0 >> .kort-handlinger button:has-text("Del")';
+  sjekk(!!(await s.$(del)), 'klassekortet har en Del-knapp også uten konto');
+  await s.click(del);
+  const valg = await s.$$eval('.popup.meny .menyvalg', (x) => x.map((b) => b.textContent));
+  sjekk(
+    valg.includes('Bilde – sett fra klassen') && valg.includes('Bilde – sett fra tavla') &&
+      !valg.some((v) => v.includes('kollega')),
+    'Del-menyen tilbyr bildet sett fra klassen og fra tavla (uten kolleger uten konto)',
+  );
+  // uten delingsmeny i nettleseren lastes bildet ned
+  const [nedlasting] = await Promise.all([
+    s.waitForEvent('download'),
+    s.click('.popup.meny .menyvalg:has-text("sett fra tavla")'),
+  ]);
+  const fil = path.join(BILDER, 'delt-kart-fra-tavla.png');
+  await nedlasting.saveAs(fil);
+  const png = fs.readFileSync(fil);
+  sjekk(
+    png.slice(1, 4).toString() === 'PNG' && /sett fra tavla\.png$/.test(nedlasting.suggestedFilename()),
+    'bildet lastes ned som PNG med visningen i filnavnet (' + nedlasting.suggestedFilename() + ')',
+  );
+  const b = await s.evaluate(async () => {
+    const n = Object.keys(D.klasser)[0];
+    const lagre = async (tavla) => {
+      const blob = await tegnKartbilde(n, tavla);
+      const bm = await createImageBitmap(blob);
+      return { w: bm.width, h: bm.height, str: blob.size };
+    };
+    return [await lagre(false), await lagre(true)];
+  });
+  sjekk(b[0].w > 1000 && b[0].h > 600 && b[0].w === b[1].w, 'bildet er skarpt og like stort fra begge sider (' + b[0].w + '×' + b[0].h + ')');
+  sjekk(navnIKart.length > 0, 'kartet som deles, har elever (' + navnIKart.length + ')');
+  // delingsmenyen på telefonen får bildet som fil
+  const delt = await s.evaluate(async () => {
+    let fikk = null;
+    navigator.canShare = (d) => !!(d.files && d.files.length);
+    navigator.share = async (d) => (fikk = d.files.map((f) => f.name + ':' + f.type));
+    await delKartSomBilde(Object.keys(D.klasser)[0], false);
+    return fikk;
+  });
+  sjekk(
+    delt && delt.length === 1 && /^Klassekart .+\.png:image\/png$/.test(delt[0]) && !delt[0].includes('tavla'),
+    'med delingsmeny (mobil) sendes bildet som fil til den (' + delt + ')',
+  );
+  await s.context().close();
+}
+
 (async () => {
   fs.mkdirSync(BILDER, { recursive: true });
   sjekkLasterekkefolge();
@@ -1567,6 +1621,7 @@ async function sjekkInnlogging(nettleser, url, feil) {
     await sjekkRomkopier(nettleser, url, feil);
     await sjekkSperring(nettleser, url, feil);
     await sjekkMobil(nettleser, url, feil);
+    await sjekkDelSomBilde(nettleser, url, feil);
     await sjekkInnlogging(nettleser, url, feil);
   } catch (err) {
     sjekk(false, 'testen stoppet: ' + err.message.split('\n')[0]);

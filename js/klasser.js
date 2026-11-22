@@ -97,7 +97,7 @@ function tegnOversikt() {
 
   const grid = $('klassegrid');
   grid.innerHTML = '';
-  navn.forEach((n) => {
+  navn.forEach((n, nr) => {
     const k = D.klasser[n];
     const s = k.sist || {};
     const ids = new Set(k.elever.map((e) => e.id));
@@ -160,18 +160,17 @@ function tegnOversikt() {
     bSlett.textContent = 'Slett';
     bSlett.addEventListener('click', () => slettKlasse(n));
     handl.appendChild(bNavn);
-    if (iSky()) {
-      const bDel = document.createElement('button');
-      bDel.type = 'button';
-      bDel.textContent = delt.length ? 'Delt ▾' : 'Del';
-      bDel.id = 'del-' + k._id;
-      bDel.addEventListener('click', (e) => {
-        e.stopPropagation();
-        delMeny(bDel, n);
-      });
-      handl.appendChild(bDel);
-      if (delt.length) bSlett.textContent = 'Forlat';
-    }
+    // deling som bilde virker også uten konto; med kolleger bare med konto
+    const bDel = document.createElement('button');
+    bDel.type = 'button';
+    bDel.textContent = delt.length ? 'Delt ▾' : 'Del';
+    bDel.id = 'del-' + (k._id || 'lokal-' + nr);
+    bDel.addEventListener('click', (e) => {
+      e.stopPropagation();
+      delMeny(bDel, n);
+    });
+    handl.appendChild(bDel);
+    if (delt.length) bSlett.textContent = 'Forlat';
     handl.appendChild(bSlett);
 
     kort.appendChild(apne);

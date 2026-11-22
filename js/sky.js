@@ -834,6 +834,10 @@ window.addEventListener('beforeunload', (e) => {
 /* ---- deling ---- */
 function delMeny(knapp, n) {
   apneMeny(knapp, (boks) => {
+    menyinfo(boks, 'Send kartet som bilde, f.eks. i Teams eller på melding:');
+    menyvalg(boks, 'Bilde – sett fra klassen', () => delKartSomBilde(n, false));
+    menyvalg(boks, 'Bilde – sett fra tavla', () => delKartSomBilde(n, true));
+    if (!iSky()) return;
     const delt = sky.medlemmer[D.klasser[n]._id] || [];
     menyinfo(
       boks,
